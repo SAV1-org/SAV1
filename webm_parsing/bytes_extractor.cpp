@@ -11,58 +11,76 @@
 using namespace webm;
 
 class FrameCallback : public Callback {
-public:
-    void open_file(char* path) {
-        this->out_file.open(path, std::ios::out | std::ios::trunc | std::ios::binary);
+   public:
+    void
+    open_file(char *path)
+    {
+        // open the specified file to write frame data to
+        this->out_file.open(
+            path, std::ios::out | std::ios::trunc | std::ios::binary);
     }
 
-    void close_file() {
+    void
+    close_file()
+    {
+        // close the output file
         this->out_file.close();
     }
 
-    Status OnFrame(
-        const FrameMetadata&, 
-        Reader* reader,                 
-        std::uint64_t* bytes_remaining
-    ) override {
+    Status
+    OnFrame(const FrameMetadata &, Reader *reader,
+            std::uint64_t *bytes_remaining) override
+    {
+        // sanity checks
         assert(reader != nullptr);
         assert(bytes_remaining != nullptr);
-        
-        std::uint8_t* buffer = new std::uint8_t[*bytes_remaining];
+
+        // create a buffer to store the frame data to
+        std::uint8_t *buffer = new std::uint8_t[*bytes_remaining];
         std::uint64_t num_read;
 
+        // make sure the output file is open
+        if (!this->out_file.is_open()) {
+            std::cout << "Output binary file "
+                         "is not open"
+                      << std::endl;
+            exit(1);
+        }
+
+        // read frame data until there's no more to read
         Status status;
         do {
             status = reader->Read(*bytes_remaining, buffer, &num_read);
+            // write bytes to output file
             for (int i = 0; i < num_read; i++) {
-                if (!this->out_file.is_open()) {
-                    std::cout << "Output binary file is not open" << std::endl;
-                    exit(1);
-                }
                 this->out_file << buffer[i];
             }
             *bytes_remaining -= num_read;
         } while (status.code == Status::kOkPartial);
 
+        // clean up memory
         delete buffer;
+
         return status;
     }
 
-private:
+   private:
     std::ofstream out_file;
 };
 
-
-int main(int argc, char* argv[]) {
-
+int
+main(int argc, char *argv[])
+{
     // make sure enough arguments have been provided
     if (argc < 3) {
-        std::cout << "Error: Not enough arguments provided. Expects <input_file.webm> <output_binary_file>" << std::endl;
+        std::cout << "Error: Not enough arguments provided. Expects "
+                     "<input_file.webm> <output_binary_file>"
+                  << std::endl;
         exit(1);
-    } 
+    }
 
     // open the input file
-    FILE* file = std::fopen(argv[1], "rb");
+    FILE *file = std::fopen(argv[1], "rb");
 
     // create the libwebm objects
     FrameCallback callback;
@@ -76,8 +94,10 @@ int main(int argc, char* argv[]) {
     Status status = parser.Feed(&callback, &reader);
     if (status.completed_ok()) {
         std::cout << "Parsing successfully completed" << std::endl;
-    } else {
-        std::cout << "Parsing failed with status code: " << status.code << std::endl;
+    }
+    else {
+        std::cout << "Parsing failed with status code: " << status.code
+                  << std::endl;
     }
 
     // close the files
