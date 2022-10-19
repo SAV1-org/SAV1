@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <cassert>
 
 #include <webm/callback.h>
@@ -11,39 +12,56 @@ using namespace webm;
 
 class FrameCallback : public Callback {
 public:
+    void open_file(char* path) {
+        this->out_file.open(path, std::ios::out | std::ios::trunc | std::ios::binary);
+    }
+
+    void close_file() {
+        this->out_file.close();
+    }
+
     Status OnFrame(
         const FrameMetadata&, 
         Reader* reader,                 
         std::uint64_t* bytes_remaining
-    ) {
+    ) override {
         assert(reader != nullptr);
         assert(bytes_remaining != nullptr);
         
         std::uint8_t* buffer = new std::uint8_t[*bytes_remaining];
         std::uint64_t num_read;
 
-        reader->Read(*bytes_remaining, buffer, &num_read);
-        
-        for (int i = 0; i < *bytes_remaining; i++) {
-            
-            std::cout << (int) buffer[i] << ' ';
-        }
-        std::cout << std::endl;
+        Status status;
+        do {
+            status = reader->Read(*bytes_remaining, buffer, &num_read);
+            for (int i = 0; i < num_read; i++) {
+                if (!this->out_file.is_open()) {
+                    std::cout << "Output binary file is not open" << std::endl;
+                    exit(1);
+                }
+                this->out_file << buffer[i];
+            }
+            *bytes_remaining -= num_read;
+        } while (status.code == Status::kOkPartial);
 
-        return Status(Status::kOkCompleted);
+        delete buffer;
+        return status;
     }
+
+private:
+    std::ofstream out_file;
 };
 
 
 int main(int argc, char* argv[]) {
 
     // make sure enough arguments have been provided
-    if (argc < 2) {
-        std::cout << "Error: file name expected" << std::endl;
+    if (argc < 3) {
+        std::cout << "Error: Not enough arguments provided. Expects <input_file.webm> <output_binary_file>" << std::endl;
         exit(1);
     } 
 
-    // open the file
+    // open the input file
     FILE* file = std::fopen(argv[1], "rb");
 
     // create the libwebm objects
@@ -51,7 +69,10 @@ int main(int argc, char* argv[]) {
     FileReader reader(file);
     WebmParser parser;
 
-    // parse the file
+    // open the output file
+    callback.open_file(argv[2]);
+
+    // parse the input file
     Status status = parser.Feed(&callback, &reader);
     if (status.completed_ok()) {
         std::cout << "Parsing successfully completed" << std::endl;
@@ -59,7 +80,8 @@ int main(int argc, char* argv[]) {
         std::cout << "Parsing failed with status code: " << status.code << std::endl;
     }
 
-    // close the file
+    // close the files
     std::fclose(file);
+    callback.close_file();
     return 0;
 }
