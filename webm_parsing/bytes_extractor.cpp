@@ -28,6 +28,22 @@ class FrameCallback : public Callback {
     }
 
     Status
+    OnTrackEntry(const ElementMetadata &metadata,
+                 const TrackEntry &track_entry) override
+    {
+        // make sure the track uses the AV1 codec
+        if (track_entry.codec_id.is_present() &&
+            track_entry.codec_id.value() == "V_AV1") {
+            return Status(Status::kOkCompleted);
+        }
+
+        // it doesn't so stop parsing
+        std::cout << "The requested file does not use the AV1 encoding"
+                  << std::endl;
+        return Status(Status::kInvalidElementValue);
+    }
+
+    Status
     OnFrame(const FrameMetadata &, Reader *reader,
             std::uint64_t *bytes_remaining) override
     {
