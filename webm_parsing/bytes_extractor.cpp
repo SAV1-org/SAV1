@@ -32,6 +32,7 @@ class FrameCallback : public Callback {
                  const TrackEntry &track_entry) override
     {
         // make sure the track uses the AV1 codec
+        // TODO: check if audio tracks break this
         if (track_entry.codec_id.is_present() &&
             track_entry.codec_id.value() == "V_AV1") {
             return Status(Status::kOkCompleted);

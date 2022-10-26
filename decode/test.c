@@ -5,7 +5,7 @@
 
 #include "dav1d/dav1d.h"
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 10
 
 // gcc test.c -Idav1d/include -ldav1d -Ldav1d/lib
 
@@ -25,8 +25,6 @@ main(int argc, char **argv)
 
     uint8_t *buffer = malloc(BUFFER_SIZE * sizeof(uint8_t));
     FILE *file = fopen(argv[1], "rb");
-
-    printf("hello world %i\n", DAV1D_PICTURE_ALIGNMENT);
 
     Dav1dSettings settings = {0};
     dav1d_default_settings(&settings);
@@ -48,26 +46,40 @@ main(int argc, char **argv)
         status = dav1d_data_wrap(&data, buffer, num_read, fake_dealloc, NULL);
         printf("data wrap status = %i\n", status);
 
-        status = dav1d_send_data(context, &data);
-        printf("send data status = %i\n", status);
+        int b_draining = 0;
+        do {
+            status = dav1d_send_data(context, &data);
+            if (status < 0 && status != DAV1D_ERR(EAGAIN)) {
+                printf("Decoder feed error %d!\n", status);
+                break;
+            }
 
-        if (status) {
-            status = dav1d_get_picture(context, &pic);
-            printf("get picture status = %i\n", status);
-        }
+            int b_output_error = 0;
+            do {
+                status = dav1d_get_picture(context, &pic);
+                if (status != DAV1D_ERR(EAGAIN)) {
+                    printf("Decoder error %d!\n", status);
+                    b_output_error = 1;
+                    break;
+                }
+            } while (status == 0);
 
-        if (status) {
-            Dav1dDataProps error = {0};
-            dav1d_get_decode_error_data_props(context, &error);
-            printf(
-                "\nerror: %s, timestamp: %d, duration: %d, offset: %d, "
-                "size: %d\n",
-                strerror(-status), error.timestamp, error.duration,
-                error.offset, error.size);
-        }
+            if (b_output_error)
+                break;
+
+            /* on drain, we must ignore the 1st EAGAIN */
+            if (!b_draining && (status == DAV1D_ERR(EAGAIN) || status == 0)) {
+                b_draining = 1;
+                status = 0;
+            }
+        } while (status == 0 || data.sz != 0);
+
+        // status = dav1d_send_data(context, &data);
+        // printf("send data status = %i\n", status);
+
+        // status = dav1d_get_picture(context, &pic);
+        // printf("get picture status = %i\n", status);
     }
-
-    printf(" DAV1D_ERR(EAGAIN) = %i\n", DAV1D_ERR(EAGAIN));
 
     dav1d_close(&context);
 
