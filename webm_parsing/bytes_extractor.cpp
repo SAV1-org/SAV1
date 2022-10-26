@@ -18,6 +18,7 @@ class FrameCallback : public Callback {
         // open the specified file to write frame data to
         this->out_file.open(
             path, std::ios::out | std::ios::trunc | std::ios::binary);
+        this->av1_track_number = -1;
     }
 
     void
@@ -27,28 +28,43 @@ class FrameCallback : public Callback {
         this->out_file.close();
     }
 
+    bool
+    found_av1_track()
+    {
+        return this->av1_track_number != -1;
+    }
+
     Status
     OnTrackEntry(const ElementMetadata &metadata,
                  const TrackEntry &track_entry) override
     {
         // make sure the track uses the AV1 codec
-        // TODO: check if audio tracks break this
         if (track_entry.codec_id.is_present() &&
             track_entry.codec_id.value() == "V_AV1") {
-            return Status(Status::kOkCompleted);
+            this->av1_track_number = track_entry.track_number.value();
         }
+        return Status(Status::kOkCompleted);
+    }
 
-        // it doesn't so stop parsing
-        std::cout << "The requested file does not use the AV1 encoding"
-                  << std::endl;
-        return Status(Status::kInvalidElementValue);
+    Status
+    OnSimpleBlockBegin(const ElementMetadata &metadata,
+                       const SimpleBlock &simple_block,
+                       Action *action) override
+    {
+        if (simple_block.track_number == this->av1_track_number) {
+            *action = Action::kRead;
+        }
+        else {
+            *action = Action::kSkip;
+        }
+        return Status(Status::kOkCompleted);
     }
 
     Status
     OnFrame(const FrameMetadata &, Reader *reader,
             std::uint64_t *bytes_remaining) override
     {
-        // sanity checks
+        //  sanity checks
         assert(reader != nullptr);
         assert(bytes_remaining != nullptr);
 
@@ -76,13 +92,14 @@ class FrameCallback : public Callback {
         } while (status.code == Status::kOkPartial);
 
         // clean up memory
-        delete buffer;
+        delete[] buffer;
 
         return status;
     }
 
    private:
     std::ofstream out_file;
+    uint64_t av1_track_number;
 };
 
 int
@@ -114,6 +131,11 @@ main(int argc, char *argv[])
     }
     else {
         std::cout << "Parsing failed with status code: " << status.code
+                  << std::endl;
+    }
+
+    if (!callback.found_av1_track()) {
+        std::cout << "The requested file does not contain an av1 track"
                   << std::endl;
     }
 
