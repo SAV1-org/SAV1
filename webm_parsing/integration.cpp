@@ -35,7 +35,7 @@ class Av1Callback : public Callback {
     }
 
     void
-    send_dav1d_data(std::uint8_t *buffer, std::uint64_t num_to_send)
+    send_obu(std::uint8_t *buffer, std::uint64_t num_to_send)
     {
         if (num_to_send == 0) {
             return;
@@ -60,6 +60,82 @@ class Av1Callback : public Callback {
         status = dav1d_get_picture(context, &pic);
         if (status == 0) {
             std::cout << "got picture from dav1d" << std::endl;
+        }
+    }
+
+    std::uint64_t
+    parse_obu_size(std::uint8_t *buffer, std::uint8_t *size_skip)
+    {
+        std::uint64_t val = 0;
+        std::uint8_t i = 0, more;
+
+        do {
+            uint8_t v = buffer[0];
+            buffer++;
+            more = v >> 7;
+            val |= ((std::uint64_t)(v & 0x7F)) << i;
+            i += 7;
+        } while (more && i < 56);
+
+        if (val > UINT_MAX || more) {
+            std::cout << "Size bytes parsing error" << std::endl;
+            *size_skip = 1;
+            return 0;
+        }
+
+        *size_skip = i / 7;
+        return val;
+    }
+
+    void
+    parse_obu(std::uint8_t *buffer, std::uint64_t buffer_size)
+    {
+        if (buffer[0] >> 7 || buffer[0] & 1) {
+            std::cout << "Illegal bit is set with payload ";
+            for (int i = 0; i < buffer_size; i++) {
+                std::cout << std::setfill('0') << std::setw(2) << std::hex
+                          << (unsigned int)buffer[i] << " ";
+            }
+            std::cout << std::endl;
+            return;
+        }
+
+        // get the OBU type
+        int obu_type = buffer[0] >> 3;
+        int size_start_index = 1;
+
+        // check for extension flag
+        if ((buffer[0] >> 2) & 1) {
+            // extension flag is set
+            std::cout << "Extension flag is set" << std::endl;
+            // move start of size bytes to account for extension byte
+            size_start_index = 2;
+        }
+
+        std::uint64_t obu_size = buffer_size;
+        if ((buffer[0] >> 1) & 1) {
+            // size flag is set
+            std::uint8_t size_skip;
+            // set obu_size to the payload size
+            obu_size =
+                this->parse_obu_size(buffer + size_start_index, &size_skip);
+            // add the bytes for the extension, header, and size
+            obu_size += size_skip + size_start_index;
+            std::cout << "Found type " << obu_type << " OBU of size "
+                      << obu_size << std::endl;
+        }
+        else {
+            // size flag is not set
+            std::cout << "Found type " << obu_type
+                      << " OBU with size flag not set" << std::endl;
+        }
+
+        // send the OBU to dav1d
+        this->send_obu(buffer, obu_size);
+
+        // keep going if there's more OBUs in the buffer
+        if (obu_size < buffer_size) {
+            this->parse_obu(buffer + obu_size, buffer_size - obu_size);
         }
     }
 
@@ -117,40 +193,7 @@ class Av1Callback : public Callback {
         } while (status.code == Status::kOkPartial);
 
         // parse the OBU
-        if (buffer[0] >> 7 || buffer[0] & 1) {
-            std::cout << "Illegal bit is set with payload ";
-            for (int i = 0; i < buffer_size; i++) {
-                std::cout << std::setfill('0') << std::setw(2) << std::hex
-                          << (unsigned int)buffer[i] << " ";
-            }
-            std::cout << std::endl;
-            delete[] buffer;
-            return Status(Status::kOkCompleted);
-        }
-
-        int obu_type = buffer[0] >> 3;
-        if (obu_type != 1) {
-            // frame OBU
-            this->send_dav1d_data(buffer, buffer_size);
-        }
-        else {
-            std::cout << "Found non-frame OBU of type " << obu_type
-                      << std::endl;
-            if ((buffer[0] >> 1) & 1) {
-                // size flag is set
-                std::uint8_t obu_payload_size = buffer[1] + 2;
-                if (buffer_size != obu_payload_size) {
-                    std::cout << "Found frame with multiple OBUs" << std::endl;
-                }
-                this->send_dav1d_data(buffer, obu_payload_size);
-                this->send_dav1d_data(buffer + obu_payload_size,
-                                      buffer_size - obu_payload_size);
-            }
-            else {
-                // size flag is not set
-                std::cout << "OBU size flag is not set" << std::endl;
-            }
-        }
+        this->parse_obu(buffer, buffer_size);
 
         // clean up memory
         delete[] buffer;
