@@ -35,6 +35,21 @@ class Av1Callback : public Callback {
     }
 
     void
+    drain_dav1d()
+    {
+        int status;
+        int num_tries = 5;
+        Dav1dPicture pic = {0};
+        do {
+            status = dav1d_get_picture(this->context, &pic);
+            if (status == 0) {
+                std::cout << "got picture from dav1d" << std::endl;
+            }
+            num_tries--;
+        } while (status == DAV1D_ERR(EAGAIN) && num_tries);
+    }
+
+    void
     send_obu(std::uint8_t *buffer, std::uint64_t num_to_send)
     {
         if (num_to_send == 0) {
@@ -44,6 +59,7 @@ class Av1Callback : public Callback {
         Dav1dPicture pic = {0};
         int status;
 
+        // wrap the OBU in a Dav1dData struct
         status =
             dav1d_data_wrap(&data, buffer, num_to_send, fake_dealloc, NULL);
         if (status) {
@@ -51,16 +67,15 @@ class Av1Callback : public Callback {
             return;
         }
 
+        // send the OBU to dav1d
         status = dav1d_send_data(this->context, &data);
         if (status) {
             std::cout << "dav1d send data failed: " << status << std::endl;
             return;
         }
 
-        status = dav1d_get_picture(context, &pic);
-        if (status == 0) {
-            std::cout << "got picture from dav1d" << std::endl;
-        }
+        // try to get the picture out
+        this->drain_dav1d();
     }
 
     std::uint64_t
