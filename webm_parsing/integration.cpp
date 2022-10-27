@@ -18,6 +18,57 @@ fake_dealloc(const uint8_t *data, void *cookie)
     return;
 }
 
+char *
+str_matrix_coefficient(int constant)
+{
+    char* val;
+    switch(constant) {
+        case DAV1D_MC_IDENTITY:
+            val = "DAV1D_MC_IDENTITY";
+            break;
+        case DAV1D_MC_BT709:
+            val = "DAV1D_MC_BT709";
+            break;
+        case DAV1D_MC_UNKNOWN:
+            val = "DAV1D_MC_UNKNOWN";
+            break;
+        case DAV1D_MC_FCC:
+            val = "DAV1D_MC_FCC";
+            break;
+        case DAV1D_MC_BT470BG:
+            val = "DAV1D_MC_BT470BG";
+            break;
+        case DAV1D_MC_BT601:
+            val = "DAV1D_MC_BT601";
+            break;
+        case DAV1D_MC_SMPTE240:
+            val = "DAV1D_MC_SMPTE240";
+            break;
+        case DAV1D_MC_SMPTE_YCGCO:
+            val = "DAV1D_MC_SMPTE_YCGCO";
+            break;
+        case DAV1D_MC_BT2020_NCL:
+            val = "DAV1D_MC_BT2020_NCL";
+            break;
+        case DAV1D_MC_BT2020_CL:
+            val = "DAV1D_MC_BT2020_CL";
+            break;
+        case DAV1D_MC_SMPTE2085:
+            val = "DAV1D_MC_SMPTE2085";
+            break;
+        case DAV1D_MC_CHROMAT_NCL:
+            val = "DAV1D_MC_CHROMAT_NCL";
+            break;
+        case DAV1D_MC_CHROMAT_CL:
+            val = "DAV1D_MC_CHROMAT_CL";
+            break;
+        case DAV1D_MC_ICTCP:
+            val = "DAV1D_MC_ICTCP";
+            break;
+    }
+    return val;
+}
+
 class Av1Callback : public Callback {
    public:
     void
@@ -44,9 +95,58 @@ class Av1Callback : public Callback {
             status = dav1d_get_picture(this->context, &pic);
             if (status == 0) {
                 std::cout << "got picture from dav1d" << std::endl;
+                this->handle_picture(&pic);
             }
             num_tries--;
         } while (status == DAV1D_ERR(EAGAIN) && num_tries);
+    }
+
+    void
+    handle_picture(Dav1dPicture* picture)
+    {
+    #if 1
+        Dav1dPictureParameters picparam = picture->p;
+        printf("frame width=%i, height=%i bpc=%i\n", picparam.w, picparam.h, picparam.bpc);
+
+        int height = picparam.w;
+        int width = picparam.h;
+
+        Dav1dSequenceHeader* seqhdr = picture->seq_hdr;
+        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
+            printf("DAV1D_PIXEL_LAYOUT_I420\n");
+        }
+        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
+            printf("DAV1D_PIXEL_LAYOUT_I400\n");
+        }
+        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
+            printf("DAV1D_PIXEL_LAYOUT_I422\n");
+        }
+        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
+            printf("DAV1D_PIXEL_LAYOUT_I444\n");
+
+            printf("Matrix coefficient=%s\n", str_matrix_coefficient(seqhdr->mtrx));
+
+            std::uint8_t* Y = (std::uint8_t*)picture->data[0];
+            std::uint8_t* U = (std::uint8_t*)picture->data[1];
+            std::uint8_t* V = (std::uint8_t*)picture->data[2];
+
+            // for one specific color matrix:
+            // https://wikimedia.org/api/rest_v1/media/math/render/svg/a875fb1d6f42a721bf6c4f408ebd988d814bae58
+
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < width; y++) {
+                    int byte_loc = y*width + x;
+                    int R = Y[byte_loc] + V[byte_loc] * 1.4746;
+                    int G = Y[byte_loc] - 0.16 * U[byte_loc] - 0.57 * V[byte_loc];
+                    int B = Y[byte_loc] + 1.88 * U[byte_loc];
+                    printf("rgb=(%i, %i, %i)\n", R, G, B);
+                    printf("yuv=(%i, %i, %i)\n", Y[byte_loc], U[byte_loc], V[byte_loc]);
+                }
+            }
+
+        }
+
+    #endif
     }
 
     void
