@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <string.h>
 
 #include <webm/callback.h>
 #include <webm/file_reader.h>
@@ -13,16 +14,16 @@
 using namespace webm;
 
 void
-fake_dealloc(const uint8_t *data, void *cookie)
+dealloc_buffer(const uint8_t *data, void *cookie)
 {
-    return;
+    delete[] data;
 }
 
-char *
+const char *
 str_matrix_coefficient(int constant)
 {
-    char* val;
-    switch(constant) {
+    const char *val;
+    switch (constant) {
         case DAV1D_MC_IDENTITY:
             val = "DAV1D_MC_IDENTITY";
             break;
@@ -76,6 +77,7 @@ class Av1Callback : public Callback {
     {
         // this should be moved to the constructor
         this->av1_track_number = -1;
+        this->opus_track_number = -1;
         this->context = context;
     }
 
@@ -85,33 +87,52 @@ class Av1Callback : public Callback {
         return this->av1_track_number != -1;
     }
 
+    bool
+    found_opus_track()
+    {
+        return this->opus_track_number != -1;
+    }
+
+    void
+    decode_opus(std::uint8_t *buffer, std::uint64_t num_bytes)
+    {
+        // DR_OPUS who?
+        delete[] buffer;
+    }
+
     void
     drain_dav1d()
     {
         int status;
-        int num_tries = 5;
         Dav1dPicture pic = {0};
-        do {
+
+        status = dav1d_get_picture(this->context, &pic);
+        // try one more time if dav1d tells us to (we usually have to)
+        if (status == DAV1D_ERR(EAGAIN)) {
             status = dav1d_get_picture(this->context, &pic);
-            if (status == 0) {
-                std::cout << "got picture from dav1d" << std::endl;
-                this->handle_picture(&pic);
-            }
-            num_tries--;
-        } while (status == DAV1D_ERR(EAGAIN) && num_tries);
+        }
+        if (status == 0) {
+            std::cout << "got picture from dav1d" << std::endl;
+            this->handle_picture(&pic);
+        }
+        else {
+            std::cout << "failed to get picture: " << strerror(-status)
+                      << std::endl;
+        }
     }
 
     void
-    handle_picture(Dav1dPicture* picture)
+    handle_picture(Dav1dPicture *picture)
     {
-    #if 1
+#if 0
         Dav1dPictureParameters picparam = picture->p;
-        printf("frame width=%i, height=%i bpc=%i\n", picparam.w, picparam.h, picparam.bpc);
+        printf("frame width=%i, height=%i bpc=%i\n", picparam.w, picparam.h,
+               picparam.bpc);
 
         int height = picparam.w;
         int width = picparam.h;
 
-        Dav1dSequenceHeader* seqhdr = picture->seq_hdr;
+        Dav1dSequenceHeader *seqhdr = picture->seq_hdr;
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
             printf("DAV1D_PIXEL_LAYOUT_I420\n");
         }
@@ -124,144 +145,83 @@ class Av1Callback : public Callback {
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
             printf("DAV1D_PIXEL_LAYOUT_I444\n");
 
-            printf("Matrix coefficient=%s\n", str_matrix_coefficient(seqhdr->mtrx));
+            printf("Matrix coefficient=%s\n",
+                   str_matrix_coefficient(seqhdr->mtrx));
 
-            std::uint8_t* Y = (std::uint8_t*)picture->data[0];
-            std::uint8_t* U = (std::uint8_t*)picture->data[1];
-            std::uint8_t* V = (std::uint8_t*)picture->data[2];
+            printf("Y stride: %i, UV stride: %i\n", (picture->stride)[0],
+                   (picture->stride)[1]);
+
+            std::uint8_t *Y = (std::uint8_t *)picture->data[0];
+            std::uint8_t *U = (std::uint8_t *)picture->data[1];
+            std::uint8_t *V = (std::uint8_t *)picture->data[2];
 
             // for one specific color matrix:
             // https://wikimedia.org/api/rest_v1/media/math/render/svg/a875fb1d6f42a721bf6c4f408ebd988d814bae58
 
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < width; y++) {
-                    int byte_loc = y*width + x;
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int byte_loc = y * picture->stride[0] + x;
+
                     int R = Y[byte_loc] + V[byte_loc] * 1.4746;
-                    int G = Y[byte_loc] - 0.16 * U[byte_loc] - 0.57 * V[byte_loc];
+                    int G =
+                        Y[byte_loc] - 0.16 * U[byte_loc] - 0.57 *
+                        V[byte_loc];
                     int B = Y[byte_loc] + 1.88 * U[byte_loc];
+
                     printf("rgb=(%i, %i, %i)\n", R, G, B);
-                    printf("yuv=(%i, %i, %i)\n", Y[byte_loc], U[byte_loc], V[byte_loc]);
+                    printf("yuv=(%i, %i, %i)\n", Y[byte_loc], U[byte_loc],
+                           V[byte_loc]);
                 }
             }
-
         }
 
-    #endif
+#endif
+        dav1d_picture_unref(picture);
     }
 
     void
-    send_obu(std::uint8_t *buffer, std::uint64_t num_to_send)
+    decode_av1(std::uint8_t *buffer, std::uint64_t num_bytes)
     {
-        if (num_to_send == 0) {
-            return;
-        }
         Dav1dData data = {0};
         Dav1dPicture pic = {0};
         int status;
 
-        // wrap the OBU in a Dav1dData struct
+        // wrap the OBUs in a Dav1dData struct
         status =
-            dav1d_data_wrap(&data, buffer, num_to_send, fake_dealloc, NULL);
+            dav1d_data_wrap(&data, buffer, num_bytes, dealloc_buffer, NULL);
         if (status) {
             std::cout << "dav1d data wrap failed: " << status << std::endl;
             return;
         }
 
-        // send the OBU to dav1d
-        status = dav1d_send_data(this->context, &data);
-        if (status) {
-            std::cout << "dav1d send data failed: " << status << std::endl;
-            return;
-        }
-
-        // try to get the picture out
-        this->drain_dav1d();
-    }
-
-    std::uint64_t
-    parse_obu_size(std::uint8_t *buffer, std::uint8_t *size_skip)
-    {
-        std::uint64_t val = 0;
-        std::uint8_t i = 0, more;
-
         do {
-            uint8_t v = buffer[0];
-            buffer++;
-            more = v >> 7;
-            val |= ((std::uint64_t)(v & 0x7F)) << i;
-            i += 7;
-        } while (more && i < 56);
-
-        if (val > UINT_MAX || more) {
-            std::cout << "Size bytes parsing error" << std::endl;
-            *size_skip = 1;
-            return 0;
-        }
-
-        *size_skip = i / 7;
-        return val;
-    }
-
-    void
-    parse_obu(std::uint8_t *buffer, std::uint64_t buffer_size)
-    {
-        if (buffer[0] >> 7 || buffer[0] & 1) {
-            std::cout << "Illegal bit is set with payload ";
-            for (int i = 0; i < buffer_size; i++) {
-                std::cout << std::setfill('0') << std::setw(2) << std::hex
-                          << (unsigned int)buffer[i] << " ";
+            // send the OBUs to dav1d
+            status = dav1d_send_data(this->context, &data);
+            if (status && status != DAV1D_ERR(EAGAIN)) {
+                std::cout << "dav1d send data failed: " << status << std::endl;
+                if (data.sz > 0) {
+                    dav1d_data_unref(&data);
+                }
+                return;
             }
-            std::cout << std::endl;
-            return;
-        }
 
-        // get the OBU type
-        int obu_type = buffer[0] >> 3;
-        int size_start_index = 1;
-
-        // check for extension flag
-        if ((buffer[0] >> 2) & 1) {
-            // extension flag is set
-            std::cout << "Extension flag is set" << std::endl;
-            // move start of size bytes to account for extension byte
-            size_start_index = 2;
-        }
-
-        std::uint64_t obu_size = buffer_size;
-        if ((buffer[0] >> 1) & 1) {
-            // size flag is set
-            std::uint8_t size_skip;
-            // set obu_size to the payload size
-            obu_size =
-                this->parse_obu_size(buffer + size_start_index, &size_skip);
-            // add the bytes for the extension, header, and size
-            obu_size += size_skip + size_start_index;
-            std::cout << "Found type " << obu_type << " OBU of size "
-                      << obu_size << std::endl;
-        }
-        else {
-            // size flag is not set
-            std::cout << "Found type " << obu_type
-                      << " OBU with size flag not set" << std::endl;
-        }
-
-        // send the OBU to dav1d
-        this->send_obu(buffer, obu_size);
-
-        // keep going if there's more OBUs in the buffer
-        if (obu_size < buffer_size) {
-            this->parse_obu(buffer + obu_size, buffer_size - obu_size);
-        }
+            // try to get the picture out
+            this->drain_dav1d();
+        } while (status == DAV1D_ERR(EAGAIN) || data.sz > 0);
     }
 
     Status
     OnTrackEntry(const ElementMetadata &metadata,
                  const TrackEntry &track_entry) override
     {
-        // make sure the track uses the AV1 codec
-        if (track_entry.codec_id.is_present() &&
-            track_entry.codec_id.value() == "V_AV1") {
-            this->av1_track_number = track_entry.track_number.value();
+        // this is assuming at most one audio and one video track
+        if (track_entry.codec_id.is_present()) {
+            if (track_entry.codec_id.value() == "V_AV1") {
+                this->av1_track_number = track_entry.track_number.value();
+            }
+            else if (track_entry.codec_id.value() == "A_OPUS") {
+                this->opus_track_number = track_entry.track_number.value();
+            }
         }
         return Status(Status::kOkCompleted);
     }
@@ -271,7 +231,24 @@ class Av1Callback : public Callback {
                        const SimpleBlock &simple_block,
                        Action *action) override
     {
-        if (simple_block.track_number == this->av1_track_number) {
+        this->current_track_number = simple_block.track_number;
+        if (simple_block.track_number == this->av1_track_number ||
+            simple_block.track_number == this->opus_track_number) {
+            *action = Action::kRead;
+        }
+        else {
+            *action = Action::kSkip;
+        }
+        return Status(Status::kOkCompleted);
+    }
+
+    Status
+    OnBlockBegin(const ElementMetadata &metadata, const Block &block,
+                 Action *action) override
+    {
+        this->current_track_number = block.track_number;
+        if (block.track_number == this->av1_track_number ||
+            block.track_number == this->opus_track_number) {
             *action = Action::kRead;
         }
         else {
@@ -307,17 +284,23 @@ class Av1Callback : public Callback {
             *bytes_remaining -= num_read;
         } while (status.code == Status::kOkPartial);
 
-        // parse the OBU
-        this->parse_obu(buffer, buffer_size);
-
-        // clean up memory
-        delete[] buffer;
+        // decode the data
+        if (this->current_track_number == this->av1_track_number) {
+            std::cout << "received av1 frame from webm_parser" << std::endl;
+            this->decode_av1(buffer, buffer_size);
+        }
+        else if (this->current_track_number == this->opus_track_number) {
+            std::cout << "received opus frame from webm_parser" << std::endl;
+            this->decode_opus(buffer, buffer_size);
+        }
 
         return status;
     }
 
    private:
     uint64_t av1_track_number;
+    uint64_t opus_track_number;
+    uint64_t current_track_number;
     Dav1dContext *context;
 };
 

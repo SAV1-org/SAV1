@@ -4,7 +4,7 @@ dependencies:
 	mv *.o libwebm/webm_parser/object_files/
 
 full:
-	g++ -o bytes.exe -std=c++11 -Ilibwebm/webm_parser/include -Ilibwebm/webm_parser bytes_extractor.cpp libwebm/webm_parser/src/*.cc
+	g++ -o integration.exe -std=c++11 -Ilibwebm/webm_parser/include -Ilibwebm/webm_parser -I../decode/dav1d/include -L. -ldav1d integration.cpp libwebm/webm_parser/src/*.cc
 
 integration:
 	g++ -o integration.exe -std=c++11 -Ilibwebm/webm_parser/include -Ilibwebm/webm_parser -I../decode/dav1d/include -L. -ldav1d libwebm/webm_parser/object_files/*.o integration.cpp
