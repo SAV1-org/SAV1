@@ -70,6 +70,27 @@ str_matrix_coefficient(int constant)
     return val;
 }
 
+const char *
+str_pixel_layout(int constant)
+{
+    const char *val;
+    switch (constant) {
+        case DAV1D_PIXEL_LAYOUT_I420:
+            val = "DAV1D_PIXEL_LAYOUT_I420";
+            break;
+        case DAV1D_PIXEL_LAYOUT_I400:
+            val = "DAV1D_PIXEL_LAYOUT_I400";
+            break;
+        case DAV1D_PIXEL_LAYOUT_I422:
+            val = "DAV1D_PIXEL_LAYOUT_I422";
+            break;
+        case DAV1D_PIXEL_LAYOUT_I444:
+            val = "DAV1D_PIXEL_LAYOUT_I444";
+            break;
+    }
+    return val;
+}
+
 class Av1Callback : public Callback {
    public:
     void
@@ -124,7 +145,7 @@ class Av1Callback : public Callback {
     void
     handle_picture(Dav1dPicture *picture)
     {
-#if 0
+#if 1
         Dav1dPictureParameters picparam = picture->p;
         printf("frame width=%i, height=%i bpc=%i\n", picparam.w, picparam.h,
                picparam.bpc);
@@ -133,44 +154,38 @@ class Av1Callback : public Callback {
         int width = picparam.h;
 
         Dav1dSequenceHeader *seqhdr = picture->seq_hdr;
+
+        printf("Pixel layout=%s\n", str_pixel_layout(seqhdr->layout));
+        printf("Matrix coefficient=%s\n",
+               str_matrix_coefficient(seqhdr->mtrx));
+
+        std::uint8_t *Y_data = (std::uint8_t *)picture->data[0];
+        std::uint8_t *U_data = (std::uint8_t *)picture->data[1];
+        std::uint8_t *V_data = (std::uint8_t *)picture->data[2];
+
+        printf("Y stride: %i, UV stride: %i\n", (picture->stride)[0],
+               (picture->stride)[1]);
+
+        ptrdiff_t Y_stride = picture->stride[0];
+        ptrdiff_t UV_stride = picture->stride[1];
+
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
-            printf("DAV1D_PIXEL_LAYOUT_I420\n");
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
-            printf("DAV1D_PIXEL_LAYOUT_I400\n");
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
-            printf("DAV1D_PIXEL_LAYOUT_I422\n");
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
-            printf("DAV1D_PIXEL_LAYOUT_I444\n");
+            uint8_t Y;
+            uint8_t U;
+            uint8_t V;
 
-            printf("Matrix coefficient=%s\n",
-                   str_matrix_coefficient(seqhdr->mtrx));
-
-            printf("Y stride: %i, UV stride: %i\n", (picture->stride)[0],
-                   (picture->stride)[1]);
-
-            std::uint8_t *Y = (std::uint8_t *)picture->data[0];
-            std::uint8_t *U = (std::uint8_t *)picture->data[1];
-            std::uint8_t *V = (std::uint8_t *)picture->data[2];
-
-            // for one specific color matrix:
-            // https://wikimedia.org/api/rest_v1/media/math/render/svg/a875fb1d6f42a721bf6c4f408ebd988d814bae58
-
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int byte_loc = y * picture->stride[0] + x;
-
-                    int R = Y[byte_loc] + V[byte_loc] * 1.4746;
-                    int G =
-                        Y[byte_loc] - 0.16 * U[byte_loc] - 0.57 *
-                        V[byte_loc];
-                    int B = Y[byte_loc] + 1.88 * U[byte_loc];
-
-                    printf("rgb=(%i, %i, %i)\n", R, G, B);
-                    printf("yuv=(%i, %i, %i)\n", Y[byte_loc], U[byte_loc],
-                           V[byte_loc]);
+            for (int y_loc = 0; y_loc < height; y_loc++) {
+                for (int x_loc = 0; x_loc < width; x_loc++) {
+                    Y = Y_data[y_loc * Y_stride + x_loc];
+                    U = U_data[y_loc * UV_stride + x_loc];
+                    V = V_data[y_loc * UV_stride + x_loc];
+                    printf("yuv= (%i, %i, %i)\n", Y, U, V);
                 }
             }
         }
