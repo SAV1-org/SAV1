@@ -199,9 +199,8 @@ class Av1Callback : public Callback {
             status = dav1d_send_data(this->context, &data);
             if (status && status != DAV1D_ERR(EAGAIN)) {
                 std::cout << "dav1d send data failed: " << status << std::endl;
-                if (data.sz > 0) {
-                    dav1d_data_unref(&data);
-                }
+                // manually unref the data
+                dav1d_data_unref(&data);
                 return;
             }
 
