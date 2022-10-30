@@ -9,7 +9,9 @@
 #include <webm/status.h>
 #include <webm/webm_parser.h>
 
-#include "dav1d/dav1d.h"
+#include <libyuv.h>
+
+#include <dav1d/dav1d.h>
 
 using namespace webm;
 
