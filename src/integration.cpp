@@ -145,54 +145,170 @@ class Av1Callback : public Callback {
     }
 
     void
+    get_matrix_coefficients(Dav1dSequenceHeader *seqhdr,
+                            const struct libyuv::YuvConstants **matrixYUV,
+                            const struct libyuv::YuvConstants **matrixYVU)
+    {
+        if (seqhdr->color_range) {
+            switch (seqhdr->mtrx) {
+                case DAV1D_MC_BT709:
+                    *matrixYUV = &libyuv::kYuvF709Constants;
+                    *matrixYVU = &libyuv::kYvuF709Constants;
+                    break;
+                case DAV1D_MC_BT470BG:
+                case DAV1D_MC_BT601:
+                case DAV1D_MC_UNKNOWN:
+                    *matrixYUV = &libyuv::kYuvJPEGConstants;
+                    *matrixYVU = &libyuv::kYvuJPEGConstants;
+                    break;
+                case DAV1D_MC_BT2020_NCL:
+                    *matrixYUV = &libyuv::kYuvV2020Constants;
+                    *matrixYVU = &libyuv::kYvuV2020Constants;
+                    break;
+                case DAV1D_MC_CHROMAT_NCL:
+                    switch (seqhdr->pri) {
+                        case DAV1D_COLOR_PRI_BT709:
+                        case DAV1D_COLOR_PRI_UNKNOWN:
+                            *matrixYUV = &libyuv::kYuvF709Constants;
+                            *matrixYVU = &libyuv::kYvuF709Constants;
+                            break;
+                        case DAV1D_COLOR_PRI_BT470BG:
+                        case DAV1D_COLOR_PRI_BT601:
+                            *matrixYUV = &libyuv::kYuvJPEGConstants;
+                            *matrixYVU = &libyuv::kYvuJPEGConstants;
+                            break;
+                        case DAV1D_COLOR_PRI_BT2020:
+                            *matrixYUV = &libyuv::kYuvV2020Constants;
+                            *matrixYVU = &libyuv::kYvuV2020Constants;
+                            break;
+                        case DAV1D_COLOR_PRI_BT470M:
+                        case DAV1D_COLOR_PRI_SMPTE240:
+                        case DAV1D_COLOR_PRI_FILM:
+                        case DAV1D_COLOR_PRI_XYZ:
+                        case DAV1D_COLOR_PRI_SMPTE431:
+                        case DAV1D_COLOR_PRI_SMPTE432:
+                        case DAV1D_COLOR_PRI_EBU3213:
+                            break;
+                    }
+                    break;
+                case DAV1D_MC_IDENTITY:
+                case DAV1D_MC_FCC:
+                case DAV1D_MC_SMPTE240:
+                case DAV1D_MC_SMPTE_YCGCO:
+                case DAV1D_MC_BT2020_CL:
+                case DAV1D_MC_SMPTE2085:
+                case DAV1D_MC_CHROMAT_CL:
+                case DAV1D_MC_ICTCP:
+                    break;
+            }
+        }
+        else {
+            switch (seqhdr->mtrx) {
+                case DAV1D_MC_BT709:
+                    *matrixYUV = &libyuv::kYuvH709Constants;
+                    *matrixYVU = &libyuv::kYvuH709Constants;
+                    break;
+                case DAV1D_MC_BT470BG:
+                case DAV1D_MC_BT601:
+                case DAV1D_MC_UNKNOWN:
+                    *matrixYUV = &libyuv::kYuvI601Constants;
+                    *matrixYVU = &libyuv::kYvuI601Constants;
+                    break;
+                case DAV1D_MC_BT2020_NCL:
+                    *matrixYUV = &libyuv::kYuv2020Constants;
+                    *matrixYVU = &libyuv::kYvu2020Constants;
+                    break;
+                case DAV1D_MC_CHROMAT_NCL:
+                    switch (seqhdr->pri) {
+                        case DAV1D_COLOR_PRI_BT709:
+                        case DAV1D_COLOR_PRI_UNKNOWN:
+                            *matrixYUV = &libyuv::kYuvH709Constants;
+                            *matrixYVU = &libyuv::kYvuH709Constants;
+                            break;
+                        case DAV1D_COLOR_PRI_BT470BG:
+                        case DAV1D_COLOR_PRI_BT601:
+                            *matrixYUV = &libyuv::kYuvI601Constants;
+                            *matrixYVU = &libyuv::kYvuI601Constants;
+                            break;
+                        case DAV1D_COLOR_PRI_BT2020:
+                            *matrixYUV = &libyuv::kYuv2020Constants;
+                            *matrixYVU = &libyuv::kYvu2020Constants;
+                            break;
+                        case DAV1D_COLOR_PRI_BT470M:
+                        case DAV1D_COLOR_PRI_SMPTE240:
+                        case DAV1D_COLOR_PRI_FILM:
+                        case DAV1D_COLOR_PRI_XYZ:
+                        case DAV1D_COLOR_PRI_SMPTE431:
+                        case DAV1D_COLOR_PRI_SMPTE432:
+                        case DAV1D_COLOR_PRI_EBU3213:
+                            break;
+                    }
+                    break;
+                case DAV1D_MC_IDENTITY:
+                case DAV1D_MC_FCC:
+                case DAV1D_MC_SMPTE240:
+                case DAV1D_MC_SMPTE_YCGCO:
+                case DAV1D_MC_BT2020_CL:
+                case DAV1D_MC_SMPTE2085:
+                case DAV1D_MC_CHROMAT_CL:
+                case DAV1D_MC_ICTCP:
+                    break;
+            }
+        }
+    }
+
+    void
     handle_picture(Dav1dPicture *picture)
     {
-#if 1
         Dav1dPictureParameters picparam = picture->p;
-        printf("frame width=%i, height=%i bpc=%i\n", picparam.w, picparam.h,
-               picparam.bpc);
 
         int height = picparam.w;
         int width = picparam.h;
 
         Dav1dSequenceHeader *seqhdr = picture->seq_hdr;
 
-        printf("Pixel layout=%s\n", str_pixel_layout(seqhdr->layout));
-        printf("Matrix coefficient=%s\n",
-               str_matrix_coefficient(seqhdr->mtrx));
-
         std::uint8_t *Y_data = (std::uint8_t *)picture->data[0];
         std::uint8_t *U_data = (std::uint8_t *)picture->data[1];
         std::uint8_t *V_data = (std::uint8_t *)picture->data[2];
-
-        printf("Y stride: %i, UV stride: %i\n", (picture->stride)[0],
-               (picture->stride)[1]);
-
         ptrdiff_t Y_stride = picture->stride[0];
         ptrdiff_t UV_stride = picture->stride[1];
 
+        const struct libyuv::YuvConstants *matrixYUV = nullptr;
+        // we probably don't need this one but I'll leave it for now
+        const struct libyuv::YuvConstants *matrixYVU = nullptr;
+        this->get_matrix_coefficients(seqhdr, &matrixYUV, &matrixYVU);
+        assert(matrixYUV != nullptr);
+
+        int rgba_size = width * height * 4;
+        std::uint8_t *rgba_data = new std::uint8_t[rgba_size];
+        ptrdiff_t rgba_stride = width * 4;
+
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
+            libyuv::I420ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride,
+                                     V_data, UV_stride, rgba_data, rgba_stride,
+                                     matrixYUV, width, height);
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
+            libyuv::I400ToARGBMatrix(Y_data, Y_stride, rgba_data, rgba_stride,
+                                     matrixYUV, width, height);
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
+            libyuv::I422ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride,
+                                     V_data, UV_stride, rgba_data, rgba_stride,
+                                     matrixYUV, width, height);
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
-            uint8_t Y;
-            uint8_t U;
-            uint8_t V;
-
-            for (int y_loc = 0; y_loc < height; y_loc++) {
-                for (int x_loc = 0; x_loc < width; x_loc++) {
-                    Y = Y_data[y_loc * Y_stride + x_loc];
-                    U = U_data[y_loc * UV_stride + x_loc];
-                    V = V_data[y_loc * UV_stride + x_loc];
-                    printf("yuv= (%i, %i, %i)\n", Y, U, V);
-                }
-            }
+            libyuv::I444ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride,
+                                     V_data, UV_stride, rgba_data, rgba_stride,
+                                     matrixYUV, width, height);
         }
 
-#endif
+        for (int i = 0; i < rgba_size; i += 4) {
+            printf("RGBA (%d, %d, %d, %d)\n", rgba_data[i], rgba_data[i + 1],
+                   rgba_data[i + 2], rgba_data[i + 3]);
+        }
+
+        delete[] rgba_data;
         dav1d_picture_unref(picture);
     }
 
