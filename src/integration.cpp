@@ -19,7 +19,7 @@
 using namespace webm;
 
 void
-dealloc_buffer(const uint8_t *data, void *cookie)
+dealloc_buffer(const std::uint8_t *data, void *cookie)
 {
     delete[] data;
 }
