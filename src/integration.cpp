@@ -158,117 +158,64 @@ class Av1Callback : public Callback {
         }
     }
 
-    void
-    get_matrix_coefficients(Dav1dSequenceHeader *seqhdr,
-                            const struct libyuv::YuvConstants **matrixYUV,
-                            const struct libyuv::YuvConstants **matrixYVU)
+    const struct libyuv::YuvConstants *
+    get_matrix_coefficients(Dav1dSequenceHeader *seqhdr)
     {
         if (seqhdr->color_range) {
             switch (seqhdr->mtrx) {
                 case DAV1D_MC_BT709:
-                    *matrixYUV = &libyuv::kYuvF709Constants;
-                    *matrixYVU = &libyuv::kYvuF709Constants;
-                    break;
+                    return &libyuv::kYuvF709Constants;
                 case DAV1D_MC_BT470BG:
                 case DAV1D_MC_BT601:
                 case DAV1D_MC_UNKNOWN:
-                    *matrixYUV = &libyuv::kYuvJPEGConstants;
-                    *matrixYVU = &libyuv::kYvuJPEGConstants;
-                    break;
+                    return &libyuv::kYuvJPEGConstants;
                 case DAV1D_MC_BT2020_NCL:
-                    *matrixYUV = &libyuv::kYuvV2020Constants;
-                    *matrixYVU = &libyuv::kYvuV2020Constants;
-                    break;
+                    return &libyuv::kYuvV2020Constants;
                 case DAV1D_MC_CHROMAT_NCL:
                     switch (seqhdr->pri) {
                         case DAV1D_COLOR_PRI_BT709:
                         case DAV1D_COLOR_PRI_UNKNOWN:
-                            *matrixYUV = &libyuv::kYuvF709Constants;
-                            *matrixYVU = &libyuv::kYvuF709Constants;
-                            break;
+                            return &libyuv::kYuvF709Constants;
                         case DAV1D_COLOR_PRI_BT470BG:
                         case DAV1D_COLOR_PRI_BT601:
-                            *matrixYUV = &libyuv::kYuvJPEGConstants;
-                            *matrixYVU = &libyuv::kYvuJPEGConstants;
-                            break;
+                            return &libyuv::kYuvJPEGConstants;
                         case DAV1D_COLOR_PRI_BT2020:
-                            *matrixYUV = &libyuv::kYuvV2020Constants;
-                            *matrixYVU = &libyuv::kYvuV2020Constants;
-                            break;
-                        case DAV1D_COLOR_PRI_BT470M:
-                        case DAV1D_COLOR_PRI_SMPTE240:
-                        case DAV1D_COLOR_PRI_FILM:
-                        case DAV1D_COLOR_PRI_XYZ:
-                        case DAV1D_COLOR_PRI_SMPTE431:
-                        case DAV1D_COLOR_PRI_SMPTE432:
-                        case DAV1D_COLOR_PRI_EBU3213:
-                            break;
+                            return &libyuv::kYuvV2020Constants;
+                        default:
+                            return nullptr;
                     }
-                    break;
-                case DAV1D_MC_IDENTITY:
-                case DAV1D_MC_FCC:
-                case DAV1D_MC_SMPTE240:
-                case DAV1D_MC_SMPTE_YCGCO:
-                case DAV1D_MC_BT2020_CL:
-                case DAV1D_MC_SMPTE2085:
-                case DAV1D_MC_CHROMAT_CL:
-                case DAV1D_MC_ICTCP:
-                    break;
+                default:
+                    return nullptr;
             }
         }
         else {
             switch (seqhdr->mtrx) {
                 case DAV1D_MC_BT709:
-                    *matrixYUV = &libyuv::kYuvH709Constants;
-                    *matrixYVU = &libyuv::kYvuH709Constants;
-                    break;
+                    return &libyuv::kYuvH709Constants;
                 case DAV1D_MC_BT470BG:
                 case DAV1D_MC_BT601:
                 case DAV1D_MC_UNKNOWN:
-                    *matrixYUV = &libyuv::kYuvI601Constants;
-                    *matrixYVU = &libyuv::kYvuI601Constants;
-                    break;
+                    return &libyuv::kYuvI601Constants;
                 case DAV1D_MC_BT2020_NCL:
-                    *matrixYUV = &libyuv::kYuv2020Constants;
-                    *matrixYVU = &libyuv::kYvu2020Constants;
-                    break;
+                    return &libyuv::kYuv2020Constants;
                 case DAV1D_MC_CHROMAT_NCL:
                     switch (seqhdr->pri) {
                         case DAV1D_COLOR_PRI_BT709:
                         case DAV1D_COLOR_PRI_UNKNOWN:
-                            *matrixYUV = &libyuv::kYuvH709Constants;
-                            *matrixYVU = &libyuv::kYvuH709Constants;
-                            break;
+                            return &libyuv::kYuvH709Constants;
                         case DAV1D_COLOR_PRI_BT470BG:
                         case DAV1D_COLOR_PRI_BT601:
-                            *matrixYUV = &libyuv::kYuvI601Constants;
-                            *matrixYVU = &libyuv::kYvuI601Constants;
-                            break;
+                            return &libyuv::kYuvI601Constants;
                         case DAV1D_COLOR_PRI_BT2020:
-                            *matrixYUV = &libyuv::kYuv2020Constants;
-                            *matrixYVU = &libyuv::kYvu2020Constants;
-                            break;
-                        case DAV1D_COLOR_PRI_BT470M:
-                        case DAV1D_COLOR_PRI_SMPTE240:
-                        case DAV1D_COLOR_PRI_FILM:
-                        case DAV1D_COLOR_PRI_XYZ:
-                        case DAV1D_COLOR_PRI_SMPTE431:
-                        case DAV1D_COLOR_PRI_SMPTE432:
-                        case DAV1D_COLOR_PRI_EBU3213:
-                            break;
+                            return &libyuv::kYuv2020Constants;
+                        default:
+                            return nullptr;
                     }
-                    break;
-                case DAV1D_MC_IDENTITY:
-                case DAV1D_MC_FCC:
-                case DAV1D_MC_SMPTE240:
-                case DAV1D_MC_SMPTE_YCGCO:
-                case DAV1D_MC_BT2020_CL:
-                case DAV1D_MC_SMPTE2085:
-                case DAV1D_MC_CHROMAT_CL:
-                case DAV1D_MC_ICTCP:
-                    break;
+                default:
+                    return nullptr;
             }
         }
+        return nullptr;
     }
 
     void
@@ -287,47 +234,54 @@ class Av1Callback : public Callback {
         ptrdiff_t Y_stride = picture->stride[0];
         ptrdiff_t UV_stride = picture->stride[1];
 
-        const struct libyuv::YuvConstants *matrixYUV = nullptr;
-        // we probably don't need this one but I'll leave it for now
-        const struct libyuv::YuvConstants *matrixYVU = nullptr;
-        this->get_matrix_coefficients(seqhdr, &matrixYUV, &matrixYVU);
-        assert(matrixYUV != nullptr);
+        int bgra_size = width * height * 4;
+        std::uint8_t *bgra_data = new std::uint8_t[bgra_size];
+        ptrdiff_t bgra_stride = width * 4;
+        assert(bgra_data != NULL);
 
-        int rgba_size = width * height * 4;
-        std::uint8_t *rgba_data = new std::uint8_t[rgba_size];
-        ptrdiff_t rgba_stride = width * 4;
+        if (seqhdr->mtrx == DAV1D_MC_IDENTITY &&
+            seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
+            // manually copy the data (look for a better way to do this)
+            int dest_index = 0;
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int source_index = y * Y_stride + x;
+                    bgra_data[dest_index++] = U_data[source_index];
+                    bgra_data[dest_index++] = Y_data[source_index];
+                    bgra_data[dest_index++] = V_data[source_index];
+                    bgra_data[dest_index++] = 255;
+                }
+            }
+        }
+        else {
+            const struct libyuv::YuvConstants *matrixYUV =
+                this->get_matrix_coefficients(seqhdr);
+            assert(matrixYUV != nullptr);
 
-        // assert(rgba_data != NULL);
-
-        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
-            libyuv::I420ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride,
-                                     V_data, UV_stride, rgba_data, rgba_stride,
-                                     matrixYUV, width, height);
+            if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
+                libyuv::I420ToARGBMatrix(
+                    Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                    bgra_data, bgra_stride, matrixYUV, width, height);
+            }
+            if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
+                libyuv::I400ToARGBMatrix(Y_data, Y_stride, bgra_data,
+                                         bgra_stride, matrixYUV, width,
+                                         height);
+            }
+            if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
+                libyuv::I422ToARGBMatrix(
+                    Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                    bgra_data, bgra_stride, matrixYUV, width, height);
+            }
+            if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
+                libyuv::I444ToARGBMatrix(
+                    Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                    bgra_data, bgra_stride, matrixYUV, width, height);
+            }
         }
-        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
-            libyuv::I400ToARGBMatrix(Y_data, Y_stride, rgba_data, rgba_stride,
-                                     matrixYUV, width, height);
-        }
-        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
-            libyuv::I422ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride,
-                                     V_data, UV_stride, rgba_data, rgba_stride,
-                                     matrixYUV, width, height);
-        }
-        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
-            libyuv::I444ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride,
-                                     V_data, UV_stride, rgba_data, rgba_stride,
-                                     matrixYUV, width, height);
-        }
-
-#if 0
-        for (int i = 0; i < rgba_size; i += 4) {
-            printf("RGBA (%d, %d, %d, %d)\n", rgba_data[i], rgba_data[i + 1],
-                   rgba_data[i + 2], rgba_data[i + 3]);
-        }
-#endif
 
         SDL_Surface *frame = SDL_CreateRGBSurfaceWithFormatFrom(
-            (void *)rgba_data, width, height, 32, rgba_stride,
+            (void *)bgra_data, width, height, 32, bgra_stride,
             SDL_PIXELFORMAT_BGRA32);
 
         SDL_SetWindowSize(this->window, width, height);
@@ -344,7 +298,7 @@ class Av1Callback : public Callback {
         // char delay[10];
         // std::cin >> delay;
 
-        delete[] rgba_data;
+        delete[] bgra_data;
         dav1d_picture_unref(picture);
     }
 
