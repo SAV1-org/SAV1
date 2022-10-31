@@ -13,6 +13,9 @@
 
 #include <dav1d/dav1d.h>
 
+#define SDL_MAIN_HANDLED
+#include <SDL2/SDL.h>
+
 using namespace webm;
 
 void
@@ -93,15 +96,26 @@ str_pixel_layout(int constant)
     return val;
 }
 
+void
+poll_events()
+{
+    SDL_Event event;
+
+    while (SDL_PollEvent(&event)) {
+        continue;
+    }
+}
+
 class Av1Callback : public Callback {
    public:
     void
-    setup(Dav1dContext *context)
+    setup(Dav1dContext *context, SDL_Window *window)
     {
         // this should be moved to the constructor
         this->av1_track_number = -1;
         this->opus_track_number = -1;
         this->context = context;
+        this->window = window;
     }
 
     bool
@@ -262,8 +276,8 @@ class Av1Callback : public Callback {
     {
         Dav1dPictureParameters picparam = picture->p;
 
-        int height = picparam.w;
-        int width = picparam.h;
+        int width = picparam.w;
+        int height = picparam.h;
 
         Dav1dSequenceHeader *seqhdr = picture->seq_hdr;
 
@@ -282,6 +296,8 @@ class Av1Callback : public Callback {
         int rgba_size = width * height * 4;
         std::uint8_t *rgba_data = new std::uint8_t[rgba_size];
         ptrdiff_t rgba_stride = width * 4;
+
+        // assert(rgba_data != NULL);
 
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
             libyuv::I420ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride,
@@ -303,10 +319,30 @@ class Av1Callback : public Callback {
                                      matrixYUV, width, height);
         }
 
+#if 0
         for (int i = 0; i < rgba_size; i += 4) {
             printf("RGBA (%d, %d, %d, %d)\n", rgba_data[i], rgba_data[i + 1],
                    rgba_data[i + 2], rgba_data[i + 3]);
         }
+#endif
+
+        SDL_Surface *frame = SDL_CreateRGBSurfaceWithFormatFrom(
+            (void *)rgba_data, width, height, 32, rgba_stride,
+            SDL_PIXELFORMAT_BGRA32);
+
+        SDL_SetWindowSize(this->window, width, height);
+        SDL_Surface *screen = SDL_GetWindowSurface(this->window);
+        // SDL_SaveBMP(frame, "output.bmp");
+
+        SDL_BlitSurface(frame, NULL, screen, NULL);
+        SDL_UpdateWindowSurface(this->window);
+        SDL_FreeSurface(frame);
+
+        poll_events();
+
+        /* frame by frame input delay */
+        // char delay[10];
+        // std::cin >> delay;
 
         delete[] rgba_data;
         dav1d_picture_unref(picture);
@@ -434,6 +470,7 @@ class Av1Callback : public Callback {
     uint64_t opus_track_number;
     uint64_t current_track_number;
     Dav1dContext *context;
+    SDL_Window *window;
 };
 
 int
@@ -459,8 +496,13 @@ main(int argc, char *argv[])
     Dav1dContext *context;
     dav1d_open(&context, &settings);
 
+    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_Window *window =
+        SDL_CreateWindow("!!AV1 != !!False", SDL_WINDOWPOS_UNDEFINED,
+                         SDL_WINDOWPOS_UNDEFINED, 500, 500, 0);
+
     // setup the callback class
-    callback.setup(context);
+    callback.setup(context, window);
 
     // parse the input file
     Status status = parser.Feed(&callback, &reader);

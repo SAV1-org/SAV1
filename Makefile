@@ -13,7 +13,7 @@ all_dependencies:
 	$(MAKE) libyuv
 
 integration:
-	g++ -o integration.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/integration.cpp
+	g++ -o integration.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -Ldependencies/SDL2/lib -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/integration.cpp
 
 integration_static:
 	g++ -o integration.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libwebm/webm_parser -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d src/integration.cpp dependencies/libwebm/webm_parser/src/*.cc dependencies/libyuv/source/*.cc
