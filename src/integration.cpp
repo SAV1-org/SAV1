@@ -219,6 +219,46 @@ class Av1Callback : public Callback {
     }
 
     void
+    convert_yuv_to_rgb_with_identity_matrix(
+        std::uint8_t *Y_data, ptrdiff_t Y_stride, std::uint8_t *U_data,
+        std::uint8_t *V_data, ptrdiff_t UV_stride, std::uint8_t *bgra_data,
+        ptrdiff_t bgra_stride, Dav1dPixelLayout layout, int width, int height)
+    {
+        int chroma_sampling_horizontal = 1;
+        int chroma_sampling_vertical = 1;
+        if (layout != DAV1D_PIXEL_LAYOUT_I444) {
+            chroma_sampling_horizontal = 2;
+            if (layout == DAV1D_PIXEL_LAYOUT_I420) {
+                chroma_sampling_vertical = 2;
+            }
+        }
+
+        for (int y = 0; y < height; y++) {
+            int dest_index = y * bgra_stride;
+            for (int x = 0; x < width; x++) {
+                int Y_index = y * Y_stride + x;
+                int UV_index = y / chroma_sampling_vertical * UV_stride +
+                               x / chroma_sampling_horizontal;
+
+                if (layout == DAV1D_PIXEL_LAYOUT_I400) {
+                    // grayscale
+                    bgra_data[dest_index++] = Y_data[Y_index];
+                    bgra_data[dest_index++] = Y_data[Y_index];
+                    bgra_data[dest_index++] = Y_data[Y_index];
+                    bgra_data[dest_index++] = 255;
+                }
+                else {
+                    // color
+                    bgra_data[dest_index++] = U_data[UV_index];
+                    bgra_data[dest_index++] = Y_data[Y_index];
+                    bgra_data[dest_index++] = V_data[UV_index];
+                    bgra_data[dest_index++] = 255;
+                }
+            }
+        }
+    }
+
+    void
     handle_picture(Dav1dPicture *picture)
     {
         Dav1dPictureParameters picparam = picture->p;
@@ -239,19 +279,11 @@ class Av1Callback : public Callback {
         ptrdiff_t bgra_stride = width * 4;
         assert(bgra_data != NULL);
 
-        if (seqhdr->mtrx == DAV1D_MC_IDENTITY &&
-            seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
-            // manually copy the data (look for a better way to do this)
-            int dest_index = 0;
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int source_index = y * Y_stride + x;
-                    bgra_data[dest_index++] = U_data[source_index];
-                    bgra_data[dest_index++] = Y_data[source_index];
-                    bgra_data[dest_index++] = V_data[source_index];
-                    bgra_data[dest_index++] = 255;
-                }
-            }
+        if (seqhdr->mtrx == DAV1D_MC_IDENTITY) {
+            // this function takes way too many arguments
+            convert_yuv_to_rgb_with_identity_matrix(
+                Y_data, Y_stride, U_data, V_data, UV_stride, bgra_data,
+                bgra_stride, seqhdr->layout, width, height);
         }
         else {
             const struct libyuv::YuvConstants *matrixYUV =
@@ -286,7 +318,7 @@ class Av1Callback : public Callback {
 
         SDL_SetWindowSize(this->window, width, height);
         SDL_Surface *screen = SDL_GetWindowSurface(this->window);
-        // SDL_SaveBMP(frame, "output.bmp");
+        SDL_SaveBMP(frame, "output.bmp");
 
         SDL_BlitSurface(frame, NULL, screen, NULL);
         SDL_UpdateWindowSurface(this->window);
@@ -295,8 +327,8 @@ class Av1Callback : public Callback {
         poll_events();
 
         /* frame by frame input delay */
-        // char delay[10];
-        // std::cin >> delay;
+        std::cout << "Press enter to advance to next frame...";
+        std::cin.ignore();
 
         delete[] bgra_data;
         dav1d_picture_unref(picture);
