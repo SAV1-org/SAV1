@@ -77,32 +77,34 @@ main(int argc, char *argv[])
                     printf("The requested file does not contain an av1 track\n");
                 }
             }
+            else {
+                decode_frame(dc, pc->data, pc->size);
 
-            decode_frame(dc, pc->data, pc->size);
+                width = dc->dav1d_picture->p.w;
+                height = dc->dav1d_picture->p.h;
+                ptrdiff_t pixel_buffer_stride = 4 * width;
+                size_t pixel_buffer_size = pixel_buffer_stride * height;
+                // resize the pixel buffer if necessary
+                if (pixel_buffer_size > pixel_buffer_capacity) {
+                    pixel_buffer_capacity = pixel_buffer_size;
+                    free(pixel_buffer);
+                    pixel_buffer =
+                        (uint8_t *)malloc(pixel_buffer_capacity * sizeof(uint8_t));
+                }
 
-            width = dc->dav1d_picture->p.w;
-            height = dc->dav1d_picture->p.h;
-            ptrdiff_t pixel_buffer_stride = 4 * width;
-            size_t pixel_buffer_size = pixel_buffer_stride * height;
-            // resize the pixel buffer if necessary
-            if (pixel_buffer_size > pixel_buffer_capacity) {
-                pixel_buffer_capacity = pixel_buffer_size;
-                free(pixel_buffer);
-                pixel_buffer = (uint8_t *)malloc(pixel_buffer_capacity * sizeof(uint8_t));
+                // convert the color space
+                convert(dc->dav1d_picture, pixel_buffer, pixel_buffer_stride);
+
+                frame = SDL_CreateRGBSurfaceWithFormatFrom(
+                    (void *)pixel_buffer, width, height, 32, pixel_buffer_stride,
+                    SDL_PIXELFORMAT_BGRA32);
+
+                SDL_SetWindowSize(window, width, height);
+                screen = SDL_GetWindowSurface(window);  // this may be unneccessary
+                SDL_BlitSurface(frame, NULL, screen, NULL);
+
+                frame_is_ready = 1;
             }
-
-            // convert the color space
-            convert(dc->dav1d_picture, pixel_buffer, pixel_buffer_stride);
-
-            frame = SDL_CreateRGBSurfaceWithFormatFrom((void *)pixel_buffer, width,
-                                                       height, 32, pixel_buffer_stride,
-                                                       SDL_PIXELFORMAT_BGRA32);
-
-            SDL_SetWindowSize(window, width, height);
-            screen = SDL_GetWindowSurface(window);  // this may be unneccessary
-            SDL_BlitSurface(frame, NULL, screen, NULL);
-
-            frame_is_ready = 1;
         }
 
         while (SDL_PollEvent(&event)) {
