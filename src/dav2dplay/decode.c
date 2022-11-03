@@ -3,7 +3,7 @@
 void
 dealloc_buffer(const uint8_t *data, void *cookie)
 {
-    free(data);
+    free((uint8_t *) data);
 }
 
 void
@@ -61,8 +61,4 @@ decode_frame(DecodeContext *context, uint8_t *input, size_t size)
         }
 
     } while (status == DAV1D_ERR(EAGAIN) || data.sz > 0);
-}
-
-int main(int argc, char **argv) {  // ONLY TO MAKE COMPILER HAPPY | DELETE LATER
-    return 0;
 }

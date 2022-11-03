@@ -152,7 +152,3 @@ convert(Dav1dPicture *picture, uint8_t *bgra_data, size_t bgra_stride)
         }
     }
 }
-
-int main(int argc, char **argv) {  // ONLY TO MAKE COMPILER HAPPY | DELETE LATER
-    return 0;
-}
