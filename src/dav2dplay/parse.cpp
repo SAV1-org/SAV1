@@ -197,9 +197,3 @@ parse_get_next_frame(ParseContext *context)
     }
     return PARSE_ERROR;
 }
-
-int
-main()
-{
-    return 0;
-}
