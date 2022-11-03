@@ -3,11 +3,10 @@
 using namespace libyuv;
 
 void
-convert_yuv_to_rgb_with_identity_matrix(uint8_t *Y_data, uint8_t Y_stride,
-                                        uint8_t *U_data, uint8_t *V_data,
-                                        uint8_t UV_stride, uint8_t *bgra_data,
-                                        uint8_t bgra_stride, Dav1dPixelLayout layout,
-                                        int width, int height)
+convert_yuv_to_rgb_with_identity_matrix(uint8_t *Y_data, size_t Y_stride, uint8_t *U_data,
+                                        uint8_t *V_data, size_t UV_stride,
+                                        uint8_t *bgra_data, size_t bgra_stride,
+                                        Dav1dPixelLayout layout, int width, int height)
 {
     int chroma_sampling_horizontal = 1;
     int chroma_sampling_vertical = 1;
@@ -116,8 +115,8 @@ convert(Dav1dPicture *picture, uint8_t *bgra_data, size_t bgra_stride)
     uint8_t *Y_data = (uint8_t *)picture->data[0];
     uint8_t *U_data = (uint8_t *)picture->data[1];
     uint8_t *V_data = (uint8_t *)picture->data[2];
-    uint8_t Y_stride = picture->stride[0];
-    uint8_t UV_stride = picture->stride[1];
+    size_t Y_stride = picture->stride[0];
+    size_t UV_stride = picture->stride[1];
 
     if (seqhdr->mtrx == DAV1D_MC_IDENTITY) {
         // this function takes way too many arguments
@@ -146,4 +145,5 @@ convert(Dav1dPicture *picture, uint8_t *bgra_data, size_t bgra_stride)
                              bgra_data, bgra_stride, matrixYUV, width, height);
         }
     }
+    dav1d_picture_unref(picture);
 }
