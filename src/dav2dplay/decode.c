@@ -51,22 +51,17 @@ decode_frame(DecodeContext *context, uint8_t *input, size_t size)
         }
 
         // attempt to get picture from dav1d
-        int picture_status;
-        picture_status =
-            dav1d_get_picture(context->dav1d_context, context->dav1d_picture);
+        status = dav1d_get_picture(context->dav1d_context, context->dav1d_picture);
 
         // try one more time if dav1d tells us to (we usually have to)
-        if (picture_status == DAV1D_ERR(EAGAIN)) {
-            picture_status =
-                dav1d_get_picture(context->dav1d_context, context->dav1d_picture);
+        if (status == DAV1D_ERR(EAGAIN)) {
+            status = dav1d_get_picture(context->dav1d_context, context->dav1d_picture);
         }
-        if (picture_status == 0) {
-            // Successfully got picture
-            return 0;
+        if (status) {
+            return -status;
         }
-        else {
-            return -picture_status;
-        }
+        // Successfully got picture
+        return 0;
 
-    } while (status == DAV1D_ERR(EAGAIN) || data.sz > 0);
+    } while (data.sz > 0);
 }
