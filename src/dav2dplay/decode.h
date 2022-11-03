@@ -7,7 +7,7 @@
 
 typedef struct DecodeContext {
     Dav1dContext *dc;
-    Dav1dPicture picture;
+    Dav1dPicture *picture;
 } DecodeContext;
 
 void

@@ -46,10 +46,10 @@ decode_frame(DecodeContext *context, uint8_t *input, size_t size)
         // Attempt to get picture from dav1d
         int picture_status;
 
-        picture_status = dav1d_get_picture(context->dc, &context->picture);
+        picture_status = dav1d_get_picture(context->dc, context->picture);
         // try one more time if dav1d tells us to (we usually have to)
         if (picture_status == DAV1D_ERR(EAGAIN)) {
-            picture_status = dav1d_get_picture(context->dc, &context->picture);
+            picture_status = dav1d_get_picture(context->dc, context->picture);
         }
         if (picture_status == 0) {
             fprintf(stderr, "got picture from dav1d\n");
