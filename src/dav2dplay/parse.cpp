@@ -7,14 +7,44 @@ class Av1Callback : public Callback {
     void
     init(ParseContext *context)
     {
-        this->av1_track_number = -1;
         this->context = context;
+        this->av1_track_number = -1;
+        this->timecode_scale = 0;
+        this->cluster_timecode = 0;
     }
 
     bool
     found_av1_track()
     {
         return this->av1_track_number != -1;
+    }
+
+    void
+    calculate_timecode(std::int16_t relative_time)
+    {
+        std::uint64_t total_time = this->cluster_timecode + relative_time;
+        this->context->timecode = (total_time * this->timecode_scale) / 1000000;
+    }
+
+    Status
+    OnInfo(const ElementMetadata &metadata, const Info &info) override
+    {
+        if (info.timecode_scale.is_present()) {
+            this->timecode_scale = info.timecode_scale.value();
+        }
+        return Status(Status::kOkCompleted);
+    }
+
+    Status
+    OnClusterBegin(const ElementMetadata &metadata, const Cluster &cluster,
+                   Action *action) override
+    {
+        assert(action != nullptr);
+        *action = Action::kRead;
+        if (cluster.timecode.is_present()) {
+            this->cluster_timecode = cluster.timecode.value();
+        }
+        return Status(Status::kOkCompleted);
     }
 
     Status
@@ -34,6 +64,7 @@ class Av1Callback : public Callback {
     {
         if (simple_block.track_number == this->av1_track_number) {
             *action = Action::kRead;
+            this->calculate_timecode(simple_block.timecode);
         }
         else {
             *action = Action::kSkip;
@@ -47,6 +78,7 @@ class Av1Callback : public Callback {
     {
         if (block.track_number == this->av1_track_number) {
             *action = Action::kRead;
+            this->calculate_timecode(block.timecode);
         }
         else {
             *action = Action::kSkip;
@@ -90,6 +122,8 @@ class Av1Callback : public Callback {
    private:
     std::uint64_t av1_track_number;
     ParseContext *context;
+    std::uint64_t timecode_scale;
+    std::uint64_t cluster_timecode;
 };
 
 typedef struct ParseInternalState {
@@ -162,4 +196,10 @@ parse_get_next_frame(ParseContext *context)
         return PARSE_OK;
     }
     return PARSE_ERROR;
+}
+
+int
+main()
+{
+    return 0;
 }
