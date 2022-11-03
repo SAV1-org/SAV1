@@ -99,9 +99,13 @@ class Av1Callback : public Callback {
 
         // resize the buffer if it's not big enough
         context->size = *bytes_remaining;
+        int needs_resize = 0;
         while (context->size > context->capacity) {
-            delete[] context->data;
+            needs_resize = 1;
             context->capacity *= 2;
+        }
+        if (needs_resize) {
+            delete[] context->data;
             context->data = new std::uint8_t[context->capacity];
         }
 
@@ -157,7 +161,7 @@ parse_init(ParseContext **context, char *file_name)
     parse_context->timecode = 0;
 
     // create the data buffer
-    parse_context->capacity = 512;
+    parse_context->capacity = 1024;
     parse_context->data = new std::uint8_t[parse_context->capacity];
 
     // initialize the callback class

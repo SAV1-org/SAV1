@@ -8,10 +8,10 @@
 #include <webm/status.h>
 #include <webm/webm_parser.h>
 
-#define PARSE_OK 0b00000000
-#define PARSE_END_OF_FILE 0b00000001
-#define PARSE_ERROR 0b00000010
-#define PARSE_NO_AV1_TRACK 0b00000100
+#define PARSE_OK 0
+#define PARSE_END_OF_FILE 1
+#define PARSE_ERROR 2
+#define PARSE_NO_AV1_TRACK 3
 
 typedef struct ParseContext {
     uint8_t *data;

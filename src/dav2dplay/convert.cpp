@@ -6,9 +6,8 @@ void
 convert_yuv_to_rgb_with_identity_matrix(uint8_t *Y_data, uint8_t Y_stride,
                                         uint8_t *U_data, uint8_t *V_data,
                                         uint8_t UV_stride, uint8_t *bgra_data,
-                                        uint8_t bgra_stride,
-                                        Dav1dPixelLayout layout, int width,
-                                        int height)
+                                        uint8_t bgra_stride, Dav1dPixelLayout layout,
+                                        int width, int height)
 {
     int chroma_sampling_horizontal = 1;
     int chroma_sampling_vertical = 1;
@@ -23,8 +22,8 @@ convert_yuv_to_rgb_with_identity_matrix(uint8_t *Y_data, uint8_t Y_stride,
         int dest_index = y * bgra_stride;
         for (int x = 0; x < width; x++) {
             int Y_index = y * Y_stride + x;
-            int UV_index = y / chroma_sampling_vertical * UV_stride +
-                            x / chroma_sampling_horizontal;
+            int UV_index =
+                y / chroma_sampling_vertical * UV_stride + x / chroma_sampling_horizontal;
 
             if (layout == DAV1D_PIXEL_LAYOUT_I400) {
                 // grayscale
@@ -120,35 +119,31 @@ convert(Dav1dPicture *picture, uint8_t *bgra_data, size_t bgra_stride)
     uint8_t Y_stride = picture->stride[0];
     uint8_t UV_stride = picture->stride[1];
 
-    // assert(bgra_data != NULL); CHANGE AND UNCOMMMENT
-
     if (seqhdr->mtrx == DAV1D_MC_IDENTITY) {
         // this function takes way too many arguments
         convert_yuv_to_rgb_with_identity_matrix(Y_data, Y_stride, U_data, V_data,
                                                 UV_stride, bgra_data, bgra_stride,
                                                 seqhdr->layout, width, height);
-    } else {
+    }
+    else {
         const struct YuvConstants *matrixYUV = get_matrix_coefficients(seqhdr);
-        // assert(matrixYUV != NULL);  CHANGE AND UNCOMMMENT
+        assert(matrixYUV != NULL);
 
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
-            I420ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data,
-                                        UV_stride, bgra_data, bgra_stride, matrixYUV,
-                                        width, height);
+            I420ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                             bgra_data, bgra_stride, matrixYUV, width, height);
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
-            I400ToARGBMatrix(Y_data, Y_stride, bgra_data, bgra_stride,
-                                        matrixYUV, width, height);
+            I400ToARGBMatrix(Y_data, Y_stride, bgra_data, bgra_stride, matrixYUV, width,
+                             height);
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
-            I422ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data,
-                                        UV_stride, bgra_data, bgra_stride, matrixYUV,
-                                        width, height);
+            I422ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                             bgra_data, bgra_stride, matrixYUV, width, height);
         }
         if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
-            I444ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data,
-                                        UV_stride, bgra_data, bgra_stride, matrixYUV,
-                                        width, height);
+            I444ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                             bgra_data, bgra_stride, matrixYUV, width, height);
         }
     }
 }

@@ -337,7 +337,6 @@ class Av1Callback : public Callback {
     decode_av1(std::uint8_t *buffer, std::uint64_t num_bytes)
     {
         Dav1dData data = {0};
-        Dav1dPicture pic = {0};
         int status;
 
         // wrap the OBUs in a Dav1dData struct
