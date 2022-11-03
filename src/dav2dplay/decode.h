@@ -1,13 +1,20 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <strings.h>
+#include <stdlib.h>
+
+#include <dav1d/dav1d.h>
+
 typedef struct DecodeContext {
     Dav1dContext *dc;
-    Dav1dPicture *picture;
-};
+    Dav1dPicture picture;
+} DecodeContext;
 
 void
-decode_init(struct DecodeContext *context);
+decode_init(DecodeContext *context);
 
 void
-decode_destroy(struct DecodeContext *context);
+decode_destroy(DecodeContext *context);
 
 int
-decode_frame(struct DecodeContext *context, std::uint8_t *data, std::size_t size);
+decode_frame(DecodeContext *context, uint8_t *data, size_t size);
