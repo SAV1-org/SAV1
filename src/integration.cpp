@@ -153,8 +153,7 @@ class Av1Callback : public Callback {
             this->handle_picture(&pic);
         }
         else {
-            std::cout << "failed to get picture: " << strerror(-status)
-                      << std::endl;
+            std::cout << "failed to get picture: " << strerror(-status) << std::endl;
         }
     }
 
@@ -219,10 +218,12 @@ class Av1Callback : public Callback {
     }
 
     void
-    convert_yuv_to_rgb_with_identity_matrix(
-        std::uint8_t *Y_data, ptrdiff_t Y_stride, std::uint8_t *U_data,
-        std::uint8_t *V_data, ptrdiff_t UV_stride, std::uint8_t *bgra_data,
-        ptrdiff_t bgra_stride, Dav1dPixelLayout layout, int width, int height)
+    convert_yuv_to_rgb_with_identity_matrix(std::uint8_t *Y_data, ptrdiff_t Y_stride,
+                                            std::uint8_t *U_data, std::uint8_t *V_data,
+                                            ptrdiff_t UV_stride, std::uint8_t *bgra_data,
+                                            ptrdiff_t bgra_stride,
+                                            Dav1dPixelLayout layout, int width,
+                                            int height)
     {
         int chroma_sampling_horizontal = 1;
         int chroma_sampling_vertical = 1;
@@ -281,9 +282,9 @@ class Av1Callback : public Callback {
 
         if (seqhdr->mtrx == DAV1D_MC_IDENTITY) {
             // this function takes way too many arguments
-            convert_yuv_to_rgb_with_identity_matrix(
-                Y_data, Y_stride, U_data, V_data, UV_stride, bgra_data,
-                bgra_stride, seqhdr->layout, width, height);
+            convert_yuv_to_rgb_with_identity_matrix(Y_data, Y_stride, U_data, V_data,
+                                                    UV_stride, bgra_data, bgra_stride,
+                                                    seqhdr->layout, width, height);
         }
         else {
             const struct libyuv::YuvConstants *matrixYUV =
@@ -291,30 +292,28 @@ class Av1Callback : public Callback {
             assert(matrixYUV != nullptr);
 
             if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
-                libyuv::I420ToARGBMatrix(
-                    Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
-                    bgra_data, bgra_stride, matrixYUV, width, height);
+                libyuv::I420ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data,
+                                         UV_stride, bgra_data, bgra_stride, matrixYUV,
+                                         width, height);
             }
             if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
-                libyuv::I400ToARGBMatrix(Y_data, Y_stride, bgra_data,
-                                         bgra_stride, matrixYUV, width,
-                                         height);
+                libyuv::I400ToARGBMatrix(Y_data, Y_stride, bgra_data, bgra_stride,
+                                         matrixYUV, width, height);
             }
             if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
-                libyuv::I422ToARGBMatrix(
-                    Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
-                    bgra_data, bgra_stride, matrixYUV, width, height);
+                libyuv::I422ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data,
+                                         UV_stride, bgra_data, bgra_stride, matrixYUV,
+                                         width, height);
             }
             if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
-                libyuv::I444ToARGBMatrix(
-                    Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
-                    bgra_data, bgra_stride, matrixYUV, width, height);
+                libyuv::I444ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data,
+                                         UV_stride, bgra_data, bgra_stride, matrixYUV,
+                                         width, height);
             }
         }
 
         SDL_Surface *frame = SDL_CreateRGBSurfaceWithFormatFrom(
-            (void *)bgra_data, width, height, 32, bgra_stride,
-            SDL_PIXELFORMAT_BGRA32);
+            (void *)bgra_data, width, height, 32, bgra_stride, SDL_PIXELFORMAT_BGRA32);
 
         SDL_SetWindowSize(this->window, width, height);
         SDL_Surface *screen = SDL_GetWindowSurface(this->window);
@@ -342,8 +341,7 @@ class Av1Callback : public Callback {
         int status;
 
         // wrap the OBUs in a Dav1dData struct
-        status =
-            dav1d_data_wrap(&data, buffer, num_bytes, dealloc_buffer, NULL);
+        status = dav1d_data_wrap(&data, buffer, num_bytes, dealloc_buffer, NULL);
         if (status) {
             std::cout << "dav1d data wrap failed: " << status << std::endl;
             return;
@@ -365,8 +363,7 @@ class Av1Callback : public Callback {
     }
 
     Status
-    OnTrackEntry(const ElementMetadata &metadata,
-                 const TrackEntry &track_entry) override
+    OnTrackEntry(const ElementMetadata &metadata, const TrackEntry &track_entry) override
     {
         // this is assuming at most one audio and one video track
         if (track_entry.codec_id.is_present()) {
@@ -381,8 +378,7 @@ class Av1Callback : public Callback {
     }
 
     Status
-    OnSimpleBlockBegin(const ElementMetadata &metadata,
-                       const SimpleBlock &simple_block,
+    OnSimpleBlockBegin(const ElementMetadata &metadata, const SimpleBlock &simple_block,
                        Action *action) override
     {
         this->current_track_number = simple_block.track_number;
@@ -432,8 +428,7 @@ class Av1Callback : public Callback {
         // read frame data until there's no more to read
         Status status;
         do {
-            status =
-                reader->Read(*bytes_remaining, buffer_location, &num_read);
+            status = reader->Read(*bytes_remaining, buffer_location, &num_read);
             buffer_location += num_read;
             *bytes_remaining -= num_read;
         } while (status.code == Status::kOkPartial);
@@ -483,9 +478,8 @@ main(int argc, char *argv[])
     dav1d_open(&context, &settings);
 
     SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_Window *window =
-        SDL_CreateWindow("!!AV1 != !!False", SDL_WINDOWPOS_UNDEFINED,
-                         SDL_WINDOWPOS_UNDEFINED, 500, 500, 0);
+    SDL_Window *window = SDL_CreateWindow("!!AV1 != !!False", SDL_WINDOWPOS_UNDEFINED,
+                                          SDL_WINDOWPOS_UNDEFINED, 500, 500, 0);
 
     // setup the callback class
     callback.setup(context, window);
@@ -496,13 +490,11 @@ main(int argc, char *argv[])
         std::cout << "Parsing successfully completed" << std::endl;
     }
     else {
-        std::cout << "Parsing failed with status code: " << status.code
-                  << std::endl;
+        std::cout << "Parsing failed with status code: " << status.code << std::endl;
     }
 
     if (!callback.found_av1_track()) {
-        std::cout << "The requested file does not contain an av1 track"
-                  << std::endl;
+        std::cout << "The requested file does not contain an av1 track" << std::endl;
     }
 
     // close the file
