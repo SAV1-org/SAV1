@@ -11,7 +11,7 @@ decode_init(DecodeContext *context)
 {
     Dav1dSettings settings = {0};
     dav1d_default_settings(&settings);
-    dav1d_open(context->dc, &settings);
+    dav1d_open(&context->dc, &settings);
 }
 
 void
