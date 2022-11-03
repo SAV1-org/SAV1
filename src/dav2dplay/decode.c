@@ -9,14 +9,15 @@ dealloc_buffer(const uint8_t *data, void *cookie)
 void
 decode_init(DecodeContext *context)
 {
-    Dav1dContext *dc;
-    context->dc = dc;
+    Dav1dSettings settings = {0};
+    dav1d_default_settings(&settings);
+    dav1d_open(context->dc, &settings);
 }
 
 void
 decode_destroy(DecodeContext *context)
 {
-    free(context);
+    dav1d_close(&context->dc);
 }
 
 int
