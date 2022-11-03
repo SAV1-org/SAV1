@@ -2,6 +2,7 @@
 #define DECODE_H
 
 #include <cassert>
+#include <cstring>
 
 #include <dav1d/dav1d.h>
 

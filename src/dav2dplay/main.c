@@ -72,6 +72,7 @@ main(int argc, char *argv[])
 
         // convert the color space
         convert(dc->dav1d_picture, pixel_buffer, pixel_buffer_stride);
+        dav1d_picture_unref(dc->dav1d_picture);
 
         SDL_Surface *frame = SDL_CreateRGBSurfaceWithFormatFrom(
             (void *)pixel_buffer, width, height, 32, pixel_buffer_stride,

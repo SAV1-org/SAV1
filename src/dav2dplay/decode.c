@@ -22,7 +22,6 @@ decode_init(DecodeContext **context)
 void
 decode_destroy(DecodeContext *context)
 {
-    dav1d_picture_unref(context->dav1d_picture);
     dav1d_close(&context->dav1d_context);
     free(context->dav1d_picture);
     free(context);
@@ -34,8 +33,6 @@ decode_frame(DecodeContext *context, uint8_t *input, size_t size)
     Dav1dData data = {0};
     int status;
 
-    dav1d_picture_unref(context->dav1d_picture);
-
     // wrap the OBUs in a Dav1dData struct
     status = dav1d_data_wrap(&data, input, size, fake_dealloc, NULL);
     if (status) {
@@ -43,6 +40,8 @@ decode_frame(DecodeContext *context, uint8_t *input, size_t size)
     }
 
     do {
+        memset(context->dav1d_picture, 0, sizeof(Dav1dPicture));
+
         // send the OBUs to dav1d
         status = dav1d_send_data(context->dav1d_context, &data);
         if (status && status != DAV1D_ERR(EAGAIN)) {
