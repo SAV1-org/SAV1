@@ -18,6 +18,9 @@ integration:
 integration_static:
 	g++ -o integration.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libwebm/webm_parser -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 src/integration.cpp dependencies/libwebm/webm_parser/src/*.cc dependencies/libyuv/source/*.cc
 
+dav2dplay:
+	g++ -o dav2dplay.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/dav2dplay/main.c src/dav2dplay/parse.cpp src/dav2dplay/decode.c src/dav2dplay/convert.cpp 
+
 dav1d_test:
 	gcc src/test.c -Idependencies/dav1d/include -L. -ldav1d 
 

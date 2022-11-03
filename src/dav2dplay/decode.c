@@ -3,7 +3,7 @@
 void
 dealloc_buffer(const uint8_t *data, void *cookie)
 {
-    free((uint8_t *) data);
+    //free((uint8_t *) data);
 }
 
 void
@@ -12,19 +12,21 @@ decode_init(DecodeContext *context)
     Dav1dSettings settings = {0};
     dav1d_default_settings(&settings);
     dav1d_open(&context->dc, &settings);
+
+    context->picture = (Dav1dPicture*) malloc(sizeof(Dav1dPicture));
 }
 
 void
 decode_destroy(DecodeContext *context)
 {
     dav1d_close(&context->dc);
+    free(context->picture);
 }
 
 int
 decode_frame(DecodeContext *context, uint8_t *input, size_t size)
 {
     Dav1dData data = {0};
-    Dav1dPicture pic = {0};
     int status;
 
     // wrap the OBUs in a Dav1dData struct
@@ -38,7 +40,7 @@ decode_frame(DecodeContext *context, uint8_t *input, size_t size)
         // send the OBUs to dav1d
         status = dav1d_send_data(context->dc, &data);
         if (status && status != DAV1D_ERR(EAGAIN)) {
-            fprintf(stderr, "dav1d data wrap failed: %d\n", status);
+            fprintf(stderr, "dav1d send data failed: %d\n", status);
             // manually unref the data
             dav1d_data_unref(&data);
             return status;
