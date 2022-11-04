@@ -1,7 +1,7 @@
 #include "decode.h"
 
 void
-fake_dealloc(const uint8_t *data, void *cookie)
+fake_dealloc(const uint8_t *, void *)
 {
     // NOP
 }
@@ -12,7 +12,7 @@ decode_init(DecodeContext **context)
     DecodeContext *decode_context = (DecodeContext *)malloc(sizeof(DecodeContext));
     *context = decode_context;
 
-    Dav1dSettings settings = {0};
+    Dav1dSettings settings;
     dav1d_default_settings(&settings);
     dav1d_open(&decode_context->dav1d_context, &settings);
 
@@ -30,7 +30,7 @@ decode_destroy(DecodeContext *context)
 int
 decode_frame(DecodeContext *context, uint8_t *input, size_t size)
 {
-    Dav1dData data = {0};
+    Dav1dData data;
     int status;
 
     // wrap the OBUs in a Dav1dData struct

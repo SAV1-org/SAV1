@@ -1,5 +1,7 @@
 #include "parse.h"
 
+#define PARSE_TRACK_NUMBER_NOT_SPECIFIED 99999
+
 using namespace webm;
 
 class Av1Callback : public Callback {
@@ -8,7 +10,7 @@ class Av1Callback : public Callback {
     init(ParseContext *context)
     {
         this->context = context;
-        this->av1_track_number = -1;
+        this->av1_track_number = PARSE_TRACK_NUMBER_NOT_SPECIFIED;
         this->timecode_scale = 0;
         this->cluster_timecode = 0;
     }
@@ -16,7 +18,7 @@ class Av1Callback : public Callback {
     bool
     found_av1_track()
     {
-        return this->av1_track_number != -1;
+        return this->av1_track_number != PARSE_TRACK_NUMBER_NOT_SPECIFIED;
     }
 
     void
@@ -27,7 +29,7 @@ class Av1Callback : public Callback {
     }
 
     Status
-    OnInfo(const ElementMetadata &metadata, const Info &info) override
+    OnInfo(const ElementMetadata &, const Info &info) override
     {
         if (info.timecode_scale.is_present()) {
             this->timecode_scale = info.timecode_scale.value();
@@ -36,7 +38,7 @@ class Av1Callback : public Callback {
     }
 
     Status
-    OnClusterBegin(const ElementMetadata &metadata, const Cluster &cluster,
+    OnClusterBegin(const ElementMetadata &, const Cluster &cluster,
                    Action *action) override
     {
         assert(action != nullptr);
@@ -48,7 +50,7 @@ class Av1Callback : public Callback {
     }
 
     Status
-    OnTrackEntry(const ElementMetadata &metadata, const TrackEntry &track_entry) override
+    OnTrackEntry(const ElementMetadata &, const TrackEntry &track_entry) override
     {
         // this is assuming at most one video track
         if (track_entry.codec_id.is_present() &&
@@ -59,7 +61,7 @@ class Av1Callback : public Callback {
     }
 
     Status
-    OnSimpleBlockBegin(const ElementMetadata &metadata, const SimpleBlock &simple_block,
+    OnSimpleBlockBegin(const ElementMetadata &, const SimpleBlock &simple_block,
                        Action *action) override
     {
         if (simple_block.track_number == this->av1_track_number) {
@@ -73,8 +75,7 @@ class Av1Callback : public Callback {
     }
 
     Status
-    OnBlockBegin(const ElementMetadata &metadata, const Block &block,
-                 Action *action) override
+    OnBlockBegin(const ElementMetadata &, const Block &block, Action *action) override
     {
         if (block.track_number == this->av1_track_number) {
             *action = Action::kRead;

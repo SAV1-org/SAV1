@@ -65,7 +65,7 @@ main(int argc, char *argv[])
         }
         else {
             int status;
-            if (status = parse_get_next_frame(pc)) {
+            if ((status = parse_get_next_frame(pc))) {
                 running = 0;
                 if (status == PARSE_END_OF_FILE) {
                     printf("Successfully parsed entire file\n");
