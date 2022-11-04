@@ -3,3 +3,5 @@
 *.d
 *.out
 *.pyc
+.vscode/*
+
