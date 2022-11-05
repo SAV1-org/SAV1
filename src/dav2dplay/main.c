@@ -33,7 +33,9 @@ main(int argc, char *argv[])
     SDL_Surface *frame;
 
     ParseContext *pc;
+    WebMFrame *web_m_frame;
     parse_init(&pc, argv[1]);
+    pc->do_overwrite_buffer = 1;
 
     DecodeContext *dc;
     decode_init(&dc);
@@ -57,7 +59,7 @@ main(int argc, char *argv[])
                 ((curr_time.tv_sec - start_time.tv_sec) * 1000) +
                 ((curr_time.tv_nsec - start_time.tv_nsec) / 1000000);
 
-            if (total_elapsed_ms >= pc->timecode) {
+            if (total_elapsed_ms >= web_m_frame->timecode) {
                 frame_is_ready = 0;
                 SDL_UpdateWindowSurface(window);
                 SDL_FreeSurface(frame);
@@ -65,7 +67,7 @@ main(int argc, char *argv[])
         }
         else {
             int status;
-            if ((status = parse_get_next_frame(pc))) {
+            if ((status = parse_get_next_video_frame(pc, &web_m_frame))) {
                 running = 0;
                 if (status == PARSE_END_OF_FILE) {
                     printf("Successfully parsed entire file\n");
@@ -73,12 +75,15 @@ main(int argc, char *argv[])
                 else if (status == PARSE_ERROR) {
                     printf("Error parsing file\n");
                 }
-                else if (PARSE_NO_AV1_TRACK) {
+                else if (status == PARSE_NO_AV1_TRACK) {
                     printf("The requested file does not contain an av1 track\n");
+                }
+                else if (status == PARSE_BUFFER_FULL) {
+                    printf("The audio parsing buffer is full\n");
                 }
             }
             else {
-                decode_frame(dc, pc->data, pc->size);
+                decode_frame(dc, web_m_frame->data, web_m_frame->size);
 
                 width = dc->dav1d_picture->p.w;
                 height = dc->dav1d_picture->p.h;
