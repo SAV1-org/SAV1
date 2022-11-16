@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 #include <dav1d/dav1d.h>
 
@@ -18,9 +19,33 @@ switch_window_surface(SDL_Window *window, SDL_Surface **existing)
     *existing = new_surf;
 }
 
+void
+rect_fit(SDL_Rect* arg, SDL_Rect target)
+{
+    /* Stolen from pygame source: src_c/Rect.c */
+
+    int w, h, x, y;
+    float xratio, yratio, maxratio;
+
+    xratio = (float)arg->w / (float)target.w;
+    yratio = (float)arg->h / (float)target.h;
+    maxratio = (xratio > yratio) ? xratio : yratio;
+
+    //w = (int)(arg->w / maxratio);
+    //h = (int)(arg->h / maxratio);
+    w = (int)ceil(arg->w / maxratio);
+    h = (int)ceil(arg->h / maxratio);
+    x = target.x + (target.w - w) / 2;
+    y = target.y + (target.h - h) / 2;
+
+    arg->w = w;
+    arg->h = h;
+    arg->x = x;
+    arg->y = y;
+}
+
 int
-get_frame_display_ready(struct timespec *start_time,
-                        WebMFrame *web_m_frame)
+get_frame_display_ready(struct timespec *start_time, WebMFrame *web_m_frame)
 {
     // quick and dirty check to see if we should display the next frame
     struct timespec curr_time;
@@ -79,11 +104,17 @@ main(int argc, char *argv[])
         exit(1);
     }
 
+    int screen_width = 500;
+    int screen_height = 500;
+
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window = SDL_CreateWindow("!!AV1 != !!False", SDL_WINDOWPOS_UNDEFINED,
-                                          SDL_WINDOWPOS_UNDEFINED, 500, 500, 0);
+                                          SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, 0);
     SDL_Surface *screen = SDL_GetWindowSurface(window);
+    SDL_Rect screen_rect = {0, 0, screen_width, screen_height};
+
     SDL_Surface *frame = NULL;
+    SDL_Rect frame_rect;
 
     ParseContext *pc;
     parse_init(&pc, argv[1]);
@@ -96,7 +127,7 @@ main(int argc, char *argv[])
     uint8_t *pixel_buffer = (uint8_t *)malloc(pixel_buffer_capacity * sizeof(uint8_t));
     int width, height;
 
-    WebMFrame* web_m_frame;
+    WebMFrame *web_m_frame;
     ptrdiff_t pixel_buffer_stride;
 
     struct timespec start_time;
@@ -107,10 +138,11 @@ main(int argc, char *argv[])
     SDL_Event event;
 
     while (running) {
+        SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 127, 68, 255));
+
         if (has_frame_bytes) {
             if (get_frame_display_ready(&start_time, web_m_frame)) {
-                SDL_BlitSurface(frame, NULL, screen, NULL);
-                SDL_UpdateWindowSurface(window);
+                // SDL_BlitSurface(frame, NULL, screen, NULL);
                 has_frame_bytes = 0;
             }
         }
@@ -121,17 +153,29 @@ main(int argc, char *argv[])
             frame = SDL_CreateRGBSurfaceWithFormatFrom((void *)pixel_buffer, width,
                                                        height, 32, pixel_buffer_stride,
                                                        SDL_PIXELFORMAT_BGRA32);
+            frame_rect.x = 0;
+            frame_rect.y = 0;
+            frame_rect.w = width;
+            frame_rect.h = height;
+            rect_fit(&frame_rect, screen_rect);
             has_frame_bytes = 1;
         }
 
-        // SDL_CreateRGBSurface(0, )
-        // SDL_BlitSurface(frame, NULL, screen, NULL);
-        // SDL_UpdateWindowSurface(window);
+        if (frame) {
+            SDL_BlitScaled(frame, NULL, screen, &frame_rect);
+        }
+        SDL_UpdateWindowSurface(window);
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_QUIT:
                     running = 0;
+                    break;
+
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.sym == SDLK_ESCAPE) {
+                        running = 0;
+                    }
                     break;
 
                 default:
@@ -142,6 +186,7 @@ main(int argc, char *argv[])
 
     parse_destroy(pc);
     decode_destroy(dc);
+    free(pixel_buffer);
 
     SDL_Quit();
 }
