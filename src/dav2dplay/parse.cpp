@@ -28,6 +28,10 @@ class Av1Callback : public Callback {
         this->cluster_timecode = 0;
         this->timecode = 0;
         this->target_video = true;
+        this->av1_codec_delay = 0;
+        this->opus_codec_delay = 0;
+        this->opus_sampling_frequency = 0;
+        this->opus_num_channels = 0;
     }
 
     bool
@@ -46,7 +50,35 @@ class Av1Callback : public Callback {
     calculate_timecode(std::int16_t relative_time)
     {
         std::uint64_t total_time = this->cluster_timecode + relative_time;
+        if (this->current_track_number == this->av1_track_number) {
+            if (this->av1_codec_delay >= total_time) {
+                total_time = 0;
+            }
+            else {
+                total_time -= this->av1_codec_delay;
+            }
+        }
+        else if (this->current_track_number == this->opus_track_number) {
+            if (this->opus_codec_delay >= total_time) {
+                total_time = 0;
+            }
+            else {
+                total_time -= this->opus_codec_delay;
+            }
+        }
         this->timecode = (total_time * this->timecode_scale) / 1000000;
+    }
+
+    std::uint64_t
+    get_opus_num_channels()
+    {
+        return this->opus_num_channels;
+    }
+
+    double
+    get_opus_sampling_frequency()
+    {
+        return this->opus_sampling_frequency;
     }
 
     Status
@@ -76,9 +108,14 @@ class Av1Callback : public Callback {
         if (track_entry.codec_id.is_present()) {
             if (track_entry.codec_id.value() == "V_AV1") {
                 this->av1_track_number = track_entry.track_number.value();
+                this->av1_codec_delay = track_entry.codec_delay.value();
             }
             else if (track_entry.codec_id.value() == "A_OPUS") {
                 this->opus_track_number = track_entry.track_number.value();
+                this->opus_codec_delay = track_entry.codec_delay.value();
+                this->opus_num_channels = track_entry.audio.value().channels.value();
+                this->opus_sampling_frequency =
+                    track_entry.audio.value().sampling_frequency.value();
             }
         }
         return Status(Status::kOkCompleted);
@@ -91,8 +128,8 @@ class Av1Callback : public Callback {
         if (simple_block.track_number == this->av1_track_number ||
             simple_block.track_number == this->opus_track_number) {
             *action = Action::kRead;
-            this->calculate_timecode(simple_block.timecode);
             this->current_track_number = simple_block.track_number;
+            this->calculate_timecode(simple_block.timecode);
         }
         else {
             *action = Action::kSkip;
@@ -106,8 +143,8 @@ class Av1Callback : public Callback {
         if (block.track_number == this->av1_track_number ||
             block.track_number == this->opus_track_number) {
             *action = Action::kRead;
-            this->calculate_timecode(block.timecode);
             this->current_track_number = block.track_number;
+            this->calculate_timecode(block.timecode);
         }
         else {
             *action = Action::kSkip;
@@ -201,6 +238,10 @@ class Av1Callback : public Callback {
     std::uint64_t timecode_scale;
     std::uint64_t cluster_timecode;
     std::uint64_t timecode;
+    std::uint64_t opus_codec_delay;
+    std::uint64_t av1_codec_delay;
+    double opus_sampling_frequency;
+    std::uint64_t opus_num_channels;
     bool target_video;
 };
 
@@ -349,6 +390,40 @@ parse_clear_video_buffer(ParseContext *context)
 {
     context->video_frames_size = 0;
     context->video_frames_index = 0;
+}
+
+double
+parse_get_opus_sampling_frequency(ParseContext *context)
+{
+    ParseInternalState *state = (ParseInternalState *)context->internal_state;
+
+    // if we already have this then just return it
+    double freq = state->callback->get_opus_sampling_frequency();
+    if (freq) {
+        return freq;
+    }
+
+    // we need to parse to get it
+    state->callback->do_target_video(false);
+    state->parser->Feed(state->callback, state->reader);
+    return state->callback->get_opus_sampling_frequency();
+}
+
+std::uint64_t
+parse_get_opus_num_channels(ParseContext *context)
+{
+    ParseInternalState *state = (ParseInternalState *)context->internal_state;
+
+    // if we already have this then just return it
+    double freq = state->callback->get_opus_num_channels();
+    if (freq) {
+        return freq;
+    }
+
+    // we need to parse to get it
+    state->callback->do_target_video(false);
+    state->parser->Feed(state->callback, state->reader);
+    return state->callback->get_opus_num_channels();
 }
 
 void
