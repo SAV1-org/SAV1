@@ -21,6 +21,9 @@ integration_static:
 dav2dplay:
 	g++ -o dav2dplay.exe -std=c++11 -s -Wall -Wextra -pedantic -g -Idependencies/libwebm/webm_parser/include -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/dav2dplay/main.c src/dav2dplay/parse.cpp src/dav2dplay/decode.c src/dav2dplay/convert.cpp 
 
+dav3dplay_win:
+	gcc -o dav3dplay.exe -Idependencies/thread src/dav3dplay/thread_queue.c -lwinmm
+
 dav1d_test:
 	gcc src/test.c -Idependencies/dav1d/include -L. -ldav1d 
 
