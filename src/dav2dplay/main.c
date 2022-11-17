@@ -20,7 +20,7 @@ switch_window_surface(SDL_Window *window, SDL_Surface **existing)
 }
 
 void
-rect_fit(SDL_Rect* arg, SDL_Rect target)
+rect_fit(SDL_Rect *arg, SDL_Rect target)
 {
     /* Stolen from pygame source: src_c/Rect.c */
 
@@ -31,8 +31,8 @@ rect_fit(SDL_Rect* arg, SDL_Rect target)
     yratio = (float)arg->h / (float)target.h;
     maxratio = (xratio > yratio) ? xratio : yratio;
 
-    //w = (int)(arg->w / maxratio);
-    //h = (int)(arg->h / maxratio);
+    // w = (int)(arg->w / maxratio);
+    // h = (int)(arg->h / maxratio);
     w = (int)ceil(arg->w / maxratio);
     h = (int)ceil(arg->h / maxratio);
     x = target.x + (target.w - w) / 2;
@@ -104,12 +104,13 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-    int screen_width = 500;
-    int screen_height = 500;
+    int screen_width = 1200;
+    int screen_height = 760;
 
     SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_Window *window = SDL_CreateWindow("!!AV1 != !!False", SDL_WINDOWPOS_UNDEFINED,
-                                          SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, 0);
+    SDL_Window *window = SDL_CreateWindow("Dav2d video player", SDL_WINDOWPOS_UNDEFINED,
+                                          SDL_WINDOWPOS_UNDEFINED, screen_width,
+                                          screen_height, SDL_WINDOW_RESIZABLE);
     SDL_Surface *screen = SDL_GetWindowSurface(window);
     SDL_Rect screen_rect = {0, 0, screen_width, screen_height};
 
@@ -153,15 +154,15 @@ main(int argc, char *argv[])
             frame = SDL_CreateRGBSurfaceWithFormatFrom((void *)pixel_buffer, width,
                                                        height, 32, pixel_buffer_stride,
                                                        SDL_PIXELFORMAT_BGRA32);
+            has_frame_bytes = 1;
+        }
+
+        if (frame) {
             frame_rect.x = 0;
             frame_rect.y = 0;
             frame_rect.w = width;
             frame_rect.h = height;
             rect_fit(&frame_rect, screen_rect);
-            has_frame_bytes = 1;
-        }
-
-        if (frame) {
             SDL_BlitScaled(frame, NULL, screen, &frame_rect);
         }
         SDL_UpdateWindowSurface(window);
@@ -177,6 +178,17 @@ main(int argc, char *argv[])
                         running = 0;
                     }
                     break;
+
+                case SDL_WINDOWEVENT:
+                    if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                        screen_width = event.window.data1;
+                        screen_height = event.window.data2;
+                        screen_rect.w = screen_width;
+                        screen_rect.h = screen_height;
+
+                        SDL_FreeSurface(screen);
+                        screen = SDL_GetWindowSurface(window);
+                    }
 
                 default:
                     break;
