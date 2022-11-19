@@ -60,3 +60,12 @@ sav1_thread_queue_get_size(Sav1ThreadQueue *sav1_queue)
 {
     return thread_queue_count(sav1_queue->queue);
 }
+
+void *
+sav1_thread_queue_pop_timeout(Sav1ThreadQueue *sav1_queue)
+{
+    thread_mutex_lock(sav1_queue->queue_lock);
+    thread_mutex_unlock(sav1_queue->queue_lock);
+
+    return thread_queue_consume(sav1_queue->queue, 10);
+}
