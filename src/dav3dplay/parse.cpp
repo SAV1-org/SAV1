@@ -1,4 +1,5 @@
 #include "parse.h"
+#include "sav1_settings.h"
 #include <cassert>
 #include <webm/callback.h>
 #include <webm/file_reader.h>
@@ -121,9 +122,9 @@ class Sav1Callback : public Callback {
     {
         assert(action != nullptr);
         if ((simple_block.track_number == this->av1_track_number &&
-             this->context->codec_target & PARSE_TARGET_AV1) ||
+             this->context->codec_target & SAV1_CODEC_TARGET_AV1) ||
             (simple_block.track_number == this->opus_track_number &&
-             this->context->codec_target & PARSE_TARGET_OPUS)) {
+             this->context->codec_target & SAV1_CODEC_TARGET_OPUS)) {
             *action = Action::kRead;
             this->current_track_number = simple_block.track_number;
             this->calculate_timecode(simple_block.timecode);
@@ -139,9 +140,9 @@ class Sav1Callback : public Callback {
     {
         assert(action != nullptr);
         if ((block.track_number == this->av1_track_number &&
-             this->context->codec_target & PARSE_TARGET_AV1) ||
+             this->context->codec_target & SAV1_CODEC_TARGET_AV1) ||
             (block.track_number == this->opus_track_number &&
-             this->context->codec_target & PARSE_TARGET_OPUS)) {
+             this->context->codec_target & SAV1_CODEC_TARGET_OPUS)) {
             *action = Action::kRead;
             this->current_track_number = block.track_number;
             this->calculate_timecode(block.timecode);
@@ -185,17 +186,17 @@ class Sav1Callback : public Callback {
 
         // fill in type-specific information
         if (this->current_track_number == this->av1_track_number &&
-            this->context->codec_target & PARSE_TARGET_AV1 &&
+            this->context->codec_target & SAV1_CODEC_TARGET_AV1 &&
             this->context->video_output_queue != NULL) {
-            frame->type = PARSE_FRAME_TYPE_AV1;
+            frame->codec = PARSE_FRAME_TYPE_AV1;
             sav1_thread_queue_push(this->context->video_output_queue, frame);
         }
         else if (this->current_track_number == this->opus_track_number &&
-                 this->context->codec_target & PARSE_TARGET_OPUS &&
+                 this->context->codec_target & SAV1_CODEC_TARGET_OPUS &&
                  this->context->audio_output_queue != NULL) {
             frame->opus_sampling_frequency = this->opus_sampling_frequency;
             frame->opus_num_channels = this->opus_num_channels;
-            frame->type = PARSE_FRAME_TYPE_OPUS;
+            frame->codec = PARSE_FRAME_TYPE_OPUS;
             sav1_thread_queue_push(this->context->audio_output_queue, frame);
         }
         else {
@@ -295,15 +296,29 @@ void
 parse_stop(ParseContext *context)
 {
     thread_atomic_int_store(&(context->do_parse), 0);
-    WebMFrame *video_frame =
-        (WebMFrame *)sav1_thread_queue_pop_timeout(context->video_output_queue);
-    if (video_frame != NULL) {
-        webm_frame_destroy(video_frame);
+    if (context->video_output_queue != NULL) {
+        while (1) {
+            WebMFrame *video_frame =
+                (WebMFrame *)sav1_thread_queue_pop_timeout(context->video_output_queue);
+            if (video_frame == NULL) {
+                break;
+            }
+            else {
+                webm_frame_destroy(video_frame);
+            }
+        }
     }
-    WebMFrame *audio_frame =
-        (WebMFrame *)sav1_thread_queue_pop_timeout(context->audio_output_queue);
-    if (audio_frame != NULL) {
-        webm_frame_destroy(audio_frame);
+    if (context->audio_output_queue != NULL) {
+        while (1) {
+            WebMFrame *audio_frame =
+                (WebMFrame *)sav1_thread_queue_pop_timeout(context->audio_output_queue);
+            if (audio_frame == NULL) {
+                break;
+            }
+            else {
+                webm_frame_destroy(audio_frame);
+            }
+        }
     }
 }
 
@@ -337,7 +352,7 @@ webm_frame_init(WebMFrame **frame, std::size_t size)
     webm_frame->timecode = 0;
     webm_frame->opus_sampling_frequency = 0;
     webm_frame->opus_num_channels = 0;
-    webm_frame->type = 0;
+    webm_frame->codec = 0;
 }
 
 void

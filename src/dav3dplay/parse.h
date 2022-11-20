@@ -8,8 +8,6 @@
 #define PARSE_STATUS_OK 0
 #define PARSE_STATUS_END_OF_FILE 1
 #define PARSE_STATUS_ERROR 2
-#define PARSE_TARGET_AV1 1
-#define PARSE_TARGET_OPUS 2
 #define PARSE_FRAME_TYPE_AV1 1
 #define PARSE_FRAME_TYPE_OPUS 2
 
@@ -19,7 +17,7 @@ typedef struct WebMFrame {
     uint64_t timecode;  // the timestamp of the frame in milliseconds
     double opus_sampling_frequency;
     uint64_t opus_num_channels;
-    int type;
+    int codec;
 } WebMFrame;
 
 void

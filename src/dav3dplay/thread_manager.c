@@ -1,7 +1,32 @@
 #include <stdio.h>
-#include "thread.h"
-#include "parse.h"
-#include "thread_queue.h"
+#include <cstdlib>
+#include "thread_manager.h"
+
+#define THREAD_QUEUE_SIZE 25
+
+void
+thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
+{
+    ThreadManager *thread_manager = (ThreadManager *)malloc(sizeof(ThreadManager));
+    *manager = thread_manager;
+
+    // initialize the thread queues
+    sav1_thread_queue_init(&(thread_manager->video_webm_frame_queue), THREAD_QUEUE_SIZE);
+    sav1_thread_queue_init(&(thread_manager->audio_webm_frame_queue), THREAD_QUEUE_SIZE);
+    sav1_thread_queue_init(&(thread_manager->video_output_queue), THREAD_QUEUE_SIZE);
+    sav1_thread_queue_init(&(thread_manager->audio_output_queue), THREAD_QUEUE_SIZE);
+
+    // initialize the thread contexts
+    parse_init(&(thread_manager->parse_context), settings->file_name,
+               settings->codec_target, thread_manager->video_webm_frame_queue,
+               thread_manager->audio_webm_frame_queue);
+
+    // populate the thread manager struct
+    thread_manager->settings = settings;
+    thread_manager->parse_thread = NULL;
+    thread_manager->process_av1_thread = NULL;
+    thread_manager->process_opus_thread = NULL;
+}
 
 // this is just a demo program. I haven't built the thread manager yet
 int
@@ -18,8 +43,7 @@ main(int argc, char *argv[])
     sav1_thread_queue_init(&audio_frames, 10);
 
     ParseContext *context;
-    parse_init(&context, argv[1], PARSE_TARGET_AV1 | PARSE_TARGET_OPUS, video_frames,
-               audio_frames);
+    parse_init(&context, argv[1], 0, video_frames, audio_frames);
 
     thread_ptr_t parse_thread =
         thread_create(parse_start, context, THREAD_STACK_SIZE_DEFAULT);
