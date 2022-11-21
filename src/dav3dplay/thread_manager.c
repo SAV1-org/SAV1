@@ -19,6 +19,9 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
     parse_init(&(thread_manager->parse_context), settings->file_name,
                settings->codec_target, thread_manager->video_webm_frame_queue,
                thread_manager->audio_webm_frame_queue);
+    process_av1_init(&(thread_manager->process_av1_context),
+                     thread_manager->video_webm_frame_queue,
+                     thread_manager->video_output_queue);
 
     // populate the thread manager struct
     thread_manager->settings = settings;
@@ -35,6 +38,7 @@ thread_manager_destroy(ThreadManager *manager)
 
     // destroy the contexts
     parse_destroy(manager->parse_context);
+    process_av1_destroy(manager->process_av1_context);
 
     // destroy the thread queues
     sav1_thread_queue_destroy(manager->video_webm_frame_queue);
@@ -51,6 +55,10 @@ thread_manager_start_pipeline(ThreadManager *manager)
     // create the webm parsing thread
     manager->parse_thread =
         thread_create(parse_start, manager->parse_context, THREAD_STACK_SIZE_DEFAULT);
+
+    // create the av1 processing thread
+    manager->process_av1_thread = thread_create(
+        process_av1_start, manager->process_av1_context, THREAD_STACK_SIZE_DEFAULT);
 }
 
 void
@@ -61,6 +69,13 @@ thread_manager_kill_pipeline(ThreadManager *manager)
         thread_join(manager->parse_thread);
         thread_destroy(manager->parse_thread);
         manager->parse_thread = NULL;
+    }
+
+    if (manager->process_av1_thread != NULL) {
+        process_av1_stop(manager->process_av1_context);
+        thread_join(manager->process_av1_thread);
+        thread_destroy(manager->process_av1_thread);
+        manager->process_av1_thread = NULL;
     }
 }
 

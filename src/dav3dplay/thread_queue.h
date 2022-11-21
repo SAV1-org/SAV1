@@ -1,6 +1,8 @@
 #ifndef THREAD_QUEUE_H
 #define THREAD_QUEUE_H
 
+#include <cstddef>
+
 #include "thread.h"
 
 typedef struct Sav1ThreadQueue {
@@ -33,5 +35,8 @@ sav1_thread_queue_get_size(Sav1ThreadQueue *sav1_queue);
 
 void *
 sav1_thread_queue_pop_timeout(Sav1ThreadQueue *sav1_queue);
+
+void
+sav1_thread_queue_push_timeout(Sav1ThreadQueue *sav1_queue, void *item);
 
 #endif

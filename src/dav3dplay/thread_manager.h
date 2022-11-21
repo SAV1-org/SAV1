@@ -1,13 +1,15 @@
 #ifndef THREAD_MANAGER_H
 #define THREAD_MANAGER_H
 
-#include "parse.h"
 #include "thread_queue.h"
 #include "thread.h"
 #include "sav1_settings.h"
+#include "parse.h"
+#include "process_av1.h"
 
 typedef struct ThreadManager {
     ParseContext *parse_context;
+    ProcessAv1Context *process_av1_context;
     Sav1ThreadQueue *video_webm_frame_queue;
     Sav1ThreadQueue *audio_webm_frame_queue;
     Sav1ThreadQueue *video_output_queue;

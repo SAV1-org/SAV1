@@ -69,3 +69,12 @@ sav1_thread_queue_pop_timeout(Sav1ThreadQueue *sav1_queue)
 
     return thread_queue_consume(sav1_queue->queue, 10);
 }
+
+void
+sav1_thread_queue_push_timeout(Sav1ThreadQueue *sav1_queue, void *item)
+{
+    thread_mutex_lock(sav1_queue->queue_lock);
+    thread_mutex_unlock(sav1_queue->queue_lock);
+
+    thread_queue_produce(sav1_queue->queue, item, 10);
+}
