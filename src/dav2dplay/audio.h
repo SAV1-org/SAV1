@@ -1,6 +1,3 @@
-#ifndef OPUS_H
-#define OPUS_H
-
 #include <opus/opus.h>
 #include <opus/opus_types.h>
 #include <opus/opus_defines.h>
@@ -26,5 +23,3 @@ audio_destroy(AudioContext *context);
 
 int
 audio_decode(AudioContext *context, uint8_t *data, size_t size);
-
-#endif
