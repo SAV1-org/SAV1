@@ -133,8 +133,28 @@ class Av1Callback : public Callback {
     void
     decode_opus(std::uint8_t *buffer, std::uint64_t num_bytes)
     {
-        // DR_OPUS who?
-        delete[] buffer;
+        
+        int error;
+        int Fs = 48000;   // Default Value
+        int channels = 2;  // Default Value
+        int max_size = 10000;  // Random number
+        opus_int16* decoded = (opus_int16*)calloc(max_size, sizeof(opus_int16));
+
+        int frame_size;
+        OpusDecoder *dec;
+        
+        dec = opus_decoder_create(Fs, channels, &error);
+        frame_size = opus_decode(dec, buffer, num_bytes, decoded, max_size, 0);
+
+        fprintf(stderr, "Frame Size = %d\n", frame_size);  // Prove that decoding worked
+        for (int i = 0; i < frame_size; i++) {
+            if (decoded[i] > 0) {
+                fprintf(stderr, "Decoded Byte %d: %d\n", i, decoded[i]);
+            }
+        }
+
+        free(buffer);
+        free(decoded); // Do something before this is freed
     }
 
     void
