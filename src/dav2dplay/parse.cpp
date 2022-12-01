@@ -372,10 +372,10 @@ parse_get_next_audio_frame(ParseContext *context, WebMFrame **frame)
             }
             return PARSE_NO_AV1_TRACK;
         }
-        else if (status.code == Status::kOkPartial) {
+        else if (status.code == Status::kWouldBlock) {
             return PARSE_BUFFER_FULL;
         }
-        else if (status.code != Status::kWouldBlock) {
+        else if (status.code != Status::kOkPartial) {
             return PARSE_ERROR;
         }
     }
