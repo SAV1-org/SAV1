@@ -1,8 +1,6 @@
 #include <cstdlib>
 #include "thread_manager.h"
 
-#define THREAD_QUEUE_SIZE 25
-
 void
 thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
 {
@@ -10,10 +8,13 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
     *manager = thread_manager;
 
     // initialize the thread queues
-    sav1_thread_queue_init(&(thread_manager->video_webm_frame_queue), THREAD_QUEUE_SIZE);
-    sav1_thread_queue_init(&(thread_manager->audio_webm_frame_queue), THREAD_QUEUE_SIZE);
-    sav1_thread_queue_init(&(thread_manager->video_output_queue), THREAD_QUEUE_SIZE);
-    sav1_thread_queue_init(&(thread_manager->audio_output_queue), THREAD_QUEUE_SIZE);
+    sav1_thread_queue_init(&(thread_manager->video_webm_frame_queue),
+                           settings->queue_size);
+    sav1_thread_queue_init(&(thread_manager->audio_webm_frame_queue),
+                           settings->queue_size);
+    sav1_thread_queue_init(&(thread_manager->dav1d_picture_queue), settings->queue_size);
+    sav1_thread_queue_init(&(thread_manager->video_output_queue), settings->queue_size);
+    sav1_thread_queue_init(&(thread_manager->audio_output_queue), settings->queue_size);
 
     // initialize the thread contexts
     parse_init(&(thread_manager->parse_context), settings->file_name,

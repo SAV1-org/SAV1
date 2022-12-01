@@ -149,3 +149,30 @@ convert_av1(Dav1dPicture *picture, uint8_t *bgra_data, ptrdiff_t bgra_stride)
     }
     dav1d_picture_unref(picture);
 }
+
+void
+convert_av1_init(ConvertAv1Context **context)
+{
+    ConvertAv1Context *convert_context =
+        (ConvertAv1Context *)malloc(sizeof(ConvertAv1Context));
+    *context = decode_context;
+
+    convert_context->input_queue = input_queue;
+    convert_context->output_queue = output_queue;
+}
+
+void
+convert_av1_destroy(ConvertAv1Context *context)
+{
+    free(context);
+}
+
+int
+convert_av1_start(void *context)
+{
+}
+
+void
+convert_av1_stop(ConvertAv1Context *context)
+{
+}

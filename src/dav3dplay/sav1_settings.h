@@ -7,6 +7,7 @@
 typedef struct Sav1Settings {
     char *file_name;
     int codec_target;
+    size_t queue_size;
 } Sav1Settings;
 
 #endif

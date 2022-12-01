@@ -9,13 +9,16 @@
 
 typedef struct ThreadManager {
     ParseContext *parse_context;
-    ProcessAv1Context *process_av1_context;
+    DecodeAv1Context *decode_av1_context;
+    ConvertAv1Context *convert_av1_context;
     Sav1ThreadQueue *video_webm_frame_queue;
+    Sav1ThreadQueue *video_dav1d_picture_frame_queue;
     Sav1ThreadQueue *audio_webm_frame_queue;
     Sav1ThreadQueue *video_output_queue;
     Sav1ThreadQueue *audio_output_queue;
     thread_ptr_t parse_thread;
-    thread_ptr_t process_av1_thread;
+    thread_ptr_t decode_av1_thread;
+    thread_ptr_t convert_av1_thread;
     thread_ptr_t process_opus_thread;
     Sav1Settings *settings;
 } ThreadManager;

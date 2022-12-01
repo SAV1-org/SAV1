@@ -58,4 +58,7 @@ parse_get_opus_num_channels(ParseContext *context);
 double
 parse_get_opus_sampling_frequency(ParseContext *context);
 
+std::uint64_t
+parse_get_opus_bit_depth(ParseContext *context);
+
 #endif

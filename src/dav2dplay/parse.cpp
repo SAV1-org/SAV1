@@ -32,6 +32,7 @@ class Av1Callback : public Callback {
         this->opus_codec_delay = 0;
         this->opus_sampling_frequency = 0;
         this->opus_num_channels = 0;
+        this->opus_bit_depth = 0;
     }
 
     bool
@@ -81,6 +82,12 @@ class Av1Callback : public Callback {
         return this->opus_sampling_frequency;
     }
 
+    std::uint64_t
+    get_opus_bit_depth()
+    {
+        return this->opus_bit_depth;
+    }
+
     Status
     OnInfo(const ElementMetadata &, const Info &info) override
     {
@@ -116,6 +123,7 @@ class Av1Callback : public Callback {
                 this->opus_num_channels = track_entry.audio.value().channels.value();
                 this->opus_sampling_frequency =
                     track_entry.audio.value().sampling_frequency.value();
+                this->opus_bit_depth = track_entry.audio.value().bit_depth.value();
             }
         }
         return Status(Status::kOkCompleted);
@@ -235,6 +243,7 @@ class Av1Callback : public Callback {
     std::uint64_t current_track_number;
     std::uint64_t av1_track_number;
     std::uint64_t opus_track_number;
+    std::uint64_t opus_bit_depth;
     std::uint64_t timecode_scale;
     std::uint64_t cluster_timecode;
     std::uint64_t timecode;
@@ -415,7 +424,24 @@ parse_get_opus_num_channels(ParseContext *context)
     ParseInternalState *state = (ParseInternalState *)context->internal_state;
 
     // if we already have this then just return it
-    double freq = state->callback->get_opus_num_channels();
+    std::uint64_t num = state->callback->get_opus_num_channels();
+    if (num) {
+        return num;
+    }
+
+    // we need to parse to get it
+    state->callback->do_target_video(false);
+    state->parser->Feed(state->callback, state->reader);
+    return state->callback->get_opus_num_channels();
+}
+
+std::uint64_t
+parse_get_opus_bit_depth(ParseContext *context)
+{
+    ParseInternalState *state = (ParseInternalState *)context->internal_state;
+
+    // if we already have this then just return it
+    double freq = state->callback->get_opus_bit_depth();
     if (freq) {
         return freq;
     }
@@ -423,7 +449,7 @@ parse_get_opus_num_channels(ParseContext *context)
     // we need to parse to get it
     state->callback->do_target_video(false);
     state->parser->Feed(state->callback, state->reader);
-    return state->callback->get_opus_num_channels();
+    return state->callback->get_opus_bit_depth();
 }
 
 void
