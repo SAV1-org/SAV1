@@ -52,4 +52,10 @@ parse_clear_audio_buffer(ParseContext *context);
 void
 parse_clear_video_buffer(ParseContext *context);
 
+std::uint64_t
+parse_get_opus_num_channels(ParseContext *context);
+
+double
+parse_get_opus_sampling_frequency(ParseContext *context);
+
 #endif
