@@ -137,9 +137,12 @@ class Av1Callback : public Callback {
     void
     decode_opus(std::uint8_t *buffer, std::uint64_t num_bytes)
     {
+<<<<<<< HEAD
         for (int i = 0; i < 10; i++) {
             fprintf(stderr, "Buffer Byte %d: %d\n", i, buffer[i]);
         }
+=======
+>>>>>>> 708eb19e398559691953e9ce69b89df8aca85ba3
         
         int error;
         int Fs = 48000;   // Default Value
@@ -153,7 +156,11 @@ class Av1Callback : public Callback {
         dec = opus_decoder_create(Fs, channels, &error);
         frame_size = opus_decode(dec, buffer, num_bytes, decoded, max_size, 0);
 
+<<<<<<< HEAD
         fprintf(stderr, "Frame Size = %d\n", frame_size);
+=======
+        fprintf(stderr, "Frame Size = %d\n", frame_size);  // Prove that decoding worked
+>>>>>>> 708eb19e398559691953e9ce69b89df8aca85ba3
         for (int i = 0; i < frame_size; i++) {
             if (decoded[i] > 0) {
                 fprintf(stderr, "Decoded Byte %d: %d\n", i, decoded[i]);
@@ -161,7 +168,11 @@ class Av1Callback : public Callback {
         }
 
         free(buffer);
+<<<<<<< HEAD
         free(decoded);
+=======
+        free(decoded); // Do something before this is freed
+>>>>>>> 708eb19e398559691953e9ce69b89df8aca85ba3
     }
 
     void
