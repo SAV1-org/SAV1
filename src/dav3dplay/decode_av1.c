@@ -37,13 +37,13 @@ int
 decode_av1_start(void *context)
 {
     DecodeAv1Context *decode_context = (DecodeAv1Context *)context;
-    thread_atomic_int_store(&(decode_context->do_convert), 1);
+    thread_atomic_int_store(&(decode_context->do_decode), 1);
 
     Dav1dData data;
     Dav1dData *picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture));
     int status;
 
-    while (thread_atomic_int_load(&(decode_context->do_convert))) {
+    while (thread_atomic_int_load(&(decode_context->do_decode))) {
         // pull a webm frame from the input queue
         WebMFrame *input_frame =
             (WebMFrame *)sav1_thread_queue_pop(decode_context->input_queue);
@@ -108,7 +108,7 @@ decode_av1_start(void *context)
 void
 decode_av1_stop(DecodeAv1Context *context)
 {
-    thread_atomic_int_store(&(context->do_convert), 0);
+    thread_atomic_int_store(&(context->do_decode), 0);
 
     // add a fake entry to the input queue if necessary
     if (sav1_thread_queue_get_size(context->input_queue) == 0) {

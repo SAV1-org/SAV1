@@ -170,6 +170,8 @@ convert_av1_destroy(ConvertAv1Context *context)
 int
 convert_av1_start(void *context)
 {
+    ConvertAv1Context *convert_context = (DecodeAv1Context *)context;
+    thread_atomic_int_store(&(convert_context->do_convert), 1);
 }
 
 void
