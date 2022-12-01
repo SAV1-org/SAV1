@@ -30,9 +30,9 @@ audio_decode(AudioContext *context, uint8_t *data, size_t size)
     int frame_size;
     int max_size = 10000;  // Random number
 
-    frame_size = opus_decode(context->dec, data, size, context->decoded, max_size, 0);
-}
+    // max size = frame_size*channels*sezeof(opus16_int)
 
-int main() {
-    return 0;
+    frame_size = opus_decode(context->dec, data, size, context->decoded, max_size, 0);
+
+    return frame_size*context->channels*sizeof(opus_int16);
 }
