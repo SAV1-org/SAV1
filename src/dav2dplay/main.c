@@ -10,6 +10,7 @@
 #include "parse.h"
 #include "decode.h"
 #include "convert.h"
+#include "audio.h"
 
 void
 switch_window_surface(SDL_Window *window, SDL_Surface **existing)
@@ -123,6 +124,9 @@ main(int argc, char *argv[])
 
     DecodeContext *dc;
     decode_init(&dc);
+
+    AudioContext *ac;
+    audio_init(&ac, 48000, 2);
 
     size_t pixel_buffer_capacity = 4096;
     uint8_t *pixel_buffer = (uint8_t *)malloc(pixel_buffer_capacity * sizeof(uint8_t));

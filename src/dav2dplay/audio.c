@@ -1,19 +1,21 @@
 #include "audio.h"
 
 void
-audio_init(AudioContext *context, int Fs, int channels, int error)
+audio_init(AudioContext **context, int Fs, int channels)
 {
     AudioContext *audio_context = (AudioContext *)malloc(sizeof(AudioContext));
-    context = audio_context;
+    *context = audio_context;
 
     int max_size = 10000;  // Random number
+    int error;
+
     // opus_int16* decoded = (opus_int16*)calloc(max_size, sizeof(opus_int16));
     
-    context->dec = opus_decoder_create(Fs, channels, &error);
-    context->decoded = (opus_int16*)calloc(max_size, sizeof(opus_int16));
-    context->Fs = Fs;
-    context->channels = channels;
-    context->error = error;
+    audio_context->dec = opus_decoder_create(Fs, channels, &error);
+    audio_context->decoded = (opus_int16*)calloc(max_size, sizeof(opus_int16));
+    audio_context->Fs = Fs;
+    audio_context->channels = channels;
+    audio_context->error = error;
 }
 
 void

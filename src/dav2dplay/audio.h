@@ -13,10 +13,10 @@ typedef struct AudioContext {
     int Fs;
     int channels;
     int error;
-} DecodeContext;
+} AudioContext;
 
 void
-audio_init(AudioContext **context, int Fs, int channels, int error);
+audio_init(AudioContext **context, int Fs, int channels);
 
 void
 audio_destroy(AudioContext *context);
