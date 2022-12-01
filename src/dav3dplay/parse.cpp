@@ -285,6 +285,7 @@ parse_start(void *context)
     Status status = state->parser->Feed(state->callback, state->reader);
     if (status.completed_ok()) {
         thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_END_OF_FILE);
+        sav1_thread_queue_push(parse_context->video_output_queue, NULL);
     }
     else {
         thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_ERROR);

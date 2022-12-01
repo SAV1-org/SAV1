@@ -87,6 +87,7 @@ main(int argc, char *argv[])
 
     Sav1Settings settings;
     settings.file_name = argv[1];
+    settings.queue_size = 20;
     settings.codec_target = SAV1_CODEC_TARGET_AV1;
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;
@@ -98,16 +99,17 @@ main(int argc, char *argv[])
     while (running) {
         SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 127, 68, 255));
 
-        if (parse_get_status(manager->parse_context)) {
-            // this is bad because it stops the video early
-            running = 0;
-        }
-        else if (sav1_frame == NULL) {
+        if (sav1_frame == NULL) {
             sav1_frame =
                 (Sav1VideoFrame *)sav1_thread_queue_pop(manager->video_output_queue);
-            frame_width = sav1_frame->width;
-            frame_height = sav1_frame->height;
-            next_pixel_buffer = sav1_frame->data;
+            if (sav1_frame == NULL) {
+                running = 0;
+            }
+            else {
+                frame_width = sav1_frame->width;
+                frame_height = sav1_frame->height;
+                next_pixel_buffer = sav1_frame->data;
+            }
         }
         else if (get_frame_display_ready(&start_time, sav1_frame)) {
             SDL_FreeSurface(frame);

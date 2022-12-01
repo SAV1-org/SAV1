@@ -5,14 +5,15 @@
 #include "thread.h"
 #include "sav1_settings.h"
 #include "parse.h"
-#include "process_av1.h"
+#include "decode_av1.h"
+#include "convert_av1.h"
 
 typedef struct ThreadManager {
     ParseContext *parse_context;
     DecodeAv1Context *decode_av1_context;
     ConvertAv1Context *convert_av1_context;
     Sav1ThreadQueue *video_webm_frame_queue;
-    Sav1ThreadQueue *video_dav1d_picture_frame_queue;
+    Sav1ThreadQueue *video_dav1d_picture_queue;
     Sav1ThreadQueue *audio_webm_frame_queue;
     Sav1ThreadQueue *video_output_queue;
     Sav1ThreadQueue *audio_output_queue;

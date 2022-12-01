@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
 
+#include "parse.h"
 #include "thread_queue.h"
 #include "decode_av1.h"
 
@@ -39,24 +41,18 @@ decode_av1_start(void *context)
     DecodeAv1Context *decode_context = (DecodeAv1Context *)context;
     thread_atomic_int_store(&(decode_context->do_decode), 1);
 
-    Dav1dData data;
-    Dav1dData *picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture));
     int status;
+    Dav1dData data;
+    Dav1dPicture *picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture));
+    memset(picture, 0, sizeof(Dav1dPicture));
 
     while (thread_atomic_int_load(&(decode_context->do_decode))) {
         // pull a webm frame from the input queue
         WebMFrame *input_frame =
             (WebMFrame *)sav1_thread_queue_pop(decode_context->input_queue);
         if (input_frame == NULL) {
-            sav1_thread_queue_push(process_context->output_queue, NULL);
+            sav1_thread_queue_push(decode_context->output_queue, NULL);
             break;
-        }
-
-        // decode the webm frame
-        if (decode_av1_frame(process_context->decode_context, input_frame->data,
-                             input_frame->size)) {
-            webm_frame_destroy(input_frame);
-            continue;
         }
 
         // wrap the OBUs in a Dav1dData struct
@@ -68,20 +64,20 @@ decode_av1_start(void *context)
 
         do {
             // send the OBUs to dav1d
-            status = dav1d_send_data(context->dav1d_context, &data);
+            status = dav1d_send_data(decode_context->dav1d_context, &data);
             if (status && status != DAV1D_ERR(EAGAIN)) {
-                // manually unref the data
-                dav1d_data_unref(&data);
+                webm_frame_destroy(input_frame);
                 printf("Error sending dav1d data\n");
+                continue;
             }
 
             do {
                 // attempt to get picture from dav1d
-                status = dav1d_get_picture(context->dav1d_context, picture);
+                status = dav1d_get_picture(decode_context->dav1d_context, picture);
 
                 // try one more time if dav1d tells us to (we usually have to)
                 if (status == DAV1D_ERR(EAGAIN)) {
-                    status = dav1d_get_picture(context->dav1d_context, picture);
+                    status = dav1d_get_picture(decode_context->dav1d_context, picture);
                 }
 
                 // see if we have a picture to output
@@ -90,10 +86,11 @@ decode_av1_start(void *context)
                     picture->m.timestamp = input_frame->timecode;
 
                     // push to the output queue
-                    sav1_thread_queue_push(process_context->output_queue, picture);
+                    sav1_thread_queue_push(decode_context->output_queue, picture);
 
                     // allocate a new dav1d picture
                     picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture));
+                    memset(picture, 0, sizeof(Dav1dPicture));
                 }
             } while (status == 0);
         } while (data.sz > 0);
@@ -117,8 +114,8 @@ decode_av1_stop(DecodeAv1Context *context)
 
     // drain the output queue
     while (1) {
-        DavidPicture *picture =
-            (DavidPicture *)sav1_thread_queue_pop_timeout(context->output_queue);
+        Dav1dPicture *picture =
+            (Dav1dPicture *)sav1_thread_queue_pop_timeout(context->output_queue);
         if (picture == NULL) {
             break;
         }

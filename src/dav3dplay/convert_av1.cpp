@@ -1,5 +1,8 @@
-#include "convert_av1.h"
 #include <cassert>
+#include <dav1d/dav1d.h>
+
+#include "convert_av1.h"
+#include "sav1_video_frame.h"
 
 using namespace libyuv;
 
@@ -105,7 +108,7 @@ get_matrix_coefficients(Dav1dSequenceHeader *seqhdr)
 }
 
 void
-convert_av1(Dav1dPicture *picture, uint8_t *bgra_data, ptrdiff_t bgra_stride)
+convert_dav1d_picture(Dav1dPicture *picture, uint8_t *bgra_data, ptrdiff_t bgra_stride)
 {
     Dav1dPictureParameters picparam = picture->p;
 
@@ -147,15 +150,15 @@ convert_av1(Dav1dPicture *picture, uint8_t *bgra_data, ptrdiff_t bgra_stride)
                              bgra_data, bgra_stride, matrixYUV, width, height);
         }
     }
-    dav1d_picture_unref(picture);
 }
 
 void
-convert_av1_init(ConvertAv1Context **context)
+convert_av1_init(ConvertAv1Context **context, Sav1ThreadQueue *input_queue,
+                 Sav1ThreadQueue *output_queue)
 {
     ConvertAv1Context *convert_context =
         (ConvertAv1Context *)malloc(sizeof(ConvertAv1Context));
-    *context = decode_context;
+    *context = convert_context;
 
     convert_context->input_queue = input_queue;
     convert_context->output_queue = output_queue;
@@ -170,11 +173,57 @@ convert_av1_destroy(ConvertAv1Context *context)
 int
 convert_av1_start(void *context)
 {
-    ConvertAv1Context *convert_context = (DecodeAv1Context *)context;
+    ConvertAv1Context *convert_context = (ConvertAv1Context *)context;
     thread_atomic_int_store(&(convert_context->do_convert), 1);
+
+    while (thread_atomic_int_load(&(convert_context->do_convert))) {
+        // pull a Dav1dPicture from the input queue
+        Dav1dPicture *dav1d_pic =
+            (Dav1dPicture *)sav1_thread_queue_pop(convert_context->input_queue);
+        if (dav1d_pic == NULL) {
+            sav1_thread_queue_push(convert_context->output_queue, NULL);
+            break;
+        }
+
+        Sav1VideoFrame *output_frame = (Sav1VideoFrame *)malloc(sizeof(Sav1VideoFrame));
+        output_frame->codec = SAV1_CODEC_AV1;
+        output_frame->color_depth = 8;
+        output_frame->timecode = dav1d_pic->m.timestamp;
+        output_frame->width = dav1d_pic->p.w;
+        output_frame->height = dav1d_pic->p.h;
+        output_frame->stride = 4 * output_frame->width;
+        output_frame->size = output_frame->stride * output_frame->height;
+        output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
+
+        // convert the color space
+        convert_dav1d_picture(dav1d_pic, output_frame->data, output_frame->stride);
+
+        sav1_thread_queue_push(convert_context->output_queue, output_frame);
+
+        dav1d_picture_unref(dav1d_pic);
+    }
+
+    return 0;
 }
 
 void
 convert_av1_stop(ConvertAv1Context *context)
 {
+    thread_atomic_int_store(&(context->do_convert), 0);
+
+    // add a fake entry to the input queue if necessary
+    if (sav1_thread_queue_get_size(context->input_queue) == 0) {
+        sav1_thread_queue_push_timeout(context->input_queue, NULL);
+    }
+
+    // drain the output queue
+    while (1) {
+        Sav1VideoFrame *frame =
+            (Sav1VideoFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
+        if (frame == NULL) {
+            break;
+        }
+        free(frame->data);
+        free(frame);
+    }
 }
