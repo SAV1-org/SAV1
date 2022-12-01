@@ -31,5 +31,5 @@ clean:
 	rm -f *.out *.o *.d *.exe dependencies/libwebm/webm_parser/object_files/*.o
 
 opus:
-	g++ -o integration.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/integration.cpp -lopus
+	g++ -o integration.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/integration.cpp -Idependencies/opus/include -lopus
  
