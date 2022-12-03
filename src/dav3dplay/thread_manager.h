@@ -7,19 +7,23 @@
 #include "parse.h"
 #include "decode_av1.h"
 #include "convert_av1.h"
+#include "custom_processing_video.h"
 
 typedef struct ThreadManager {
     ParseContext *parse_context;
     DecodeAv1Context *decode_av1_context;
     ConvertAv1Context *convert_av1_context;
+    CustomProcessingVideoContext *custom_processing_video_context;
     Sav1ThreadQueue *video_webm_frame_queue;
     Sav1ThreadQueue *video_dav1d_picture_queue;
     Sav1ThreadQueue *audio_webm_frame_queue;
+    Sav1ThreadQueue *video_custom_processing_queue;
     Sav1ThreadQueue *video_output_queue;
     Sav1ThreadQueue *audio_output_queue;
     thread_ptr_t parse_thread;
     thread_ptr_t decode_av1_thread;
     thread_ptr_t convert_av1_thread;
+    thread_ptr_t custom_processing_video_thread;
     thread_ptr_t process_opus_thread;
     Sav1Settings *settings;
 } ThreadManager;

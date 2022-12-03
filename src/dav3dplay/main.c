@@ -12,6 +12,21 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 
+void *
+postprocessing_func(Sav1VideoFrame *frame)
+{
+    for (size_t y = 0; y < frame->height; y++) {
+        for (size_t x = 0; x < frame->width; x++) {
+            size_t pos = y * frame->stride + x * 4;
+            frame->data[pos] = 255 - (frame->data[pos]);
+            frame->data[pos + 1] = 255 - (frame->data[pos + 1]);
+            frame->data[pos + 2] = 255 - (frame->data[pos + 2]);
+        }
+    }
+
+    return (void *)frame;
+}
+
 void
 switch_window_surface(SDL_Window *window, SDL_Surface **existing)
 {
@@ -86,9 +101,11 @@ main(int argc, char *argv[])
     SDL_Event event;
 
     Sav1Settings settings;
-    settings.file_name = argv[1];
-    settings.queue_size = 20;
+    sav1_default_settings(&settings, argv[1]);
     settings.codec_target = SAV1_CODEC_TARGET_AV1;
+    settings.use_custom_processing = SAV1_USE_CUSTOM_PROCESSING_VIDEO;
+    settings.custom_video_frame_processing = &postprocessing_func;
+
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;
     thread_manager_init(&manager, &settings);

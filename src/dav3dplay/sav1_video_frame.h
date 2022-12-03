@@ -1,6 +1,8 @@
 #ifndef SAV1_VIDEO_FRAME_H
 #define SAV1_VIDEO_FRAME_H
 
+#include <cstdint>
+
 #define SAV1_CODEC_AV1 1
 
 typedef struct Sav1VideoFrame {
