@@ -5,14 +5,16 @@
 
 void
 custom_processing_video_init(CustomProcessingVideoContext **context,
-                             void *(*process_function)(Sav1VideoFrame *),
-                             Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
+                             void *(*process_function)(Sav1VideoFrame *, void *),
+                             void *cookie, Sav1ThreadQueue *input_queue,
+                             Sav1ThreadQueue *output_queue)
 {
     CustomProcessingVideoContext *process_context =
         (CustomProcessingVideoContext *)malloc(sizeof(CustomProcessingVideoContext));
     *context = process_context;
 
     process_context->process_function = process_function;
+    process_context->cookie = cookie;
     process_context->input_queue = input_queue;
     process_context->output_queue = output_queue;
 }
@@ -39,7 +41,8 @@ custom_processing_video_start(void *context)
             break;
         }
 
-        void *output_frame = process_context->process_function(input_frame);
+        void *output_frame =
+            process_context->process_function(input_frame, process_context->cookie);
 
         sav1_thread_queue_push(process_context->output_queue, output_frame);
     }

@@ -13,14 +13,23 @@
 #include <SDL2/SDL.h>
 
 void *
-postprocessing_func(Sav1VideoFrame *frame)
+postprocessing_func(Sav1VideoFrame *frame, void *cookie)
 {
     for (size_t y = 0; y < frame->height; y++) {
         for (size_t x = 0; x < frame->width; x++) {
             size_t pos = y * frame->stride + x * 4;
-            frame->data[pos] = 255 - (frame->data[pos]);
-            frame->data[pos + 1] = 255 - (frame->data[pos + 1]);
-            frame->data[pos + 2] = 255 - (frame->data[pos + 2]);
+            if (x < frame->width / 3) {
+                frame->data[pos + 1] = 0;
+                frame->data[pos + 2] = 0;
+            }
+            else if (x < 2 * frame->width / 3) {
+                frame->data[pos] = 0;
+                frame->data[pos + 2] = 0;
+            }
+            else {
+                frame->data[pos] = 0;
+                frame->data[pos + 1] = 0;
+            }
         }
     }
 
@@ -103,8 +112,7 @@ main(int argc, char *argv[])
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
     settings.codec_target = SAV1_CODEC_TARGET_AV1;
-    settings.use_custom_processing = SAV1_USE_CUSTOM_PROCESSING_VIDEO;
-    settings.custom_video_frame_processing = &postprocessing_func;
+    sav1_settings_use_custom_video_processing(&settings, postprocessing_func, NULL);
 
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;

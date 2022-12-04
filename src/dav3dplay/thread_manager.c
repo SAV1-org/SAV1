@@ -26,6 +26,7 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
                          thread_manager->video_custom_processing_queue);
         custom_processing_video_init(&(thread_manager->custom_processing_video_context),
                                      settings->custom_video_frame_processing,
+                                     settings->custom_video_frame_processing_cookie,
                                      thread_manager->video_custom_processing_queue,
                                      thread_manager->video_output_queue);
     }

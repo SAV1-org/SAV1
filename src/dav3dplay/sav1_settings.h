@@ -14,10 +14,16 @@ typedef struct Sav1Settings {
     int codec_target;
     size_t queue_size;
     int use_custom_processing;
-    void *(*custom_video_frame_processing)(Sav1VideoFrame *);
+    void *(*custom_video_frame_processing)(Sav1VideoFrame *, void *);
+    void *custom_video_frame_processing_cookie;
 } Sav1Settings;
 
 void
 sav1_default_settings(Sav1Settings *settings, char *file_name);
+
+void
+sav1_settings_use_custom_video_processing(
+    Sav1Settings *settings,
+    void *(*processing_function)(Sav1VideoFrame *frame, void *cookie), void *cookie);
 
 #endif
