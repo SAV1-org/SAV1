@@ -9,9 +9,20 @@
 #define SAV1_USE_CUSTOM_PROCESSING_VIDEO 1
 #define SAV1_USE_CUSTOM_PROCESSING_AUDIO 2
 
+#define SAV1_PIXEL_FORMAT_RGBA 0
+#define SAV1_PIXEL_FORMAT_ARGB 1
+#define SAV1_PIXEL_FORMAT_BGRA 2
+#define SAV1_PIXEL_FORMAT_ABGR 3
+#define SAV1_PIXEL_FORMAT_RGB 4
+#define SAV1_PIXEL_FORMAT_BGR 5
+#define SAV1_PIXEL_FORMAT_YUY 6
+#define SAV1_PIXEL_FORMAT_UYVY 7
+#define SAV1_PIXEL_FORMAT_YVYU 8
+
 typedef struct Sav1Settings {
     char *file_name;
     int codec_target;
+    int desired_pixel_format;
     size_t queue_size;
     int use_custom_processing;
     void *(*custom_video_frame_processing)(Sav1VideoFrame *, void *);

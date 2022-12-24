@@ -9,11 +9,12 @@ typedef struct ConvertAv1Context {
     Sav1ThreadQueue *input_queue;
     Sav1ThreadQueue *output_queue;
     thread_atomic_int_t do_convert;
+    int desired_pixel_format;
 } ConvertAv1Context;
 
 void
-convert_av1_init(ConvertAv1Context **context, Sav1ThreadQueue *input_queue,
-                 Sav1ThreadQueue *output_queue);
+convert_av1_init(ConvertAv1Context **context, int desired_pixel_format,
+                 Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue);
 
 void
 convert_av1_destroy(ConvertAv1Context *context);

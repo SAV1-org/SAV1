@@ -22,6 +22,7 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
         sav1_thread_queue_init(&(thread_manager->video_custom_processing_queue),
                                settings->queue_size);
         convert_av1_init(&(thread_manager->convert_av1_context),
+                         settings->desired_pixel_format,
                          thread_manager->video_dav1d_picture_queue,
                          thread_manager->video_custom_processing_queue);
         custom_processing_video_init(&(thread_manager->custom_processing_video_context),
@@ -34,6 +35,7 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
         thread_manager->custom_processing_video_context = NULL;
         thread_manager->video_custom_processing_queue = NULL;
         convert_av1_init(&(thread_manager->convert_av1_context),
+                         settings->desired_pixel_format,
                          thread_manager->video_dav1d_picture_queue,
                          thread_manager->video_output_queue);
     }

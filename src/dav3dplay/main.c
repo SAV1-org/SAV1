@@ -112,7 +112,8 @@ main(int argc, char *argv[])
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
     settings.codec_target = SAV1_CODEC_TARGET_AV1;
-    sav1_settings_use_custom_video_processing(&settings, postprocessing_func, NULL);
+    settings.desired_pixel_format = SAV1_PIXEL_FORMAT_ARGB;
+    // sav1_settings_use_custom_video_processing(&settings, postprocessing_func, NULL);
 
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;
@@ -144,7 +145,7 @@ main(int argc, char *argv[])
             pixel_buffer = next_pixel_buffer;
             frame = SDL_CreateRGBSurfaceWithFormatFrom(
                 (void *)pixel_buffer, frame_width, frame_height, 32, sav1_frame->stride,
-                SDL_PIXELFORMAT_BGRA32);
+                SDL_PIXELFORMAT_ARGB32);
             free(sav1_frame);
             sav1_frame = NULL;
         }

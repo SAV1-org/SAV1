@@ -1,20 +1,24 @@
 #include <cassert>
+#include <cstdio>
 #include <dav1d/dav1d.h>
 
 #include "convert_av1.h"
 #include "sav1_video_frame.h"
+#include "sav1_settings.h"
 
 using namespace libyuv;
 
 void
-convert_yuv_to_rgb_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
-                                        uint8_t *U_data, uint8_t *V_data,
-                                        ptrdiff_t UV_stride, uint8_t *bgra_data,
-                                        ptrdiff_t bgra_stride, Dav1dPixelLayout layout,
-                                        int width, int height)
+convert_yuv_to_rgba_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
+                                         uint8_t *U_data, uint8_t *V_data,
+                                         ptrdiff_t UV_stride,
+                                         Sav1VideoFrame *output_frame,
+                                         Dav1dPixelLayout layout,
+                                         int desired_pixel_format)
 {
-    int chroma_sampling_horizontal = 1;
-    int chroma_sampling_vertical = 1;
+    // determine chroma sampling in both axes
+    size_t chroma_sampling_horizontal = 1;
+    size_t chroma_sampling_vertical = 1;
     if (layout != DAV1D_PIXEL_LAYOUT_I444) {
         chroma_sampling_horizontal = 2;
         if (layout == DAV1D_PIXEL_LAYOUT_I420) {
@@ -22,36 +26,71 @@ convert_yuv_to_rgb_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
         }
     }
 
-    for (int y = 0; y < height; y++) {
-        int dest_index = y * bgra_stride;
-        for (int x = 0; x < width; x++) {
-            int Y_index = y * Y_stride + x;
-            int UV_index =
+    // where within one pixel do A, R, G, and B go
+    uint8_t byte_offsets_lookup[6][4] = {
+        [SAV1_PIXEL_FORMAT_RGBA] = {3, 0, 1, 2}, [SAV1_PIXEL_FORMAT_ARGB] = {0, 1, 2, 3},
+        [SAV1_PIXEL_FORMAT_BGRA] = {3, 2, 1, 0}, [SAV1_PIXEL_FORMAT_ABGR] = {0, 3, 2, 1},
+        [SAV1_PIXEL_FORMAT_RGB] = {0, 0, 1, 2},  [SAV1_PIXEL_FORMAT_BGR] = {0, 2, 1, 0}};
+    uint8_t pixel_size = desired_pixel_format == SAV1_PIXEL_FORMAT_RGB ||
+                                 desired_pixel_format == SAV1_PIXEL_FORMAT_BGR
+                             ? 3
+                             : 4;
+    uint8_t *byte_offsets = byte_offsets_lookup[desired_pixel_format];
+
+    // iterate over all pixels
+    for (size_t y = 0; y < output_frame->height; y++) {
+        for (int x = 0; x < output_frame->width; x++) {
+            // get the indices for the YUV data
+            size_t Y_index = y * Y_stride + x;
+            size_t UV_index =
                 y / chroma_sampling_vertical * UV_stride + x / chroma_sampling_horizontal;
+            // get the index for the output data
+            size_t dest_index = y * output_frame->stride + x * pixel_size;
 
             if (layout == DAV1D_PIXEL_LAYOUT_I400) {
                 // grayscale
-                bgra_data[dest_index++] = Y_data[Y_index];
-                bgra_data[dest_index++] = Y_data[Y_index];
-                bgra_data[dest_index++] = Y_data[Y_index];
-                bgra_data[dest_index++] = 255;
+                output_frame->data[dest_index + byte_offsets[0]] = 255;  // alpha
+                output_frame->data[dest_index + byte_offsets[1]] =
+                    Y_data[Y_index];  // red
+                output_frame->data[dest_index + byte_offsets[2]] =
+                    Y_data[Y_index];  // green
+                output_frame->data[dest_index + byte_offsets[3]] =
+                    Y_data[Y_index];  // blue
             }
             else {
                 // color
-                bgra_data[dest_index++] = U_data[UV_index];
-                bgra_data[dest_index++] = Y_data[Y_index];
-                bgra_data[dest_index++] = V_data[UV_index];
-                bgra_data[dest_index++] = 255;
+                output_frame->data[dest_index + byte_offsets[0]] = 255;  // alpha
+                output_frame->data[dest_index + byte_offsets[1]] =
+                    V_data[UV_index];  // red
+                output_frame->data[dest_index + byte_offsets[2]] =
+                    Y_data[Y_index];  // green
+                output_frame->data[dest_index + byte_offsets[3]] =
+                    U_data[UV_index];  // blue
             }
         }
     }
 }
 
-const struct YuvConstants *
-get_matrix_coefficients(Dav1dSequenceHeader *seqhdr)
+int
+RGB24ToBGR24(const uint8_t *src_rgb24, int src_stride_rgb24, uint8_t *dst_bgr24,
+             int dst_stride_bgr24, int width, int height)
 {
-    if (seqhdr->color_range) {
-        switch (seqhdr->mtrx) {
+    for (size_t y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            size_t i = y * src_stride_rgb24 + x * 3;
+            uint8_t temp = src_rgb24[i];
+            dst_bgr24[i] = src_rgb24[i + 2];
+            dst_bgr24[i + 2] = temp;
+        }
+    }
+    return 0;
+}
+
+const struct YuvConstants *
+get_matrix_coefficients(Dav1dSequenceHeader *seq_hdr)
+{
+    if (seq_hdr->color_range) {
+        switch (seq_hdr->mtrx) {
             case DAV1D_MC_BT709:
                 return &kYuvF709Constants;
             case DAV1D_MC_BT470BG:
@@ -61,7 +100,7 @@ get_matrix_coefficients(Dav1dSequenceHeader *seqhdr)
             case DAV1D_MC_BT2020_NCL:
                 return &kYuvV2020Constants;
             case DAV1D_MC_CHROMAT_NCL:
-                switch (seqhdr->pri) {
+                switch (seq_hdr->pri) {
                     case DAV1D_COLOR_PRI_BT709:
                     case DAV1D_COLOR_PRI_UNKNOWN:
                         return &kYuvF709Constants;
@@ -71,14 +110,14 @@ get_matrix_coefficients(Dav1dSequenceHeader *seqhdr)
                     case DAV1D_COLOR_PRI_BT2020:
                         return &kYuvV2020Constants;
                     default:
-                        return NULL;
+                        return &kYuvJPEGConstants;
                 }
             default:
-                return NULL;
+                return &kYuvJPEGConstants;
         }
     }
     else {
-        switch (seqhdr->mtrx) {
+        switch (seq_hdr->mtrx) {
             case DAV1D_MC_BT709:
                 return &kYuvH709Constants;
             case DAV1D_MC_BT470BG:
@@ -88,7 +127,7 @@ get_matrix_coefficients(Dav1dSequenceHeader *seqhdr)
             case DAV1D_MC_BT2020_NCL:
                 return &kYuv2020Constants;
             case DAV1D_MC_CHROMAT_NCL:
-                switch (seqhdr->pri) {
+                switch (seq_hdr->pri) {
                     case DAV1D_COLOR_PRI_BT709:
                     case DAV1D_COLOR_PRI_UNKNOWN:
                         return &kYuvH709Constants;
@@ -98,24 +137,23 @@ get_matrix_coefficients(Dav1dSequenceHeader *seqhdr)
                     case DAV1D_COLOR_PRI_BT2020:
                         return &kYuv2020Constants;
                     default:
-                        return NULL;
+                        return &kYuvI601Constants;
                 }
             default:
-                return NULL;
+                return &kYuvI601Constants;
         }
     }
-    return NULL;
+    return &kYuvJPEGConstants;
 }
 
 void
-convert_dav1d_picture(Dav1dPicture *picture, uint8_t *bgra_data, ptrdiff_t bgra_stride)
+convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
+                      int desired_pixel_format)
 {
-    Dav1dPictureParameters picparam = picture->p;
-
-    int width = picparam.w;
-    int height = picparam.h;
-
-    Dav1dSequenceHeader *seqhdr = picture->seq_hdr;
+    int width = picture->p.w;
+    int height = picture->p.h;
+    output_frame->width = picture->p.w;
+    output_frame->height = picture->p.h;
 
     uint8_t *Y_data = (uint8_t *)picture->data[0];
     uint8_t *U_data = (uint8_t *)picture->data[1];
@@ -123,38 +161,140 @@ convert_dav1d_picture(Dav1dPicture *picture, uint8_t *bgra_data, ptrdiff_t bgra_
     ptrdiff_t Y_stride = picture->stride[0];
     ptrdiff_t UV_stride = picture->stride[1];
 
-    if (seqhdr->mtrx == DAV1D_MC_IDENTITY) {
-        // this function takes way too many arguments
-        convert_yuv_to_rgb_with_identity_matrix(Y_data, Y_stride, U_data, V_data,
-                                                UV_stride, bgra_data, bgra_stride,
-                                                seqhdr->layout, width, height);
+    Dav1dSequenceHeader *seq_hdr = picture->seq_hdr;
+
+    if (desired_pixel_format == SAV1_PIXEL_FORMAT_YUY ||
+        desired_pixel_format == SAV1_PIXEL_FORMAT_UYVY ||
+        desired_pixel_format == SAV1_PIXEL_FORMAT_YVYU) {
+        // YUV variations
     }
     else {
-        const struct YuvConstants *matrixYUV = get_matrix_coefficients(seqhdr);
-        assert(matrixYUV != NULL);
+        // RGBA variations
+        if (desired_pixel_format == SAV1_PIXEL_FORMAT_RGB ||
+            desired_pixel_format == SAV1_PIXEL_FORMAT_BGR) {
+            // 3 bytes per pixel (no alpha)
+            output_frame->stride = 3 * output_frame->width;
+        }
+        else {
+            // 4 bytes per pixel
+            output_frame->stride = 4 * output_frame->width;
+        }
+        // allocate pixel buffer
+        output_frame->size = output_frame->stride * output_frame->height;
+        output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
+        if (seq_hdr->mtrx == DAV1D_MC_IDENTITY) {
+            convert_yuv_to_rgba_with_identity_matrix(
+                Y_data, Y_stride, U_data, V_data, UV_stride, output_frame,
+                seq_hdr->layout, desired_pixel_format);
+        }
+        else {
+            // get the appropriate matrix coefficients (or close enough)
+            const struct YuvConstants *matrix_coefficients =
+                get_matrix_coefficients(seq_hdr);
 
-        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
-            I420ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
-                             bgra_data, bgra_stride, matrixYUV, width, height);
-        }
-        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
-            I400ToARGBMatrix(Y_data, Y_stride, bgra_data, bgra_stride, matrixYUV, width,
-                             height);
-        }
-        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
-            I422ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
-                             bgra_data, bgra_stride, matrixYUV, width, height);
-        }
-        if (seqhdr->layout == DAV1D_PIXEL_LAYOUT_I444) {
-            I444ToARGBMatrix(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
-                             bgra_data, bgra_stride, matrixYUV, width, height);
+            typedef int (*RgbConversionFunction)(const uint8_t *, int, uint8_t *, int,
+                                                 int, int);
+
+            size_t output_pixel_layout_lookup[] = {
+                [SAV1_PIXEL_FORMAT_RGBA] = 0, [SAV1_PIXEL_FORMAT_ARGB] = 1,
+                [SAV1_PIXEL_FORMAT_BGRA] = 2, [SAV1_PIXEL_FORMAT_ABGR] = 3,
+                [SAV1_PIXEL_FORMAT_RGB] = 4,  [SAV1_PIXEL_FORMAT_BGR] = 5};
+            size_t output_pixel_layout_index =
+                output_pixel_layout_lookup[desired_pixel_format];
+
+            if (seq_hdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
+                // get the appropriate matrix coefficients (or close enough)
+                const struct YuvConstants *matrix_coefficients =
+                    get_matrix_coefficients(seq_hdr);
+
+                I400ToARGBMatrix(Y_data, Y_stride, output_frame->data,
+                                 output_frame->stride, matrix_coefficients, width,
+                                 height);
+
+                RgbConversionFunction rgb_conversion_function_lookup[6] = {
+                    ARGBToABGR, ARGBToBGRA,  nullptr,
+                    ARGBToRGBA, ARGBToRGB24, ARGBToRGB24};
+
+                // convert to the final byte order if necessary
+                RgbConversionFunction rgb_conversion_function =
+                    rgb_conversion_function_lookup[output_pixel_layout_index];
+                if (rgb_conversion_function) {
+                    rgb_conversion_function(output_frame->data, output_frame->stride,
+                                            output_frame->data, output_frame->stride,
+                                            width, height);
+                }
+                if (output_pixel_layout_index == 4) {
+                    RGB24ToBGR24(output_frame->data, output_frame->stride,
+                                 output_frame->data, output_frame->stride, width, height);
+                }
+            }
+            else {
+                typedef int (*YuvConversionFunction)(
+                    const uint8_t *, int, const uint8_t *, int, const uint8_t *, int,
+                    uint8_t *, int, const struct YuvConstants *, int, int);
+                YuvConversionFunction yuv_conversion_function_lookup[6][3] = {
+                    {
+                        I420ToARGBMatrix,
+                        I422ToARGBMatrix,
+                        I444ToARGBMatrix,
+                    },
+                    {
+                        I420ToARGBMatrix,
+                        I422ToARGBMatrix,
+                        I444ToARGBMatrix,
+                    },
+                    {
+                        I420ToARGBMatrix,
+                        I422ToARGBMatrix,
+                        I444ToARGBMatrix,
+                    },
+                    {
+                        I420ToRGBAMatrix,
+                        I422ToRGBAMatrix,
+                        I444ToARGBMatrix,
+                    },
+                    {I420ToRGB24Matrix, I422ToRGB24Matrix, I444ToRGB24Matrix},
+                    {I420ToRGB24Matrix, I422ToRGB24Matrix, I444ToRGB24Matrix}};
+
+                RgbConversionFunction rgb_conversion_function_lookup[6] = {
+                    ARGBToABGR, ARGBToBGRA, nullptr, nullptr, RGB24ToBGR24, nullptr};
+
+                size_t input_pixel_layout_lookup[] = {[DAV1D_PIXEL_LAYOUT_I400] = 0,
+                                                      [DAV1D_PIXEL_LAYOUT_I420] = 0,
+                                                      [DAV1D_PIXEL_LAYOUT_I422] = 1,
+                                                      [DAV1D_PIXEL_LAYOUT_I444] = 2};
+                size_t input_pixel_layout_index =
+                    input_pixel_layout_lookup[seq_hdr->layout];
+
+                // convert from YUV to some form of RGB
+                YuvConversionFunction yuv_conversion_function =
+                    yuv_conversion_function_lookup[output_pixel_layout_index]
+                                                  [input_pixel_layout_index];
+                yuv_conversion_function(Y_data, Y_stride, U_data, UV_stride, V_data,
+                                        UV_stride, output_frame->data,
+                                        output_frame->stride, matrix_coefficients, width,
+                                        height);
+
+                // convert to the final byte order if necessary
+                RgbConversionFunction rgb_conversion_function =
+                    rgb_conversion_function_lookup[output_pixel_layout_index];
+                if (output_pixel_layout_index == 3 && input_pixel_layout_index == 2) {
+                    // special case because no I444ToRGBAMatrix function exists
+                    rgb_conversion_function = ARGBToRGBA;
+                }
+                if (rgb_conversion_function) {
+                    rgb_conversion_function(output_frame->data, output_frame->stride,
+                                            output_frame->data, output_frame->stride,
+                                            width, height);
+                }
+            }
         }
     }
 }
 
 void
-convert_av1_init(ConvertAv1Context **context, Sav1ThreadQueue *input_queue,
-                 Sav1ThreadQueue *output_queue)
+convert_av1_init(ConvertAv1Context **context, int desired_pixel_format,
+                 Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     ConvertAv1Context *convert_context =
         (ConvertAv1Context *)malloc(sizeof(ConvertAv1Context));
@@ -162,6 +302,7 @@ convert_av1_init(ConvertAv1Context **context, Sav1ThreadQueue *input_queue,
 
     convert_context->input_queue = input_queue;
     convert_context->output_queue = output_queue;
+    convert_context->desired_pixel_format = desired_pixel_format;
 }
 
 void
@@ -185,18 +326,22 @@ convert_av1_start(void *context)
             break;
         }
 
+        // make sure the picture is 8 bits per color
+        if (dav1d_pic->p.bpc != 8) {
+            // TODO: proper logging here
+            printf("ERROR: SAV1 only currently supports 8 bits per color\n");
+            sav1_thread_queue_push(convert_context->output_queue, NULL);
+            break;
+        }
+
         Sav1VideoFrame *output_frame = (Sav1VideoFrame *)malloc(sizeof(Sav1VideoFrame));
         output_frame->codec = SAV1_CODEC_AV1;
         output_frame->color_depth = 8;
         output_frame->timecode = dav1d_pic->m.timestamp;
-        output_frame->width = dav1d_pic->p.w;
-        output_frame->height = dav1d_pic->p.h;
-        output_frame->stride = 4 * output_frame->width;
-        output_frame->size = output_frame->stride * output_frame->height;
-        output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
 
         // convert the color space
-        convert_dav1d_picture(dav1d_pic, output_frame->data, output_frame->stride);
+        convert_dav1d_picture(dav1d_pic, output_frame,
+                              convert_context->desired_pixel_format);
 
         sav1_thread_queue_push(convert_context->output_queue, output_frame);
 
