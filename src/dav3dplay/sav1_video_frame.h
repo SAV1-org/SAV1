@@ -14,6 +14,7 @@ typedef struct Sav1VideoFrame {
     uint64_t timecode;
     uint8_t color_depth;
     int codec;
+    int pixel_format;
 } Sav1VideoFrame;
 
 #endif

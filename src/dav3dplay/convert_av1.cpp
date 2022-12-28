@@ -71,6 +71,50 @@ convert_yuv_to_rgba_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
     }
 }
 
+void
+convert_yuv_to_packed(uint8_t *Y_data, ptrdiff_t Y_stride, uint8_t *U_data,
+                      uint8_t *V_data, ptrdiff_t UV_stride, Sav1VideoFrame *output_frame,
+                      Dav1dPixelLayout layout, int desired_pixel_format)
+{
+    // determine chroma sampling in both axes
+    size_t chroma_sampling_horizontal = 4;
+    size_t chroma_sampling_vertical = 4;
+    if (layout != DAV1D_PIXEL_LAYOUT_I444) {
+        chroma_sampling_horizontal = 2;
+        if (layout == DAV1D_PIXEL_LAYOUT_I420) {
+            chroma_sampling_vertical = 2;
+        }
+    }
+
+    for (size_t y = 0; y < output_frame->height; y++) {
+        for (int x = 0; x < output_frame->width; x++) {
+            // get the indices for the YUV data
+            size_t Y_index = y * Y_stride + x;
+            size_t UV_index =
+                y / chroma_sampling_vertical * UV_stride + x / chroma_sampling_horizontal;
+
+            // get the index for the output data
+            size_t dest_index = y * output_frame->stride + x * 2;
+            size_t Y_offset = desired_pixel_format == SAV1_PIXEL_FORMAT_UYVY ? 1 : 0;
+            size_t UV_offset = 1 - Y_offset;
+
+            output_frame->data[dest_index + Y_offset] = Y_data[Y_index];
+            if (layout == DAV1D_PIXEL_LAYOUT_I400) {
+                output_frame->data[dest_index + UV_offset] = 0;
+            }
+            else {
+                if ((y * output_frame->width + x) % 2 ^
+                    desired_pixel_format == SAV1_PIXEL_FORMAT_YVYU) {
+                    output_frame->data[dest_index + UV_offset] = V_data[UV_index];
+                }
+                else {
+                    output_frame->data[dest_index + UV_offset] = U_data[UV_index];
+                }
+            }
+        }
+    }
+}
+
 int
 RGB24ToBGR24(const uint8_t *src_rgb24, int src_stride_rgb24, uint8_t *dst_bgr24,
              int dst_stride_bgr24, int width, int height)
@@ -163,10 +207,79 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
 
     Dav1dSequenceHeader *seq_hdr = picture->seq_hdr;
 
-    if (desired_pixel_format == SAV1_PIXEL_FORMAT_YUY ||
+    if (desired_pixel_format == SAV1_PIXEL_FORMAT_YUY2 ||
         desired_pixel_format == SAV1_PIXEL_FORMAT_UYVY ||
         desired_pixel_format == SAV1_PIXEL_FORMAT_YVYU) {
         // YUV variations
+
+        if (seq_hdr->mtrx == DAV1D_MC_IDENTITY) {
+            // allocate twice as much memory as we'll eventually need
+            output_frame->stride = 4 * output_frame->width;
+            output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
+
+            // first pack as BGRA
+            convert_yuv_to_rgba_with_identity_matrix(
+                Y_data, Y_stride, U_data, V_data, UV_stride, output_frame,
+                seq_hdr->layout, SAV1_PIXEL_FORMAT_BGRA);
+
+            // convert BGRA to what we need
+            if (desired_pixel_format == SAV1_PIXEL_FORMAT_YVYU) {
+                ARGBToUYVY(output_frame->data, output_frame->stride, output_frame->data,
+                           output_frame->stride, width, height);
+            }
+            else {
+                ARGBToYUY2(output_frame->data, output_frame->stride, output_frame->data,
+                           output_frame->stride, width, height);
+
+                if (desired_pixel_format == SAV1_PIXEL_FORMAT_UYVY) {
+                    // no conversion function exists for this so U and V must be switched
+                    size_t start_x = 0;
+                    for (size_t y = 0; y < output_frame->height; y++) {
+                        for (int x = start_x; x < output_frame->width; x += 2) {
+                            size_t i = y * output_frame->stride + x * 2;
+                            uint8_t temp = output_frame->data[i];
+                            size_t next_i = i + 2;
+                            start_x = 0;
+                            if (x == output_frame->width - 1) {
+                                start_x = 1;
+                                next_i = (y + 1) * output_frame->stride;
+                            }
+                            output_frame->data[i] = output_frame->data[i + 2];
+                            output_frame->data[i + 2] = temp;
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            output_frame->stride = 2 * output_frame->width;
+            output_frame->size = output_frame->stride * output_frame->height;
+            output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
+
+            // check for cases where libYUV functions already exist (this are most
+            // common)
+            if (desired_pixel_format == SAV1_PIXEL_FORMAT_YUY2 &&
+                seq_hdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
+                I420ToYUY2(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                           output_frame->data, output_frame->stride, width, height);
+            }
+            else if (desired_pixel_format == SAV1_PIXEL_FORMAT_YVYU &&
+                     seq_hdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
+                I420ToUYVY(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                           output_frame->data, output_frame->stride, width, height);
+            }
+            else if (desired_pixel_format == SAV1_PIXEL_FORMAT_YVYU &&
+                     seq_hdr->layout == DAV1D_PIXEL_LAYOUT_I422) {
+                I422ToUYVY(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
+                           output_frame->data, output_frame->stride, width, height);
+            }
+            else {
+                // no function already exists so use our own
+                convert_yuv_to_packed(Y_data, Y_stride, U_data, V_data, UV_stride,
+                                      output_frame, seq_hdr->layout,
+                                      desired_pixel_format);
+            }
+        }
     }
     else {
         // RGBA variations
@@ -336,6 +449,7 @@ convert_av1_start(void *context)
 
         Sav1VideoFrame *output_frame = (Sav1VideoFrame *)malloc(sizeof(Sav1VideoFrame));
         output_frame->codec = SAV1_CODEC_AV1;
+        output_frame->pixel_format = convert_context->desired_pixel_format;
         output_frame->color_depth = 8;
         output_frame->timecode = dav1d_pic->m.timestamp;
 
