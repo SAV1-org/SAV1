@@ -26,16 +26,18 @@ convert_yuv_to_rgba_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
         }
     }
 
-    // where within one pixel do A, R, G, and B go
+    // where do A, R, G, and B go within one pixel
     uint8_t byte_offsets_lookup[6][4] = {
         [SAV1_PIXEL_FORMAT_RGBA] = {3, 0, 1, 2}, [SAV1_PIXEL_FORMAT_ARGB] = {0, 1, 2, 3},
         [SAV1_PIXEL_FORMAT_BGRA] = {3, 2, 1, 0}, [SAV1_PIXEL_FORMAT_ABGR] = {0, 3, 2, 1},
         [SAV1_PIXEL_FORMAT_RGB] = {0, 0, 1, 2},  [SAV1_PIXEL_FORMAT_BGR] = {0, 2, 1, 0}};
+    uint8_t *byte_offsets = byte_offsets_lookup[desired_pixel_format];
+
+    // how many bytes does one pixel take up
     uint8_t pixel_size = desired_pixel_format == SAV1_PIXEL_FORMAT_RGB ||
                                  desired_pixel_format == SAV1_PIXEL_FORMAT_BGR
                              ? 3
                              : 4;
-    uint8_t *byte_offsets = byte_offsets_lookup[desired_pixel_format];
 
     // iterate over all pixels
     for (size_t y = 0; y < output_frame->height; y++) {
@@ -44,6 +46,7 @@ convert_yuv_to_rgba_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
             size_t Y_index = y * Y_stride + x;
             size_t UV_index =
                 y / chroma_sampling_vertical * UV_stride + x / chroma_sampling_horizontal;
+
             // get the index for the output data
             size_t dest_index = y * output_frame->stride + x * pixel_size;
 
@@ -74,7 +77,7 @@ convert_yuv_to_rgba_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
 void
 convert_yuv_to_packed(uint8_t *Y_data, ptrdiff_t Y_stride, uint8_t *U_data,
                       uint8_t *V_data, ptrdiff_t UV_stride, Sav1VideoFrame *output_frame,
-                      Dav1dPixelLayout layout, int desired_pixel_format)
+                      Dav1dPixelLayout layout)
 {
     // determine chroma sampling in both axes
     size_t chroma_sampling_horizontal = 4;
@@ -86,6 +89,7 @@ convert_yuv_to_packed(uint8_t *Y_data, ptrdiff_t Y_stride, uint8_t *U_data,
         }
     }
 
+    // iterate over all pixels
     for (size_t y = 0; y < output_frame->height; y++) {
         for (int x = 0; x < output_frame->width; x++) {
             // get the indices for the YUV data
@@ -95,16 +99,19 @@ convert_yuv_to_packed(uint8_t *Y_data, ptrdiff_t Y_stride, uint8_t *U_data,
 
             // get the index for the output data
             size_t dest_index = y * output_frame->stride + x * 2;
-            size_t Y_offset = desired_pixel_format == SAV1_PIXEL_FORMAT_UYVY ? 1 : 0;
+            size_t Y_offset =
+                output_frame->pixel_format == SAV1_PIXEL_FORMAT_UYVY ? 1 : 0;
             size_t UV_offset = 1 - Y_offset;
 
             output_frame->data[dest_index + Y_offset] = Y_data[Y_index];
             if (layout == DAV1D_PIXEL_LAYOUT_I400) {
+                // grayscale
                 output_frame->data[dest_index + UV_offset] = 0;
             }
             else {
+                // alternate using U and V data for each pixel
                 if ((y * output_frame->width + x) % 2 ^
-                    desired_pixel_format == SAV1_PIXEL_FORMAT_YVYU) {
+                    output_frame->pixel_format == SAV1_PIXEL_FORMAT_YVYU) {
                     output_frame->data[dest_index + UV_offset] = V_data[UV_index];
                 }
                 else {
@@ -119,8 +126,10 @@ int
 RGB24ToBGR24(const uint8_t *src_rgb24, int src_stride_rgb24, uint8_t *dst_bgr24,
              int dst_stride_bgr24, int width, int height)
 {
+    // iterate over all pixels
     for (size_t y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
+            // swap the R and B bytes
             size_t i = y * src_stride_rgb24 + x * 3;
             uint8_t temp = src_rgb24[i];
             dst_bgr24[i] = src_rgb24[i + 2];
@@ -191,13 +200,14 @@ get_matrix_coefficients(Dav1dSequenceHeader *seq_hdr)
 }
 
 void
-convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
-                      int desired_pixel_format)
+convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
 {
     int width = picture->p.w;
     int height = picture->p.h;
     output_frame->width = picture->p.w;
     output_frame->height = picture->p.h;
+
+    int desired_pixel_format = output_frame->pixel_format;
 
     uint8_t *Y_data = (uint8_t *)picture->data[0];
     uint8_t *U_data = (uint8_t *)picture->data[1];
@@ -213,6 +223,8 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
         // YUV variations
 
         if (seq_hdr->mtrx == DAV1D_MC_IDENTITY) {
+            // data is actually GBR so it needs to be converted into YUV
+
             // allocate twice as much memory as we'll eventually need
             output_frame->stride = 4 * output_frame->width;
             output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
@@ -252,12 +264,12 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
             }
         }
         else {
+            // allocate pixel buffer
             output_frame->stride = 2 * output_frame->width;
             output_frame->size = output_frame->stride * output_frame->height;
             output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
 
-            // check for cases where libYUV functions already exist (this are most
-            // common)
+            // check for cases where libYUV functions already exist (most common)
             if (desired_pixel_format == SAV1_PIXEL_FORMAT_YUY2 &&
                 seq_hdr->layout == DAV1D_PIXEL_LAYOUT_I420) {
                 I420ToYUY2(Y_data, Y_stride, U_data, UV_stride, V_data, UV_stride,
@@ -276,8 +288,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
             else {
                 // no function already exists so use our own
                 convert_yuv_to_packed(Y_data, Y_stride, U_data, V_data, UV_stride,
-                                      output_frame, seq_hdr->layout,
-                                      desired_pixel_format);
+                                      output_frame, seq_hdr->layout);
             }
         }
     }
@@ -292,6 +303,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
             // 4 bytes per pixel
             output_frame->stride = 4 * output_frame->width;
         }
+
         // allocate pixel buffer
         output_frame->size = output_frame->stride * output_frame->height;
         output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
@@ -305,9 +317,11 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
             const struct YuvConstants *matrix_coefficients =
                 get_matrix_coefficients(seq_hdr);
 
+            // define libYUV type for functions that convert between RGBA variations
             typedef int (*RgbConversionFunction)(const uint8_t *, int, uint8_t *, int,
                                                  int, int);
 
+            // map the SAV1 pixel format enum to indices manually just to be safe
             size_t output_pixel_layout_lookup[] = {
                 [SAV1_PIXEL_FORMAT_RGBA] = 0, [SAV1_PIXEL_FORMAT_ARGB] = 1,
                 [SAV1_PIXEL_FORMAT_BGRA] = 2, [SAV1_PIXEL_FORMAT_ABGR] = 3,
@@ -316,10 +330,9 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
                 output_pixel_layout_lookup[desired_pixel_format];
 
             if (seq_hdr->layout == DAV1D_PIXEL_LAYOUT_I400) {
-                // get the appropriate matrix coefficients (or close enough)
-                const struct YuvConstants *matrix_coefficients =
-                    get_matrix_coefficients(seq_hdr);
+                // grayscale
 
+                // only one libYUV function exists for this
                 I400ToARGBMatrix(Y_data, Y_stride, output_frame->data,
                                  output_frame->stride, matrix_coefficients, width,
                                  height);
@@ -336,15 +349,18 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
                                             output_frame->data, output_frame->stride,
                                             width, height);
                 }
-                if (output_pixel_layout_index == 4) {
+                if (desired_pixel_format == SAV1_PIXEL_FORMAT_RGB) {
                     RGB24ToBGR24(output_frame->data, output_frame->stride,
                                  output_frame->data, output_frame->stride, width, height);
                 }
             }
             else {
+                // define libYUV type for functions that convert YUV to RGBA variations
                 typedef int (*YuvConversionFunction)(
                     const uint8_t *, int, const uint8_t *, int, const uint8_t *, int,
                     uint8_t *, int, const struct YuvConstants *, int, int);
+
+                // which libYUV function to use for YUV -> RGB conversion
                 YuvConversionFunction yuv_conversion_function_lookup[6][3] = {
                     {
                         I420ToARGBMatrix,
@@ -369,9 +385,6 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
                     {I420ToRGB24Matrix, I422ToRGB24Matrix, I444ToRGB24Matrix},
                     {I420ToRGB24Matrix, I422ToRGB24Matrix, I444ToRGB24Matrix}};
 
-                RgbConversionFunction rgb_conversion_function_lookup[6] = {
-                    ARGBToABGR, ARGBToBGRA, nullptr, nullptr, RGB24ToBGR24, nullptr};
-
                 size_t input_pixel_layout_lookup[] = {[DAV1D_PIXEL_LAYOUT_I400] = 0,
                                                       [DAV1D_PIXEL_LAYOUT_I420] = 0,
                                                       [DAV1D_PIXEL_LAYOUT_I422] = 1,
@@ -388,13 +401,17 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame,
                                         output_frame->stride, matrix_coefficients, width,
                                         height);
 
-                // convert to the final byte order if necessary
+                // which libYUV function to use for RGB -> RGB conversion
+                RgbConversionFunction rgb_conversion_function_lookup[6] = {
+                    ARGBToABGR, ARGBToBGRA, nullptr, nullptr, RGB24ToBGR24, nullptr};
                 RgbConversionFunction rgb_conversion_function =
                     rgb_conversion_function_lookup[output_pixel_layout_index];
+
                 if (output_pixel_layout_index == 3 && input_pixel_layout_index == 2) {
                     // special case because no I444ToRGBAMatrix function exists
                     rgb_conversion_function = ARGBToRGBA;
                 }
+                // convert to the final byte order if necessary
                 if (rgb_conversion_function) {
                     rgb_conversion_function(output_frame->data, output_frame->stride,
                                             output_frame->data, output_frame->stride,
@@ -447,6 +464,7 @@ convert_av1_start(void *context)
             break;
         }
 
+        // setup the output frame
         Sav1VideoFrame *output_frame = (Sav1VideoFrame *)malloc(sizeof(Sav1VideoFrame));
         output_frame->codec = SAV1_CODEC_AV1;
         output_frame->pixel_format = convert_context->desired_pixel_format;
@@ -454,8 +472,7 @@ convert_av1_start(void *context)
         output_frame->timecode = dav1d_pic->m.timestamp;
 
         // convert the color space
-        convert_dav1d_picture(dav1d_pic, output_frame,
-                              convert_context->desired_pixel_format);
+        convert_dav1d_picture(dav1d_pic, output_frame);
 
         sav1_thread_queue_push(convert_context->output_queue, output_frame);
 
