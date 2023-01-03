@@ -47,13 +47,16 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
     decode_av1_init(&(thread_manager->decode_av1_context),
                     thread_manager->video_webm_frame_queue,
                     thread_manager->video_dav1d_picture_queue);
+    decode_opus_init(&(thread_manager->decode_opus_context),
+                     thread_manager->audio_webm_frame_queue,
+                     thread_manager->audio_output_queue);
 
     // populate the thread manager struct
     thread_manager->settings = settings;
     thread_manager->parse_thread = NULL;
     thread_manager->decode_av1_thread = NULL;
     thread_manager->convert_av1_thread = NULL;
-    thread_manager->process_opus_thread = NULL;
+    thread_manager->decode_opus_thread = NULL;
     thread_manager->custom_processing_video_thread = NULL;
 }
 
@@ -105,6 +108,10 @@ thread_manager_start_pipeline(ThreadManager *manager)
             custom_processing_video_start, manager->custom_processing_video_context,
             THREAD_STACK_SIZE_DEFAULT);
     }
+
+    // create the opus decoding thread
+    manager->decode_opus_thread = thread_create(
+        decode_opus_start, manager->decode_opus_context, THREAD_STACK_SIZE_DEFAULT);
 }
 
 void

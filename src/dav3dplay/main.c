@@ -94,6 +94,17 @@ main(int argc, char *argv[])
     int frame_width, frame_height;
 
     SDL_Init(SDL_INIT_EVERYTHING);
+
+    SDL_AudioSpec desired = {0};
+    desired.freq = 24000;
+    desired.format = AUDIO_S32LSB;
+    desired.channels = 1; /* Only single channel, despite source being stereo? */
+    desired.samples = 4096;
+    desired.callback = NULL;
+
+    SDL_AudioSpec obtained = {0};
+    SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
+
     SDL_Window *window = SDL_CreateWindow("Dav3d video player", SDL_WINDOWPOS_UNDEFINED,
                                           SDL_WINDOWPOS_UNDEFINED, screen_width,
                                           screen_height, SDL_WINDOW_RESIZABLE);
@@ -106,12 +117,15 @@ main(int argc, char *argv[])
     struct timespec start_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
 
+    /* start audio device */
+    SDL_PauseAudioDevice(audio_device, 0);
+
     int running = 1;
     SDL_Event event;
 
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
-    settings.codec_target = SAV1_CODEC_TARGET_AV1;
+    settings.codec_target = SAV1_CODEC_TARGET_AV1 | SAV1_CODEC_TARGET_OPUS;
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
     // sav1_settings_use_custom_video_processing(&settings, postprocessing_func, NULL);
 
@@ -148,6 +162,15 @@ main(int argc, char *argv[])
                 SDL_PIXELFORMAT_BGRA32);
             free(sav1_frame);
             sav1_frame = NULL;
+        }
+        
+
+        /* SDL Queue Audio does unlimited queueing, so for now we just want to get
+         * everything out and queued ASAP */
+        if (sav1_thread_queue_get_size(manager->audio_output_queue)) {
+            WebMFrame *audio_frame = (WebMFrame *)sav1_thread_queue_pop(manager->audio_output_queue);
+            SDL_QueueAudio(audio_device, audio_frame->data, audio_frame->size);
+            webm_frame_destroy(audio_frame);
         }
 
         if (frame) {
