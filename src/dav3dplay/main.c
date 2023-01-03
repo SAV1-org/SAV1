@@ -163,12 +163,12 @@ main(int argc, char *argv[])
             free(sav1_frame);
             sav1_frame = NULL;
         }
-        
 
         /* SDL Queue Audio does unlimited queueing, so for now we just want to get
          * everything out and queued ASAP */
         if (sav1_thread_queue_get_size(manager->audio_output_queue)) {
-            WebMFrame *audio_frame = (WebMFrame *)sav1_thread_queue_pop(manager->audio_output_queue);
+            WebMFrame *audio_frame =
+                (WebMFrame *)sav1_thread_queue_pop(manager->audio_output_queue);
             SDL_QueueAudio(audio_device, audio_frame->data, audio_frame->size);
             webm_frame_destroy(audio_frame);
         }

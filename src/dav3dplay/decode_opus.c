@@ -58,10 +58,10 @@ decode_opus_start(void *context)
 
         webm_frame_destroy(input_frame);
 
-        WebMFrame* output_frame = (WebMFrame*)malloc(sizeof(WebMFrame));
-        
-        size_t data_size = num_samples*sizeof(uint16_t);
-        uint8_t* output_buffer = (uint8_t*)malloc(data_size);
+        WebMFrame *output_frame = (WebMFrame *)malloc(sizeof(WebMFrame));
+
+        size_t data_size = num_samples * sizeof(uint16_t);
+        uint8_t *output_buffer = (uint8_t *)malloc(data_size);
 
         memcpy(output_buffer, dec_buf, data_size);
 
