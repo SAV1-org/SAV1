@@ -58,6 +58,7 @@ decode_opus_start(void *context)
 
         webm_frame_destroy(input_frame);
 
+        // TODO: make a Sav1AudioFrame struct or something similar
         WebMFrame *output_frame = (WebMFrame *)malloc(sizeof(WebMFrame));
 
         size_t data_size = num_samples * sizeof(uint16_t);
@@ -70,6 +71,8 @@ decode_opus_start(void *context)
 
         sav1_thread_queue_push(decode_context->output_queue, output_frame);
     }
+
+    return 0;
 }
 
 void

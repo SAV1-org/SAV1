@@ -124,6 +124,13 @@ thread_manager_kill_pipeline(ThreadManager *manager)
         manager->parse_thread = NULL;
     }
 
+    if (manager->decode_opus_thread != NULL) {
+        decode_opus_stop(manager->decode_opus_context);
+        thread_join(manager->decode_opus_thread);
+        thread_destroy(manager->decode_opus_thread);
+        manager->decode_opus_thread = NULL;
+    }
+
     if (manager->decode_av1_thread != NULL) {
         decode_av1_stop(manager->decode_av1_context);
         thread_join(manager->decode_av1_thread);

@@ -125,7 +125,6 @@ main(int argc, char *argv[])
 
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
-    settings.codec_target = SAV1_CODEC_TARGET_AV1 | SAV1_CODEC_TARGET_OPUS;
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
     // sav1_settings_use_custom_video_processing(&settings, postprocessing_func, NULL);
 
