@@ -1,5 +1,5 @@
-#ifndef custom_processing_video_H
-#define custom_processing_video_H
+#ifndef CUSTOM_PROCESSING_VIDEO_H
+#define CUSTOM_PROCESSING_VIDEO_H
 
 #include "sav1_video_frame.h"
 

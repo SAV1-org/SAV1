@@ -23,3 +23,13 @@ sav1_settings_use_custom_video_processing(
     settings->custom_video_frame_processing = processing_function;
     settings->custom_video_frame_processing_cookie = cookie;
 }
+
+void
+sav1_settings_use_custom_audio_processing(
+    Sav1Settings *settings,
+    void *(*processing_function)(Sav1AudioFrame *frame, void *cookie), void *cookie)
+{
+    settings->use_custom_processing |= SAV1_USE_CUSTOM_PROCESSING_AUDIO;
+    settings->custom_audio_frame_processing = processing_function;
+    settings->custom_audio_frame_processing_cookie = cookie;
+}

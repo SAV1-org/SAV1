@@ -2,6 +2,7 @@
 #define SAV1_SETTINGS_H
 
 #include "sav1_video_frame.h"
+#include "sav1_audio_frame.h"
 
 #define SAV1_CODEC_TARGET_AV1 1
 #define SAV1_CODEC_TARGET_OPUS 2
@@ -27,6 +28,8 @@ typedef struct Sav1Settings {
     int use_custom_processing;
     void *(*custom_video_frame_processing)(Sav1VideoFrame *, void *);
     void *custom_video_frame_processing_cookie;
+    void *(*custom_audio_frame_processing)(Sav1AudioFrame *, void *);
+    void *custom_audio_frame_processing_cookie;
 } Sav1Settings;
 
 void
@@ -36,5 +39,10 @@ void
 sav1_settings_use_custom_video_processing(
     Sav1Settings *settings,
     void *(*processing_function)(Sav1VideoFrame *frame, void *cookie), void *cookie);
+
+void
+sav1_settings_use_custom_audio_processing(
+    Sav1Settings *settings,
+    void *(*processing_function)(Sav1AudioFrame *frame, void *cookie), void *cookie);
 
 #endif

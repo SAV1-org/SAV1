@@ -14,7 +14,7 @@
 #include <SDL2/SDL.h>
 
 void *
-postprocessing_func(Sav1VideoFrame *frame, void *cookie)
+video_postprocessing_func(Sav1VideoFrame *frame, void *cookie)
 {
     for (size_t y = 0; y < frame->height; y++) {
         for (size_t x = 0; x < frame->width; x++) {
@@ -32,6 +32,20 @@ postprocessing_func(Sav1VideoFrame *frame, void *cookie)
                 frame->data[pos + 1] = 0;
             }
         }
+    }
+
+    return (void *)frame;
+}
+
+void *
+audio_postprocessing_func(Sav1AudioFrame *frame, void *cookie)
+{
+    // double the volume
+    for (int i = 0; i < frame->size; i += 2) {
+        uint16_t sample = frame->data[i] | frame->data[i + 1] << 8;
+        sample *= 2;
+        frame->data[i] = sample;
+        frame->data[i + 1] = sample >> 8;
     }
 
     return (void *)frame;
@@ -127,7 +141,9 @@ main(int argc, char *argv[])
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
-    // sav1_settings_use_custom_video_processing(&settings, postprocessing_func, NULL);
+    // sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func,
+    // NULL); sav1_settings_use_custom_audio_processing(&settings,
+    // audio_postprocessing_func, NULL);
 
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;
