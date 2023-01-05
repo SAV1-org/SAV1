@@ -1,6 +1,7 @@
 #include "thread_manager.h"
 #include "thread_queue.h"
 #include "sav1_video_frame.h"
+#include "sav1_audio_frame.h"
 #include "sav1_settings.h"
 
 #include <stdio.h>
@@ -165,11 +166,12 @@ main(int argc, char *argv[])
 
         /* SDL Queue Audio does unlimited queueing, so for now we just want to get
          * everything out and queued ASAP */
-        if (sav1_thread_queue_get_size(manager->audio_output_queue)) {
-            WebMFrame *audio_frame =
-                (WebMFrame *)sav1_thread_queue_pop(manager->audio_output_queue);
+        Sav1AudioFrame *audio_frame;
+        while ((audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop_timeout(
+                    manager->audio_output_queue)) != NULL) {
             SDL_QueueAudio(audio_device, audio_frame->data, audio_frame->size);
-            webm_frame_destroy(audio_frame);
+            free(audio_frame->data);
+            free(audio_frame);
         }
 
         if (frame) {

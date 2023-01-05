@@ -5,8 +5,9 @@
 #include "parse.h"
 #include "thread_queue.h"
 #include "decode_opus.h"
+#include "sav1_audio_frame.h"
 
-// Should this max decode thing be in terms of bytes, uint16s, something else?
+// TODO: Should this max decode thing be in terms of bytes, uint16s, something else?
 #define MAX_DECODE_LEN 10000
 uint8_t dec_buf[MAX_DECODE_LEN] = {0};
 
@@ -58,16 +59,18 @@ decode_opus_start(void *context)
 
         webm_frame_destroy(input_frame);
 
-        // TODO: make a Sav1AudioFrame struct or something similar
-        WebMFrame *output_frame = (WebMFrame *)malloc(sizeof(WebMFrame));
+        // setup the output frame
+        // TODO: calculate duration
+        Sav1AudioFrame *output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame));
+        output_frame->codec = SAV1_CODEC_OPUS;
+        output_frame->timecode = input_frame->timecode;
+        output_frame->sampling_frequency = input_frame->opus_sampling_frequency;
+        output_frame->num_channels = input_frame->opus_num_channels;
 
-        size_t data_size = num_samples * sizeof(uint16_t);
-        uint8_t *output_buffer = (uint8_t *)malloc(data_size);
-
-        memcpy(output_buffer, dec_buf, data_size);
-
-        output_frame->data = output_buffer;
-        output_frame->size = data_size;
+        // copy the decoded audio data
+        output_frame->size = num_samples * sizeof(uint16_t);
+        output_frame->data = (uint8_t *)malloc(output_frame->size);
+        memcpy(output_frame->data, dec_buf, output_frame->size);
 
         sav1_thread_queue_push(decode_context->output_queue, output_frame);
     }
