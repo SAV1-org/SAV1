@@ -46,13 +46,17 @@ sav1_thread_queue_push(Sav1ThreadQueue *sav1_queue, void *item)
 void
 sav1_thread_queue_lock(Sav1ThreadQueue *sav1_queue)
 {
-    thread_mutex_lock(sav1_queue->queue_lock);
+    if (sav1_queue != NULL) {
+        thread_mutex_lock(sav1_queue->queue_lock);
+    }
 }
 
 void
 sav1_thread_queue_unlock(Sav1ThreadQueue *sav1_queue)
 {
-    thread_mutex_unlock(sav1_queue->queue_lock);
+    if (sav1_queue != NULL) {
+        thread_mutex_unlock(sav1_queue->queue_lock);
+    }
 }
 
 int

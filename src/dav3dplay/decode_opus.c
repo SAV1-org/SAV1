@@ -8,6 +8,7 @@
 #include "sav1_audio_frame.h"
 
 // TODO: Should this max decode thing be in terms of bytes, uint16s, something else?
+// TODO: move this into the DecodeOpusContext
 #define MAX_DECODE_LEN 10000
 uint8_t dec_buf[MAX_DECODE_LEN] = {0};
 

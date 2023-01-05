@@ -42,8 +42,11 @@ audio_postprocessing_func(Sav1AudioFrame *frame, void *cookie)
 {
     // double the volume
     for (int i = 0; i < frame->size; i += 2) {
-        uint16_t sample = frame->data[i] | frame->data[i + 1] << 8;
+        uint64_t sample = frame->data[i] | frame->data[i + 1] << 8;
         sample *= 2;
+        if (sample > 65535) {
+            sample = 65535;
+        }
         frame->data[i] = sample;
         frame->data[i + 1] = sample >> 8;
     }
