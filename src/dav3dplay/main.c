@@ -16,24 +16,6 @@
 void *
 video_postprocessing_func(Sav1VideoFrame *frame, void *cookie)
 {
-    // for (size_t y = 0; y < frame->height; y++) {
-    //     for (size_t x = 0; x < frame->width; x++) {
-    //         size_t pos = y * frame->stride + x * 4;
-    //         if (x < frame->width / 3) {
-    //             frame->data[pos + 1] = 0;
-    //             frame->data[pos + 2] = 0;
-    //         }
-    //         else if (x < 2 * frame->width / 3) {
-    //             frame->data[pos] = 0;
-    //             frame->data[pos + 2] = 0;
-    //         }
-    //         else {
-    //             frame->data[pos] = 0;
-    //             frame->data[pos + 1] = 0;
-    //         }
-    //     }
-    // }
-
     // pre-compute the brightness of each pixel
     uint8_t *avg = (uint8_t *)malloc(frame->width * frame->height * sizeof(uint8_t));
     for (size_t y = 0; y < frame->height; y++) {
@@ -49,16 +31,26 @@ video_postprocessing_func(Sav1VideoFrame *frame, void *cookie)
     int x_con[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
     int y_con[3][3] = {{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}};
 
-    uint8_t *result = (uint8_t *)calloc(frame->size, sizeof(uint8_t));
-    for (size_t y = 1; y < frame->height - 1; y++) {
-        for (size_t x = 1; x < frame->width - 1; x++) {
+    for (size_t y = 0; y < frame->height; y++) {
+        for (size_t x = 0; x < frame->width; x++) {
+            size_t pos = y * frame->stride + x * 4;
+            if (x == 0 || x == frame->width - 1 || y == 0 || y == frame->height - 1) {
+                frame->data[pos] = 0;
+                frame->data[pos + 1] = 0;
+                frame->data[pos + 2] = 0;
+                continue;
+            }
+
             int x_grad = 0;
             int y_grad = 0;
+
+            // look at 8 surrounding pixels for every pixel
             for (int y_offset = -1; y_offset <= 1; y_offset++) {
                 for (int x_offset = -1; x_offset <= 1; x_offset++) {
-                    size_t pos = (y + y_offset) * frame->width + x + x_offset;
-                    x_grad += x_con[1 + y_offset][1 + x_offset] * avg[pos];
-                    y_grad += y_con[1 + y_offset][1 + x_offset] * avg[pos];
+                    // compute horizontal and vertical gradients
+                    size_t con_pos = (y + y_offset) * frame->width + x + x_offset;
+                    x_grad += x_con[1 + y_offset][1 + x_offset] * avg[con_pos];
+                    y_grad += y_con[1 + y_offset][1 + x_offset] * avg[con_pos];
                 }
             }
 
@@ -66,17 +58,15 @@ video_postprocessing_func(Sav1VideoFrame *frame, void *cookie)
             if (grad > 255) {
                 grad = 255;
             }
-            size_t result_pos = y * frame->stride + x * 4;
-            result[result_pos] = grad;
-            result[result_pos + 1] = grad;
-            result[result_pos + 2] = grad;
-            result[result_pos + 3] = 255;
+
+            // set the brightness of the pixel to the gradient
+            frame->data[pos] = grad;
+            frame->data[pos + 1] = grad;
+            frame->data[pos + 2] = grad;
         }
     }
 
     free(avg);
-    free(frame->data);
-    frame->data = result;
     return (void *)frame;
 }
 
