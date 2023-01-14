@@ -10,8 +10,7 @@ dependencies/*
 !dependencies/libwebm
 !dependencies/thread
 !dependencies/libyuv
-vcpkg/*
+vcpkg/
 SDL2.dll
 dav1d.dll
 opus.dll
-
