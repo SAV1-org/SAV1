@@ -11,3 +11,7 @@ dependencies/*
 !dependencies/thread
 !dependencies/libyuv
 vcpkg/*
+SDL2.dll
+dav1d.dll
+opus.dll
+
