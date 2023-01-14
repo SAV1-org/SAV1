@@ -272,6 +272,26 @@ main(int argc, char *argv[])
                             pause_time = NULL;
                         }
                     }
+                    else if (event.key.keysym.sym == SDLK_1 && sav1_frame) {
+                        SDL_SetWindowSize(window, sav1_frame->width / 2,
+                                          sav1_frame->height / 2);
+                    }
+                    else if (event.key.keysym.sym == SDLK_2 && sav1_frame) {
+                        SDL_SetWindowSize(window, 2 * sav1_frame->width / 3,
+                                          2 * sav1_frame->height / 3);
+                    }
+                    else if (event.key.keysym.sym == SDLK_3 && sav1_frame) {
+                        SDL_SetWindowSize(window, sav1_frame->width, sav1_frame->height);
+                        printf("%d %d \n", sav1_frame->width, sav1_frame->height);
+                    }
+                    else if (event.key.keysym.sym == SDLK_4 && sav1_frame) {
+                        SDL_SetWindowSize(window, 3 * sav1_frame->width / 2,
+                                          3 * sav1_frame->height / 2);
+                    }
+                    else if (event.key.keysym.sym == SDLK_5 && sav1_frame) {
+                        SDL_SetWindowSize(window, 2 * sav1_frame->width,
+                                          2 * sav1_frame->height);
+                    }
                     break;
 
                 case SDL_WINDOWEVENT:
