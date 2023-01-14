@@ -167,6 +167,7 @@ main(int argc, char *argv[])
 
     struct timespec start_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
+    struct timespec *pause_time = NULL;
 
     /* start audio device */
     SDL_PauseAudioDevice(audio_device, 0);
@@ -177,8 +178,9 @@ main(int argc, char *argv[])
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
-    //sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func, NULL);
-    //sav1_settings_use_custom_audio_processing(&settings, audio_postprocessing_func, NULL);
+    // sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func,
+    // NULL); sav1_settings_use_custom_audio_processing(&settings,
+    // audio_postprocessing_func, NULL);
 
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;
@@ -190,29 +192,31 @@ main(int argc, char *argv[])
     while (running) {
         SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 127, 68, 255));
 
-        if (sav1_frame == NULL) {
-            sav1_frame =
-                (Sav1VideoFrame *)sav1_thread_queue_pop(manager->video_output_queue);
+        if (pause_time == NULL) {
             if (sav1_frame == NULL) {
-                running = 0;
+                sav1_frame =
+                    (Sav1VideoFrame *)sav1_thread_queue_pop(manager->video_output_queue);
+                if (sav1_frame == NULL) {
+                    running = 0;
+                }
+                else {
+                    frame_width = sav1_frame->width;
+                    frame_height = sav1_frame->height;
+                    next_pixel_buffer = sav1_frame->data;
+                }
             }
-            else {
-                frame_width = sav1_frame->width;
-                frame_height = sav1_frame->height;
-                next_pixel_buffer = sav1_frame->data;
+            else if (get_frame_display_ready(&start_time, sav1_frame)) {
+                SDL_FreeSurface(frame);
+                if (pixel_buffer != NULL) {
+                    free(pixel_buffer);
+                }
+                pixel_buffer = next_pixel_buffer;
+                frame = SDL_CreateRGBSurfaceWithFormatFrom(
+                    (void *)pixel_buffer, frame_width, frame_height, 32,
+                    sav1_frame->stride, SDL_PIXELFORMAT_BGRA32);
+                free(sav1_frame);
+                sav1_frame = NULL;
             }
-        }
-        else if (get_frame_display_ready(&start_time, sav1_frame)) {
-            SDL_FreeSurface(frame);
-            if (pixel_buffer != NULL) {
-                free(pixel_buffer);
-            }
-            pixel_buffer = next_pixel_buffer;
-            frame = SDL_CreateRGBSurfaceWithFormatFrom(
-                (void *)pixel_buffer, frame_width, frame_height, 32, sav1_frame->stride,
-                SDL_PIXELFORMAT_BGRA32);
-            free(sav1_frame);
-            sav1_frame = NULL;
         }
 
         /* SDL Queue Audio does unlimited queueing, so for now we just want to get
@@ -245,6 +249,32 @@ main(int argc, char *argv[])
                     if (event.key.keysym.sym == SDLK_ESCAPE) {
                         running = 0;
                     }
+                    else if (event.key.keysym.sym == SDLK_SPACE) {
+                        if (pause_time == NULL) {
+                            // pause the video
+                            SDL_PauseAudioDevice(audio_device, 1);
+                            pause_time =
+                                (struct timespec *)malloc(sizeof(struct timespec));
+                            clock_gettime(CLOCK_MONOTONIC, pause_time);
+                        }
+                        else {
+                            // unpause the video
+                            SDL_PauseAudioDevice(audio_device, 0);
+                            struct timespec curr_time;
+                            clock_gettime(CLOCK_MONOTONIC, &curr_time);
+                            start_time.tv_sec += curr_time.tv_sec - pause_time->tv_sec;
+                            long delta_nsec = curr_time.tv_sec - pause_time->tv_sec;
+                            if (999999999 - delta_nsec < start_time.tv_nsec) {
+                                start_time.tv_sec++;
+                                start_time.tv_nsec += delta_nsec - 999999999;
+                            }
+                            else {
+                                start_time.tv_nsec += delta_nsec;
+                            }
+                            free(pause_time);
+                            pause_time = NULL;
+                        }
+                    }
                     break;
 
                 case SDL_WINDOWEVENT:
@@ -268,6 +298,9 @@ main(int argc, char *argv[])
     thread_manager_destroy(manager);
     if (pixel_buffer != NULL) {
         free(pixel_buffer);
+    }
+    if (pause_time != NULL) {
+        free(pause_time);
     }
 
     SDL_Quit();
