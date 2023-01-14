@@ -12,20 +12,11 @@ all_dependencies:
 	$(MAKE) libwebm
 	$(MAKE) libyuv
 
-integration:
-	g++ -o integration.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/integration.cpp
-
-integration_static:
-	g++ -o integration.exe -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libwebm/webm_parser -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 src/integration.cpp dependencies/libwebm/webm_parser/src/*.cc dependencies/libyuv/source/*.cc
-
-dav2dplay:
-	g++ -o dav2dplay.exe -std=c++11 -s -Wall -Wextra -pedantic -g -Idependencies/libwebm/webm_parser/include -Idependencies/libyuv/include -Idependencies/dav1d/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 -Idependencies/opus/include -lopus dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/dav2dplay/main.c src/dav2dplay/parse.cpp src/dav2dplay/decode.c src/dav2dplay/convert.cpp src/dav2dplay/audio.c
-
 dav3dplay_win:
-	g++ -o dav3dplay.exe -std=c++11 -s -Idependencies/libwebm/webm_parser/include -Idependencies/thread -Idependencies/libyuv/include -Idependencies/dav1d/include -Idependencies/opus/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o src/dav3dplay/*.c src/dav3dplay/*.cpp -lopus -lwinmm
+	g++ -o dav3dplay.exe -std=c++11 -s -Idependencies/libwebm/webm_parser/include -Idependencies/thread -Idependencies/libyuv/include -Idependencies/dav1d/include -Idependencies/opus/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o examples/dav3dplay.c src/*.c src/*.cpp -Iinclude -Isrc -lopus -lwinmm
 
-dav1d_test:
-	gcc src/test.c -Idependencies/dav1d/include -L. -ldav1d 
+dav3dplay:
+	g++ -o dav3dplay.exe -std=c++11 -s -Idependencies/libwebm/webm_parser/include -Idependencies/thread -Idependencies/libyuv/include -Idependencies/dav1d/include -Idependencies/opus/include -L. -ldav1d -Idependencies/SDL2/include -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o examples/dav3dplay.c src/*.c src/*.cpp -Iinclude -Isrc -lopus
 
 clean:
 	rm -f *.out *.o *.d *.exe dependencies/libwebm/webm_parser/object_files/*.o

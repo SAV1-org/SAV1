@@ -177,8 +177,8 @@ main(int argc, char *argv[])
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
-    sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func, NULL);
-    sav1_settings_use_custom_audio_processing(&settings, audio_postprocessing_func, NULL);
+    //sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func, NULL);
+    //sav1_settings_use_custom_audio_processing(&settings, audio_postprocessing_func, NULL);
 
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;
