@@ -6,3 +6,8 @@
 .vscode/*
 test_files/accounting.webm
 dav3dplay
+dependencies/*
+!dependencies/libwebm
+!dependencies/thread
+!dependencies/libyuv
+vcpkg/*
