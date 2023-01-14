@@ -263,14 +263,11 @@ main(int argc, char *argv[])
                             struct timespec curr_time;
                             clock_gettime(CLOCK_MONOTONIC, &curr_time);
                             start_time.tv_sec += curr_time.tv_sec - pause_time->tv_sec;
-                            long delta_nsec = curr_time.tv_sec - pause_time->tv_sec;
-                            if (999999999 - delta_nsec < start_time.tv_nsec) {
-                                start_time.tv_sec++;
-                                start_time.tv_nsec += delta_nsec - 999999999;
-                            }
-                            else {
-                                start_time.tv_nsec += delta_nsec;
-                            }
+                            start_time.tv_sec +=
+                                (curr_time.tv_nsec - pause_time->tv_nsec) / 1000000000;
+                            start_time.tv_nsec +=
+                                (curr_time.tv_nsec - pause_time->tv_nsec) % 1000000000;
+
                             free(pause_time);
                             pause_time = NULL;
                         }
