@@ -12,6 +12,7 @@ Our current build generates a video player called dav3dplay. Once, built, invoke
 ### Windows
 ```
 install_windows_deps.bat
+mingw32-make all_dependencies (<- run that one in bash)
 mingw32-make dav3dplay_win
 ```
 
@@ -20,6 +21,7 @@ mingw32-make dav3dplay_win
 brew install sdl2
 brew install dav1d
 brew install opus
+make all_dependencies
 make dav3dplay_mac
 ```
 
