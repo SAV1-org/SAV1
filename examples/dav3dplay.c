@@ -173,6 +173,7 @@ main(int argc, char *argv[])
     SDL_PauseAudioDevice(audio_device, 0);
 
     int running = 1;
+    int needs_initial_resize = 1;
     SDL_Event event;
 
     Sav1Settings settings;
@@ -190,7 +191,7 @@ main(int argc, char *argv[])
     uint8_t *next_pixel_buffer = NULL;
 
     while (running) {
-        SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 127, 68, 255));
+        SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 103, 155, 203));
 
         if (pause_time == NULL) {
             if (sav1_frame == NULL) {
@@ -202,6 +203,10 @@ main(int argc, char *argv[])
                 else {
                     frame_width = sav1_frame->width;
                     frame_height = sav1_frame->height;
+                    if (needs_initial_resize) {
+                        SDL_SetWindowSize(window, frame_width, frame_height);
+                        needs_initial_resize = 0;
+                    }
                     next_pixel_buffer = sav1_frame->data;
                 }
             }
@@ -273,24 +278,21 @@ main(int argc, char *argv[])
                         }
                     }
                     else if (event.key.keysym.sym == SDLK_1 && sav1_frame) {
-                        SDL_SetWindowSize(window, sav1_frame->width / 2,
-                                          sav1_frame->height / 2);
+                        SDL_SetWindowSize(window, frame_width / 2, frame_height / 2);
                     }
                     else if (event.key.keysym.sym == SDLK_2 && sav1_frame) {
-                        SDL_SetWindowSize(window, 2 * sav1_frame->width / 3,
-                                          2 * sav1_frame->height / 3);
+                        SDL_SetWindowSize(window, 2 * frame_width / 3,
+                                          2 * frame_height / 3);
                     }
                     else if (event.key.keysym.sym == SDLK_3 && sav1_frame) {
-                        SDL_SetWindowSize(window, sav1_frame->width, sav1_frame->height);
-                        printf("%d %d \n", sav1_frame->width, sav1_frame->height);
+                        SDL_SetWindowSize(window, frame_width, frame_height);
                     }
                     else if (event.key.keysym.sym == SDLK_4 && sav1_frame) {
-                        SDL_SetWindowSize(window, 3 * sav1_frame->width / 2,
-                                          3 * sav1_frame->height / 2);
+                        SDL_SetWindowSize(window, 3 * frame_width / 2,
+                                          3 * frame_height / 2);
                     }
                     else if (event.key.keysym.sym == SDLK_5 && sav1_frame) {
-                        SDL_SetWindowSize(window, 2 * sav1_frame->width,
-                                          2 * sav1_frame->height);
+                        SDL_SetWindowSize(window, 2 * frame_width, 2 * frame_height);
                     }
                     break;
 

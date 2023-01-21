@@ -5,6 +5,8 @@
 *.pyc
 .vscode/*
 test_files/accounting.webm
+test_files/popeye.webm
+test_files/grey.webm
 dav3dplay
 dependencies/*
 !dependencies/libwebm
