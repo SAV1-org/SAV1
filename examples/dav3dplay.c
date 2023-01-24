@@ -147,10 +147,9 @@ main(int argc, char *argv[])
     SDL_Init(SDL_INIT_EVERYTHING);
 
     SDL_AudioSpec desired = {0};
-    desired.freq = 24000;
-    desired.format = AUDIO_S32LSB;
-    desired.channels = 1; /* Only single channel, despite source being stereo? */
-    desired.samples = 4096;
+    desired.freq = 48000;
+    desired.format = AUDIO_S16SYS;
+    desired.channels = 2;
     desired.callback = NULL;
 
     SDL_AudioSpec obtained = {0};

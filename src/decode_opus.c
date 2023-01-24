@@ -25,7 +25,7 @@ decode_opus_init(DecodeOpusContext **context, Sav1ThreadQueue *input_queue,
     decode_context->output_queue = output_queue;
 
     int error;
-    decode_context->decoder = opus_decoder_create(48000, 1, &error);
+    decode_context->decoder = opus_decoder_create(48000, 2, &error);
 
     if (error != OPUS_OK) {
         printf("decoder failed to create\n");
@@ -70,7 +70,7 @@ decode_opus_start(void *context)
         output_frame->num_channels = input_frame->opus_num_channels;
 
         // copy the decoded audio data
-        output_frame->size = num_samples * sizeof(uint16_t);
+        output_frame->size = num_samples * sizeof(uint16_t) * 2 /* multiply by two */;
         output_frame->data = (uint8_t *)malloc(output_frame->size);
         memcpy(output_frame->data, decode_context->decode_buffer, output_frame->size);
 
