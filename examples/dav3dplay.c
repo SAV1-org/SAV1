@@ -144,12 +144,20 @@ main(int argc, char *argv[])
     int screen_height = 760;
     int frame_width, frame_height;
 
+    Sav1Settings settings;
+    sav1_default_settings(&settings, argv[1]);
+    settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
+    //settings.channels = SAV1_AUDIO_MONO;
+    // sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func,
+    // NULL); sav1_settings_use_custom_audio_processing(&settings,
+    // audio_postprocessing_func, NULL);
+
     SDL_Init(SDL_INIT_EVERYTHING);
 
     SDL_AudioSpec desired = {0};
-    desired.freq = 48000;
+    desired.freq = settings.frequency;
     desired.format = AUDIO_S16SYS;
-    desired.channels = 2;
+    desired.channels = settings.channels;
     desired.callback = NULL;
 
     SDL_AudioSpec obtained = {0};
@@ -174,13 +182,6 @@ main(int argc, char *argv[])
     int running = 1;
     int needs_initial_resize = 1;
     SDL_Event event;
-
-    Sav1Settings settings;
-    sav1_default_settings(&settings, argv[1]);
-    settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
-    // sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func,
-    // NULL); sav1_settings_use_custom_audio_processing(&settings,
-    // audio_postprocessing_func, NULL);
 
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;

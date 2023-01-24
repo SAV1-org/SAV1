@@ -8,12 +8,11 @@
 #include "sav1_audio_frame.h"
 
 // TODO: Should this max decode thing be in terms of bytes, uint16s, something else?
-// TODO: move this into the DecodeOpusContext
 #define MAX_DECODE_LEN 10000
 
 void
-decode_opus_init(DecodeOpusContext **context, Sav1ThreadQueue *input_queue,
-                 Sav1ThreadQueue *output_queue)
+decode_opus_init(DecodeOpusContext **context, Sav1Settings *settings,
+                 Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     DecodeOpusContext *decode_context =
         (DecodeOpusContext *)malloc(sizeof(DecodeOpusContext));
@@ -23,9 +22,11 @@ decode_opus_init(DecodeOpusContext **context, Sav1ThreadQueue *input_queue,
 
     decode_context->input_queue = input_queue;
     decode_context->output_queue = output_queue;
+    decode_context->settings = settings;
 
     int error;
-    decode_context->decoder = opus_decoder_create(48000, 2, &error);
+    decode_context->decoder =
+        opus_decoder_create(settings->frequency, settings->channels, &error);
 
     if (error != OPUS_OK) {
         printf("decoder failed to create\n");
@@ -70,7 +71,11 @@ decode_opus_start(void *context)
         output_frame->num_channels = input_frame->opus_num_channels;
 
         // copy the decoded audio data
-        output_frame->size = num_samples * sizeof(uint16_t) * 2 /* multiply by two */;
+        // if the audio is stereo, each sample is twice as long, so we multiply by 2-
+        // this is accomplished by using the values of SAV1_AUDIO_MONO and
+        // SAV1_AUDIO_STEREO
+        output_frame->size =
+            num_samples * sizeof(uint16_t) * decode_context->settings->channels;
         output_frame->data = (uint8_t *)malloc(output_frame->size);
         memcpy(output_frame->data, decode_context->decode_buffer, output_frame->size);
 

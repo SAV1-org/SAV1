@@ -12,6 +12,8 @@ sav1_default_settings(Sav1Settings *settings, char *file_name)
     settings->use_custom_processing = 0;
     settings->custom_video_frame_processing = NULL;
     settings->custom_video_frame_processing_cookie = NULL;
+    settings->frequency = SAV1_AUDIO_FREQ_48KHZ;
+    settings->channels = SAV1_AUDIO_STEREO;
 }
 
 void

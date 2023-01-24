@@ -20,6 +20,16 @@
 #define SAV1_PIXEL_FORMAT_UYVY 7
 #define SAV1_PIXEL_FORMAT_YVYU 8
 
+typedef enum {
+    SAV1_AUDIO_FREQ_8KHZ = 8000,
+    SAV1_AUDIO_FREQ_12KHZ = 12000,
+    SAV1_AUDIO_FREQ_16KHZ = 16000,
+    SAV1_AUDIO_FREQ_24KHZ = 24000,
+    SAV1_AUDIO_FREQ_48KHZ = 48000,
+} SAV1_AudioFrequency;
+
+typedef enum { SAV1_AUDIO_MONO = 1, SAV1_AUDIO_STEREO = 2 } SAV1_AudioChannel;
+
 typedef struct Sav1Settings {
     char *file_name;
     int codec_target;
@@ -30,6 +40,8 @@ typedef struct Sav1Settings {
     void *custom_video_frame_processing_cookie;
     void *(*custom_audio_frame_processing)(Sav1AudioFrame *, void *);
     void *custom_audio_frame_processing_cookie;
+    SAV1_AudioFrequency frequency;
+    SAV1_AudioChannel channels;
 } Sav1Settings;
 
 void

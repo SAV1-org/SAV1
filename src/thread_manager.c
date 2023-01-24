@@ -63,7 +63,7 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
             // setup audio processing with custom stage
             sav1_thread_queue_init(&(thread_manager->audio_custom_processing_queue),
                                    settings->queue_size);
-            decode_opus_init(&(thread_manager->decode_opus_context),
+            decode_opus_init(&(thread_manager->decode_opus_context), settings,
                              thread_manager->audio_webm_frame_queue,
                              thread_manager->audio_custom_processing_queue);
             custom_processing_audio_init(
@@ -75,7 +75,7 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
         }
         else {
             // setup audio processing without custom stage
-            decode_opus_init(&(thread_manager->decode_opus_context),
+            decode_opus_init(&(thread_manager->decode_opus_context), settings,
                              thread_manager->audio_webm_frame_queue,
                              thread_manager->audio_output_queue);
         }
