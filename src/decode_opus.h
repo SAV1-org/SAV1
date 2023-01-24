@@ -10,6 +10,8 @@ typedef struct DecodeOpusContext {
     Sav1ThreadQueue *output_queue;
     thread_atomic_int_t do_decode;
     OpusDecoder* decoder;
+    uint8_t *decode_buffer;
+
 } DecodeOpusContext;
 
 void

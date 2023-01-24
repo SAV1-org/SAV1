@@ -10,7 +10,6 @@
 // TODO: Should this max decode thing be in terms of bytes, uint16s, something else?
 // TODO: move this into the DecodeOpusContext
 #define MAX_DECODE_LEN 10000
-uint8_t dec_buf[MAX_DECODE_LEN] = {0};
 
 void
 decode_opus_init(DecodeOpusContext **context, Sav1ThreadQueue *input_queue,
@@ -19,6 +18,8 @@ decode_opus_init(DecodeOpusContext **context, Sav1ThreadQueue *input_queue,
     DecodeOpusContext *decode_context =
         (DecodeOpusContext *)malloc(sizeof(DecodeOpusContext));
     *context = decode_context;
+
+    decode_context->decode_buffer = (uint8_t *)calloc(MAX_DECODE_LEN, sizeof(uint8_t));
 
     decode_context->input_queue = input_queue;
     decode_context->output_queue = output_queue;
@@ -56,7 +57,7 @@ decode_opus_start(void *context)
 
         int num_samples =
             opus_decode(decode_context->decoder, input_frame->data, input_frame->size,
-                        (opus_int16 *)dec_buf, MAX_DECODE_LEN, 0);
+                        (opus_int16 *)decode_context->decode_buffer, MAX_DECODE_LEN, 0);
 
         webm_frame_destroy(input_frame);
 
@@ -71,7 +72,7 @@ decode_opus_start(void *context)
         // copy the decoded audio data
         output_frame->size = num_samples * sizeof(uint16_t);
         output_frame->data = (uint8_t *)malloc(output_frame->size);
-        memcpy(output_frame->data, dec_buf, output_frame->size);
+        memcpy(output_frame->data, decode_context->decode_buffer, output_frame->size);
 
         sav1_thread_queue_push(decode_context->output_queue, output_frame);
     }
