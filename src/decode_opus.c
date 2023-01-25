@@ -18,7 +18,7 @@ decode_opus_init(DecodeOpusContext **context, Sav1Settings *settings,
         (DecodeOpusContext *)malloc(sizeof(DecodeOpusContext));
     *context = decode_context;
 
-    decode_context->decode_buffer = (uint8_t *)calloc(MAX_DECODE_LEN, sizeof(uint8_t));
+    decode_context->decode_buffer = (uint8_t *)malloc(MAX_DECODE_LEN * sizeof(uint8_t));
 
     decode_context->input_queue = input_queue;
     decode_context->output_queue = output_queue;
@@ -38,6 +38,7 @@ void
 decode_opus_destroy(DecodeOpusContext *context)
 {
     opus_decoder_destroy(context->decoder);
+    free(context->decode_buffer);
     free(context);
 }
 
