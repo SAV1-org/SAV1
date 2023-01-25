@@ -1,6 +1,6 @@
 #include "parse.h"
 #include "sav1_settings.h"
-#include "web_m_frame.h"
+#include "webm_frame.h"
 
 #include <stdio.h>
 #include <cassert>
@@ -99,9 +99,10 @@ class Sav1Callback : public Callback {
             this->cluster_timecode = cluster.timecode.value();
         }
 
-        if (this->cluster_timecode > this->cue_points.end()->timecode) {
+        uint64_t timecode_ms = (this->cluster_timecode * this->timecode_scale) / 1000000;
+        if (timecode_ms > this->cue_points.end()->timecode) {
             Sav1CuePoint cue;
-            cue.timecode = (this->cluster_timecode * this->timecode_scale) / 1000000;
+            cue.timecode = timecode_ms;
             cue.cluster_location = this->last_cluster_location;
             this->cue_points.push_back(cue);
         }
@@ -198,6 +199,16 @@ class Sav1Callback : public Callback {
         WebMFrame *frame;
         webm_frame_init(&frame, *bytes_remaining);
         frame->timecode = this->timecode;
+
+        // mark the WebMFrame to be discarded later when seeking
+        if (thread_atomic_int_load(&(this->context->do_seek))) {
+            if (this->timecode < this->context->seek_timecode) {
+                frame->do_discard = 1;
+            }
+            else {
+                thread_atomic_int_store(&(this->context->do_seek), 0);
+            }
+        }
 
         // read frame data until there's no more to read
         std::uint8_t *buffer_location = frame->data;
@@ -303,8 +314,10 @@ int
 parse_start(void *context)
 {
     ParseContext *parse_context = (ParseContext *)context;
-    thread_atomic_int_store(&(parse_context->do_parse), 1);
     ParseInternalState *state = (ParseInternalState *)parse_context->internal_state;
+
+    thread_atomic_int_store(&(parse_context->do_parse), 1);
+    thread_atomic_int_store(&(parse_context->do_seek), 0);
 
     Status status;
     while (1) {
@@ -315,12 +328,15 @@ parse_start(void *context)
             break;
         }
 
+        // empty output cues
+        parse_stop(parse_context);
+
+        // find the cue point to seek to
         std::vector<Sav1CuePoint> cue_points = state->callback->get_cue_points();
         for (auto cue = cue_points.rbegin(); cue != cue_points.rend(); ++cue) {
             if (cue->timecode <= parse_context->seek_timecode) {
                 fseek(state->file, cue->cluster_location, SEEK_SET);
                 thread_atomic_int_store(&(parse_context->do_parse), 1);
-                thread_atomic_int_store(&(parse_context->do_seek), 0);
                 state->parser->DidSeek();
                 break;
             }
@@ -392,6 +408,6 @@ parse_seek_to_time(ParseContext *context, uint64_t timecode)
 {
     // TODO: busy wait while we're in the middle of seeking
     context->seek_timecode = timecode;
-    thread_atomic_int_store(&(context->do_parse), 0);
     thread_atomic_int_store(&(context->do_seek), 1);
+    thread_atomic_int_store(&(context->do_parse), 0);
 }

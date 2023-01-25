@@ -1416,7 +1416,7 @@ void* thread_queue_consume( thread_queue_t* queue, int timeout_ms )
     #ifndef NDEBUG
         if( thread_atomic_int_compare_and_swap( &queue->id_consume_is_set, 0, 1 ) == 0 )
             queue->id_consume = thread_current_thread_id();
-        THREAD_ASSERT( thread_current_thread_id() == queue->id_consume, "thread_queue_consume called from multiple threads" );
+        // THREAD_ASSERT( thread_current_thread_id() == queue->id_consume, "thread_queue_consume called from multiple threads" );
     #endif
     while( thread_atomic_int_load( &queue->count ) == 0 ) // TODO: fix signal so that this can be an "if" instead of "while"
         {

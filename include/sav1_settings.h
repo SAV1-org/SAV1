@@ -37,8 +37,10 @@ typedef struct Sav1Settings {
     size_t queue_size;
     int use_custom_processing;
     void *(*custom_video_frame_processing)(Sav1VideoFrame *, void *);
+    void (*custom_video_frame_destroy)(void *, void *);
     void *custom_video_frame_processing_cookie;
     void *(*custom_audio_frame_processing)(Sav1AudioFrame *, void *);
+    void (*custom_audio_frame_destroy)(void *, void *);
     void *custom_audio_frame_processing_cookie;
     SAV1_AudioFrequency frequency;
     SAV1_AudioChannel channels;
@@ -50,11 +52,13 @@ sav1_default_settings(Sav1Settings *settings, char *file_name);
 void
 sav1_settings_use_custom_video_processing(
     Sav1Settings *settings,
-    void *(*processing_function)(Sav1VideoFrame *frame, void *cookie), void *cookie);
+    void *(*processing_function)(Sav1VideoFrame *frame, void *cookie),
+    void (*destroy_function)(void *, void *), void *cookie);
 
 void
 sav1_settings_use_custom_audio_processing(
     Sav1Settings *settings,
-    void *(*processing_function)(Sav1AudioFrame *frame, void *cookie), void *cookie);
+    void *(*processing_function)(Sav1AudioFrame *frame, void *cookie),
+    void (*destroy_function)(void *, void *), void *cookie);
 
 #endif

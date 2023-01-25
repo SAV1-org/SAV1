@@ -25,4 +25,7 @@ convert_av1_start(void *context);
 void
 convert_av1_stop(ConvertAv1Context *context);
 
+void
+convert_av1_drain_output_queue(ConvertAv1Context *context);
+
 #endif

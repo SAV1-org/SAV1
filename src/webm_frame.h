@@ -1,5 +1,5 @@
-#ifndef WEB_M_FRAME_H
-#define WEB_M_FRAME_H
+#ifndef WEBM_FRAME_H
+#define WEBM_FRAME_H
 
 #include <cstdint>
 
@@ -8,6 +8,7 @@ typedef struct WebMFrame {
     size_t size;        // the number of bytes in the frame
     uint64_t timecode;  // the timestamp of the frame in milliseconds
     int codec;
+    int do_discard;
 } WebMFrame;
 
 void

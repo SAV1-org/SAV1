@@ -34,6 +34,7 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
             custom_processing_video_init(
                 &(thread_manager->custom_processing_video_context),
                 settings->custom_video_frame_processing,
+                settings->custom_video_frame_destroy,
                 settings->custom_video_frame_processing_cookie,
                 thread_manager->video_custom_processing_queue,
                 thread_manager->video_output_queue);
@@ -69,6 +70,7 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
             custom_processing_audio_init(
                 &(thread_manager->custom_processing_audio_context),
                 settings->custom_audio_frame_processing,
+                settings->custom_audio_frame_destroy,
                 settings->custom_audio_frame_processing_cookie,
                 thread_manager->audio_custom_processing_queue,
                 thread_manager->audio_output_queue);
@@ -262,5 +264,28 @@ thread_manager_unlock_pipeline(ThreadManager *manager)
 void
 thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
 {
+    sav1_thread_queue_lock(manager->video_webm_frame_queue);
+    sav1_thread_queue_lock(manager->audio_webm_frame_queue);
+
+    // drain video queues
+    if (manager->settings->codec_target & SAV1_CODEC_TARGET_AV1) {
+        decode_av1_drain_output_queue(manager->decode_av1_context);
+        convert_av1_drain_output_queue(manager->convert_av1_context);
+        if (manager->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
+            custom_processing_video_drain_queue(manager->custom_processing_video_context);
+        }
+    }
+
+    // drain audio queues
+    if (manager->settings->codec_target & SAV1_CODEC_TARGET_OPUS) {
+        decode_opus_drain_output_queue(manager->decode_opus_context);
+        if (manager->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
+            custom_processing_audio_drain_queue(manager->custom_processing_audio_context);
+        }
+    }
+
+    sav1_thread_queue_unlock(manager->video_webm_frame_queue);
+    sav1_thread_queue_unlock(manager->audio_webm_frame_queue);
+
     parse_seek_to_time(manager->parse_context, timecode);
 }

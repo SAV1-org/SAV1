@@ -6,14 +6,15 @@
 void
 custom_processing_video_init(CustomProcessingVideoContext **context,
                              void *(*process_function)(Sav1VideoFrame *, void *),
-                             void *cookie, Sav1ThreadQueue *input_queue,
-                             Sav1ThreadQueue *output_queue)
+                             void (*destroy_function)(void *, void *), void *cookie,
+                             Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     CustomProcessingVideoContext *process_context =
         (CustomProcessingVideoContext *)malloc(sizeof(CustomProcessingVideoContext));
     *context = process_context;
 
     process_context->process_function = process_function;
+    process_context->destroy_function = destroy_function;
     process_context->cookie = cookie;
     process_context->input_queue = input_queue;
     process_context->output_queue = output_queue;
@@ -60,13 +61,19 @@ custom_processing_video_stop(CustomProcessingVideoContext *context)
     }
 
     // drain the output queue
+    custom_processing_video_drain_queue(context);
+}
+
+void
+custom_processing_video_drain_queue(CustomProcessingVideoContext *context)
+{
     while (1) {
         Sav1VideoFrame *frame =
             (Sav1VideoFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
         if (frame == NULL) {
             break;
         }
-        free(frame->data);
-        free(frame);
+
+        context->destroy_function(frame, context->cookie);
     }
 }

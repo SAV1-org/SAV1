@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "web_m_frame.h"
+#include "webm_frame.h"
 #include "thread_queue.h"
 #include "decode_av1.h"
 
@@ -85,8 +85,14 @@ decode_av1_start(void *context)
                     // save the timecode into the dav1dPicture
                     picture->m.timestamp = input_frame->timecode;
 
-                    // push to the output queue
-                    sav1_thread_queue_push(decode_context->output_queue, picture);
+                    if (input_frame->do_discard) {
+                        // throw this dav1dPicture away since it was marked for discard
+                        dav1d_picture_unref(picture);
+                    }
+                    else {
+                        // push to the output queue
+                        sav1_thread_queue_push(decode_context->output_queue, picture);
+                    }
 
                     // allocate a new dav1d picture
                     picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture));
@@ -113,6 +119,12 @@ decode_av1_stop(DecodeAv1Context *context)
     }
 
     // drain the output queue
+    decode_av1_drain_output_queue(context);
+}
+
+void
+decode_av1_drain_output_queue(DecodeAv1Context *context)
+{
     while (1) {
         Dav1dPicture *picture =
             (Dav1dPicture *)sav1_thread_queue_pop_timeout(context->output_queue);

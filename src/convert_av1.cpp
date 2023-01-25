@@ -493,6 +493,12 @@ convert_av1_stop(ConvertAv1Context *context)
     }
 
     // drain the output queue
+    convert_av1_drain_output_queue(context);
+}
+
+void
+convert_av1_drain_output_queue(ConvertAv1Context *context)
+{
     while (1) {
         Sav1VideoFrame *frame =
             (Sav1VideoFrame *)sav1_thread_queue_pop_timeout(context->output_queue);

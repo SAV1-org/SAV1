@@ -11,15 +11,15 @@ typedef struct DecodeOpusContext {
     Sav1ThreadQueue *input_queue;
     Sav1ThreadQueue *output_queue;
     thread_atomic_int_t do_decode;
-    OpusDecoder* decoder;
+    OpusDecoder *decoder;
     uint8_t *decode_buffer;
     Sav1Settings *settings;
 
 } DecodeOpusContext;
 
 void
-decode_opus_init(DecodeOpusContext **context, Sav1Settings *settings, Sav1ThreadQueue *input_queue,
-                Sav1ThreadQueue *output_queue);
+decode_opus_init(DecodeOpusContext **context, Sav1Settings *settings,
+                 Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue);
 
 void
 decode_opus_destroy(DecodeOpusContext *context);
@@ -29,5 +29,8 @@ decode_opus_start(void *context);
 
 void
 decode_opus_stop(DecodeOpusContext *context);
+
+void
+decode_opus_drain_output_queue(DecodeOpusContext *context);
 
 #endif

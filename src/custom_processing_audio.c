@@ -6,14 +6,15 @@
 void
 custom_processing_audio_init(CustomProcessingAudioContext **context,
                              void *(*process_function)(Sav1AudioFrame *, void *),
-                             void *cookie, Sav1ThreadQueue *input_queue,
-                             Sav1ThreadQueue *output_queue)
+                             void (*destroy_function)(void *, void *), void *cookie,
+                             Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     CustomProcessingAudioContext *process_context =
         (CustomProcessingAudioContext *)malloc(sizeof(CustomProcessingAudioContext));
     *context = process_context;
 
     process_context->process_function = process_function;
+    process_context->destroy_function = destroy_function;
     process_context->cookie = cookie;
     process_context->input_queue = input_queue;
     process_context->output_queue = output_queue;
@@ -60,13 +61,19 @@ custom_processing_audio_stop(CustomProcessingAudioContext *context)
     }
 
     // drain the output queue
+    custom_processing_audio_drain_queue(context);
+}
+
+void
+custom_processing_audio_drain_queue(CustomProcessingAudioContext *context)
+{
     while (1) {
         Sav1AudioFrame *frame =
             (Sav1AudioFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
         if (frame == NULL) {
             break;
         }
-        free(frame->data);
-        free(frame);
+
+        context->destroy_function(frame, context->cookie);
     }
 }

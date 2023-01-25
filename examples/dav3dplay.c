@@ -88,6 +88,24 @@ audio_postprocessing_func(Sav1AudioFrame *frame, void *cookie)
 }
 
 void
+audio_custom_destroy_func(void *frame, void *)
+{
+    Sav1AudioFrame *sav1_frame = (Sav1AudioFrame *)frame;
+
+    free(sav1_frame->data);
+    free(sav1_frame);
+}
+
+void
+video_custom_destroy_func(void *frame, void *)
+{
+    Sav1VideoFrame *sav1_frame = (Sav1VideoFrame *)frame;
+
+    free(sav1_frame->data);
+    free(sav1_frame);
+}
+
+void
 switch_window_surface(SDL_Window *window, SDL_Surface **existing)
 {
     SDL_FreeSurface(*existing);
@@ -147,10 +165,11 @@ main(int argc, char *argv[])
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
-    // settings.channels = SAV1_AUDIO_MONO;
-    //  sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func,
-    //  NULL); sav1_settings_use_custom_audio_processing(&settings,
-    //  audio_postprocessing_func, NULL);
+    settings.channels = SAV1_AUDIO_MONO;
+    // sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func,
+    //                                           video_custom_destroy_func, NULL);
+    // sav1_settings_use_custom_audio_processing(&settings, audio_postprocessing_func,
+    //                                           audio_custom_destroy_func, NULL);
 
     SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -296,6 +315,11 @@ main(int argc, char *argv[])
                     }
                     else if (event.key.keysym.sym == SDLK_j) {
                         thread_manager_seek_to_time(manager, 5000);
+                        SDL_ClearQueuedAudio(audio_device);
+                        // struct timespec curr_time;
+                        // clock_gettime(CLOCK_MONOTONIC, &curr_time);
+                        // start_time.tv_sec = curr_time.tv_sec - 5;
+                        // start_time.tv_nsec = curr_time.tv_nsec;
                     }
                     break;
 

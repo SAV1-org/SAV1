@@ -23,4 +23,7 @@ decode_av1_start(void *context);
 void
 decode_av1_stop(DecodeAv1Context *context);
 
+void
+decode_av1_drain_output_queue(DecodeAv1Context *context);
+
 #endif

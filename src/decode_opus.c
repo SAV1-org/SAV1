@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "web_m_frame.h"
+#include "webm_frame.h"
 #include "thread_queue.h"
 #include "decode_opus.h"
 #include "sav1_audio_frame.h"
@@ -60,13 +60,17 @@ decode_opus_start(void *context)
             opus_decode(decode_context->decoder, input_frame->data, input_frame->size,
                         (opus_int16 *)decode_context->decode_buffer, MAX_DECODE_LEN, 0);
 
-        webm_frame_destroy(input_frame);
+        if (input_frame->do_discard) {
+            webm_frame_destroy(input_frame);
+            continue;
+        }
 
         // setup the output frame
         // TODO: calculate duration
         Sav1AudioFrame *output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame));
         output_frame->codec = SAV1_CODEC_OPUS;
         output_frame->timecode = input_frame->timecode;
+        webm_frame_destroy(input_frame);
         // output_frame->sampling_frequency = input_frame->opus_sampling_frequency;
         // output_frame->num_channels = input_frame->opus_num_channels;
 
@@ -96,12 +100,19 @@ decode_opus_stop(DecodeOpusContext *context)
     }
 
     // drain the output queue
+    decode_opus_drain_output_queue(context);
+}
+
+void
+decode_opus_drain_output_queue(DecodeOpusContext *context)
+{
     while (1) {
-        WebMFrame *output_frame =
-            (WebMFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
+        Sav1AudioFrame *output_frame =
+            (Sav1AudioFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
         if (output_frame == NULL) {
             break;
         }
-        webm_frame_destroy(output_frame);
+        free(output_frame->data);
+        free(output_frame);
     }
 }
