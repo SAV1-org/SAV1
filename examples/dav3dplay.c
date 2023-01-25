@@ -147,10 +147,10 @@ main(int argc, char *argv[])
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
-    //settings.channels = SAV1_AUDIO_MONO;
-    // sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func,
-    // NULL); sav1_settings_use_custom_audio_processing(&settings,
-    // audio_postprocessing_func, NULL);
+    // settings.channels = SAV1_AUDIO_MONO;
+    //  sav1_settings_use_custom_video_processing(&settings, video_postprocessing_func,
+    //  NULL); sav1_settings_use_custom_audio_processing(&settings,
+    //  audio_postprocessing_func, NULL);
 
     SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -293,6 +293,9 @@ main(int argc, char *argv[])
                     }
                     else if (event.key.keysym.sym == SDLK_5 && sav1_frame) {
                         SDL_SetWindowSize(window, 2 * frame_width, 2 * frame_height);
+                    }
+                    else if (event.key.keysym.sym == SDLK_j) {
+                        thread_manager_seek_to_time(manager, 5000);
                     }
                     break;
 

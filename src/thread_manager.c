@@ -258,3 +258,9 @@ thread_manager_unlock_pipeline(ThreadManager *manager)
     sav1_thread_queue_unlock(manager->video_custom_processing_queue);
     sav1_thread_queue_unlock(manager->audio_custom_processing_queue);
 }
+
+void
+thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
+{
+    parse_seek_to_time(manager->parse_context, timecode);
+}

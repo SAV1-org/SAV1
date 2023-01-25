@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "parse.h"
+#include "web_m_frame.h"
 #include "thread_queue.h"
 #include "decode_opus.h"
 #include "sav1_audio_frame.h"
@@ -67,8 +67,8 @@ decode_opus_start(void *context)
         Sav1AudioFrame *output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame));
         output_frame->codec = SAV1_CODEC_OPUS;
         output_frame->timecode = input_frame->timecode;
-        output_frame->sampling_frequency = input_frame->opus_sampling_frequency;
-        output_frame->num_channels = input_frame->opus_num_channels;
+        // output_frame->sampling_frequency = input_frame->opus_sampling_frequency;
+        // output_frame->num_channels = input_frame->opus_num_channels;
 
         // copy the decoded audio data
         // if the audio is stereo, each sample is twice as long, so we multiply by 2-

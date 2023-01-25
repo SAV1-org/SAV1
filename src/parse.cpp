@@ -1,6 +1,10 @@
 #include "parse.h"
 #include "sav1_settings.h"
+#include "web_m_frame.h"
+
+#include <stdio.h>
 #include <cassert>
+#include <vector>
 #include <webm/callback.h>
 #include <webm/file_reader.h>
 #include <webm/status.h>
@@ -10,12 +14,18 @@
 
 using namespace webm;
 
+typedef struct Sav1CuePoint {
+    std::uint64_t timecode;
+    std::uint64_t cluster_location;
+} Sav1CuePoint;
+
 class Sav1Callback : public Callback {
    public:
     void
-    init(ParseContext *context)
+    init(ParseContext *context, FileReader *reader)
     {
         this->context = context;
+        this->reader = reader;
         this->av1_track_number = PARSE_TRACK_NUMBER_NOT_SPECIFIED;
         this->opus_track_number = PARSE_TRACK_NUMBER_NOT_SPECIFIED;
         this->current_track_number = 0;
@@ -24,6 +34,9 @@ class Sav1Callback : public Callback {
         this->timecode = 0;
         this->av1_codec_delay = 0;
         this->opus_codec_delay = 0;
+        this->last_cluster_location = 0;
+        Sav1CuePoint cue = {0};
+        this->cue_points.push_back(cue);
     }
 
     bool
@@ -36,6 +49,12 @@ class Sav1Callback : public Callback {
     found_opus_track()
     {
         return this->opus_track_number != PARSE_TRACK_NUMBER_NOT_SPECIFIED;
+    }
+
+    const std::vector<Sav1CuePoint> &
+    get_cue_points() const
+    {
+        return this->cue_points;
     }
 
     void
@@ -75,10 +94,26 @@ class Sav1Callback : public Callback {
                    Action *action) override
     {
         assert(action != nullptr);
-        *action = Action::kRead;
+
         if (cluster.timecode.is_present()) {
             this->cluster_timecode = cluster.timecode.value();
         }
+
+        if (this->cluster_timecode > this->cue_points.end()->timecode) {
+            Sav1CuePoint cue;
+            cue.timecode = (this->cluster_timecode * this->timecode_scale) / 1000000;
+            cue.cluster_location = this->last_cluster_location;
+            this->cue_points.push_back(cue);
+        }
+
+        *action = Action::kRead;
+        return Status(Status::kOkCompleted);
+    }
+
+    Status
+    OnClusterEnd(const ElementMetadata &, const Cluster &)
+    {
+        this->last_cluster_location = this->reader->Position();
         return Status(Status::kOkCompleted);
     }
 
@@ -100,16 +135,6 @@ class Sav1Callback : public Callback {
                 }
                 if (track_entry.codec_delay.is_present()) {
                     this->opus_codec_delay = track_entry.codec_delay.value();
-                }
-                if (track_entry.audio.is_present()) {
-                    if (track_entry.audio.value().channels.is_present()) {
-                        this->opus_num_channels =
-                            track_entry.audio.value().channels.value();
-                    }
-                    if (track_entry.audio.value().sampling_frequency.is_present()) {
-                        this->opus_sampling_frequency =
-                            track_entry.audio.value().sampling_frequency.value();
-                    }
                 }
             }
         }
@@ -194,8 +219,6 @@ class Sav1Callback : public Callback {
         else if (this->current_track_number == this->opus_track_number &&
                  this->context->codec_target & SAV1_CODEC_TARGET_OPUS &&
                  this->context->audio_output_queue != NULL) {
-            frame->opus_sampling_frequency = this->opus_sampling_frequency;
-            frame->opus_num_channels = this->opus_num_channels;
             frame->codec = PARSE_FRAME_TYPE_OPUS;
             sav1_thread_queue_push(this->context->audio_output_queue, frame);
         }
@@ -210,6 +233,7 @@ class Sav1Callback : public Callback {
 
    private:
     ParseContext *context;
+    FileReader *reader;
     std::uint64_t current_track_number;
     std::uint64_t av1_track_number;
     std::uint64_t opus_track_number;
@@ -218,8 +242,8 @@ class Sav1Callback : public Callback {
     std::uint64_t timecode;
     std::uint64_t opus_codec_delay;
     std::uint64_t av1_codec_delay;
-    std::uint64_t opus_num_channels;
-    double opus_sampling_frequency;
+    std::vector<Sav1CuePoint> cue_points;
+    std::uint64_t last_cluster_location;
 };
 
 typedef struct ParseInternalState {
@@ -256,7 +280,7 @@ parse_init(ParseContext **context, char *file_name, int codec_target,
     thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
 
     // initialize the callback class
-    state->callback->init(parse_context);
+    state->callback->init(parse_context, state->reader);
 }
 
 void
@@ -266,7 +290,6 @@ parse_destroy(ParseContext *context)
     ParseInternalState *state = (ParseInternalState *)context->internal_state;
     assert(state != nullptr);
 
-    fclose(state->file);
     delete state->callback;
     delete state->reader;
     delete state->parser;
@@ -282,7 +305,28 @@ parse_start(void *context)
     ParseContext *parse_context = (ParseContext *)context;
     thread_atomic_int_store(&(parse_context->do_parse), 1);
     ParseInternalState *state = (ParseInternalState *)parse_context->internal_state;
-    Status status = state->parser->Feed(state->callback, state->reader);
+
+    Status status;
+    while (1) {
+        status = state->parser->Feed(state->callback, state->reader);
+
+        if (status.code != Status::kWouldBlock ||
+            thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
+            break;
+        }
+
+        std::vector<Sav1CuePoint> cue_points = state->callback->get_cue_points();
+        for (auto cue = cue_points.rbegin(); cue != cue_points.rend(); ++cue) {
+            if (cue->timecode <= parse_context->seek_timecode) {
+                fseek(state->file, cue->cluster_location, SEEK_SET);
+                thread_atomic_int_store(&(parse_context->do_parse), 1);
+                thread_atomic_int_store(&(parse_context->do_seek), 0);
+                state->parser->DidSeek();
+                break;
+            }
+        }
+    }
+
     if (status.completed_ok()) {
         thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_END_OF_FILE);
         sav1_thread_queue_push(parse_context->video_output_queue, NULL);
@@ -344,23 +388,10 @@ parse_found_opus_track(ParseContext *context)
 }
 
 void
-webm_frame_init(WebMFrame **frame, std::size_t size)
+parse_seek_to_time(ParseContext *context, uint64_t timecode)
 {
-    WebMFrame *webm_frame = new WebMFrame;
-    *frame = webm_frame;
-    webm_frame->data = new std::uint8_t[size];
-    webm_frame->size = size;
-    webm_frame->timecode = 0;
-    webm_frame->opus_sampling_frequency = 0;
-    webm_frame->opus_num_channels = 0;
-    webm_frame->codec = 0;
-}
-
-void
-webm_frame_destroy(WebMFrame *frame)
-{
-    assert(frame != nullptr);
-    assert(frame->data != nullptr);
-    delete[] frame->data;
-    delete frame;
+    // TODO: busy wait while we're in the middle of seeking
+    context->seek_timecode = timecode;
+    thread_atomic_int_store(&(context->do_parse), 0);
+    thread_atomic_int_store(&(context->do_seek), 1);
 }

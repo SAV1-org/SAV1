@@ -11,27 +11,14 @@
 #define PARSE_FRAME_TYPE_AV1 1
 #define PARSE_FRAME_TYPE_OPUS 2
 
-typedef struct WebMFrame {
-    uint8_t *data;      // the frame data bytes
-    size_t size;        // the number of bytes in the frame
-    uint64_t timecode;  // the timestamp of the frame in milliseconds
-    double opus_sampling_frequency;
-    uint64_t opus_num_channels;
-    int codec;
-} WebMFrame;
-
-void
-webm_frame_init(WebMFrame **frame, std::size_t size);
-
-void
-webm_frame_destroy(WebMFrame *frame);
-
 typedef struct ParseContext {
     Sav1ThreadQueue *video_output_queue;
     Sav1ThreadQueue *audio_output_queue;
     int codec_target;
     thread_atomic_int_t status;
     thread_atomic_int_t do_parse;
+    thread_atomic_int_t do_seek;
+    uint64_t seek_timecode;
     void *internal_state;  // internal webm_parser variables
 } ParseContext;
 
@@ -56,5 +43,8 @@ parse_found_av1_track(ParseContext *context);
 
 int
 parse_found_opus_track(ParseContext *context);
+
+void
+parse_seek_to_time(ParseContext *context, uint64_t timecode);
 
 #endif

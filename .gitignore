@@ -7,6 +7,9 @@
 test_files/accounting.webm
 test_files/popeye.webm
 test_files/grey.webm
+test_files/grey.xml
+test_files/5minutes.webm
+test_files/stereo.webm
 dav3dplay
 dependencies/*
 !dependencies/libwebm
