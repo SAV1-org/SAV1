@@ -20,6 +20,11 @@
         return -1;                    \
     }
 
+#define CHECK_CONTEXT_VALID(context) \
+    if (context == NULL) {           \
+        return -1;                   \
+    }
+
 #define RAISE(ctx, error)       \
     sav1_set_error(ctx, error); \
     return -1;
@@ -27,8 +32,11 @@
 int
 sav1_create_context(Sav1Context *context, Sav1Settings *settings)
 {
+    CHECK_CONTEXT_VALID(context)
+
     if (context->is_initialized == 1) {
-        sav1_set_error(context->internal_state, "Context already created: sav1_create_context() failed");
+        sav1_set_error(context->internal_state,
+                       "Context already created: sav1_create_context() failed");
         return -1;
     }
 
@@ -55,8 +63,12 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
 }
 
 int
-sav1_destroy_context(Sav1Context *context) {
-    if (CHECK_CTX_INITIALIZED(context->internal_state, context) < 0) {  // CHECK_CTX_INITIALIZED doesn't make sense right now
+sav1_destroy_context(Sav1Context *context)
+{
+    CHECK_CONTEXT_VALID(context)
+    
+    if (CHECK_CTX_INITIALIZED(context->internal_state, context) <
+        0) {  // CHECK_CTX_INITIALIZED doesn't make sense right now
         return -1;
     }
 
@@ -73,9 +85,26 @@ sav1_destroy_context(Sav1Context *context) {
     return 0;
 }
 
+char *
+sav1_get_error(Sav1Context *context)
+{
+    if (context == NULL) {
+        return "Sav1Context context passed as NULL";
+    }
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+
+    if (ctx == NULL) {
+        return "Uninitialized context: sav1_create_context() not called";
+    }
+    else {
+        return ctx->error_message;
+    }
+}
+
 int
 sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
 {
+    CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)
@@ -84,11 +113,14 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
     if (ctx->settings->codec_target && SAV1_CODEC_AV1 != 0) {
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
+
+    return ctx->curr_video_frame;
 }
 
 int
 sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
 {
+    CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)
@@ -97,11 +129,14 @@ sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
     if (ctx->settings->codec_target && SAV1_CODEC_OPUS != 0) {
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
+
+    return ctx->curr_audio_frame;
 }
 
 int
 sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
 {
+    CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)
@@ -115,6 +150,7 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
 int
 sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
 {
+    CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)
@@ -128,6 +164,7 @@ sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
 int
 sav1_start_playback(Sav1Context *context)
 {
+    CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)

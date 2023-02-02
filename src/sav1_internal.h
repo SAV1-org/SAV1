@@ -12,6 +12,8 @@ typedef struct Sav1InternalContext {
     uint8_t is_playing;
     struct timespec *start_time;
     struct timespec *pause_time;
+    Sav1VideoFrame* curr_video_frame;
+    Sav1AudioFrame* curr_audio_frame;
 } Sav1InternalContext;
 
 void
