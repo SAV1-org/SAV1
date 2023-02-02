@@ -25,6 +25,6 @@ void
 sav1_set_error_with_code(Sav1InternalContext *ctx, const char *message, int code);
 
 void
-sav1_set_error_flag();
+sav1_set_critical_error_flag(Sav1InternalContext *ctx);
 
 #endif

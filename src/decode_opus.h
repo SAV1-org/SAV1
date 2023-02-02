@@ -1,11 +1,11 @@
 #ifndef DECODE_OPUS_H
 #define DECODE_OPUS_H
 
+#include "sav1_settings.h"
+
 #include <opus/opus.h>
 #include <opus/opus_types.h>
 #include <opus/opus_defines.h>
-
-#include "sav1_settings.h"
 
 typedef struct DecodeOpusContext {
     Sav1ThreadQueue *input_queue;

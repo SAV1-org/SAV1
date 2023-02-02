@@ -3,6 +3,9 @@
 
 #include <cstdint>
 
+// duplicate declaration
+typedef struct Sav1Context Sav1Context;
+
 typedef struct Sav1AudioFrame {
     uint8_t *data;
     size_t size;
@@ -12,5 +15,12 @@ typedef struct Sav1AudioFrame {
     size_t num_channels;
     int codec;
 } Sav1AudioFrame;
+
+int
+sav1_audio_frame_destroy(Sav1Context *context, Sav1AudioFrame *frame);
+
+int
+sav1_audio_frame_clone(Sav1Context *context, Sav1AudioFrame *src_frame,
+                       Sav1AudioFrame **dst_frame);
 
 #endif

@@ -29,6 +29,10 @@
     sav1_set_error(ctx, error); \
     return -1;
 
+#define RAISE_CRITICAL(ctx, error)     \
+    sav1_set_critical_error_flag(ctx); \
+    RAISE(ctx, error)
+
 int
 sav1_create_context(Sav1Context *context, Sav1Settings *settings)
 {
@@ -38,6 +42,8 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
         Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
         RAISE(ctx, "Context already created: sav1_create_context() failed")
     }
+
+    // TODO: error check mallocs
 
     Sav1InternalContext *ctx = (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext));
 
@@ -109,7 +115,7 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    if (ctx->settings->codec_target && SAV1_CODEC_AV1 != 0) {
+    if (ctx->settings->codec_target & SAV1_CODEC_AV1 == 0) {
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
 
@@ -126,7 +132,7 @@ sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    if (ctx->settings->codec_target && SAV1_CODEC_OPUS != 0) {
+    if (ctx->settings->codec_target & SAV1_CODEC_OPUS == 0) {
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
 
@@ -180,9 +186,7 @@ sav1_start_playback(Sav1Context *context)
         RAISE(ctx, "sav1_start_playback() called when already playing")
     }
 
-    // start playing the video
-    ctx->is_playing = 1;
-
+    // update the start time value
     int status;
     if (ctx->pause_time == NULL) {
         // video is not paused so make the beginning now
@@ -212,6 +216,39 @@ sav1_start_playback(Sav1Context *context)
         free(ctx->pause_time);
         ctx->pause_time = NULL;
     }
+
+    // set the playback status
+    ctx->is_playing = 1;
+
+    return 0;
+}
+
+int
+sav1_stop_playback(Sav1Context *context)
+{
+    CHECK_CONTEXT_VALID(context)
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    // make sure the video is already playing
+    if (!ctx->is_playing) {
+        RAISE(ctx, "sav1_stop_playback() called when already stopped")
+    }
+
+    if ((ctx->pause_time = (struct timespec *)malloc(sizeof(struct timespec))) == NULL) {
+        RAISE_CRITICAL(ctx, "malloc() failed in sav1_stop_playback()")
+    }
+    int status = clock_gettime(CLOCK_MONOTONIC, ctx->pause_time);
+    if (status) {
+        sav1_set_error_with_code(
+            ctx, "clock_gettime() in sav1_stop_playback() returned %d", status);
+        return -1;
+    }
+
+    // set the playback status
+    ctx->is_playing = 0;
 
     return 0;
 }

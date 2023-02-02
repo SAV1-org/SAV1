@@ -5,6 +5,8 @@
 #include "sav1_video_frame.h"
 #include "sav1_audio_frame.h"
 
+#include <cstdint>
+
 typedef struct Sav1Context {
     void *internal_state;
     uint8_t is_initialized;

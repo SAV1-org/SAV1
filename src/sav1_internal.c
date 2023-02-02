@@ -19,3 +19,8 @@ sav1_set_error_with_code(Sav1InternalContext *ctx, const char *message, int code
 {
     snprintf(ctx->error_message, SAV1_ERROR_MESSAGE_SIZE, message, code);
 }
+
+void
+sav1_set_critical_error_flag(Sav1InternalContext *ctx)
+{
+}
