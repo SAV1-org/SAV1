@@ -27,21 +27,50 @@
 int
 sav1_create_context(Sav1Context *context, Sav1Settings *settings)
 {
+    if (context->is_initialized == 1) {
+        sav1_set_error(context->internal_state, "Context already created: sav1_create_context() failed");
+        return -1;
+    }
+
     Sav1InternalContext *internal_context =
         (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext));
     ThreadManager *manager;
+    struct timespec start;
+
     internal_context->settings = settings;
     internal_context->thread_manager = manager;
     internal_context->critical_error_flag = 0;
     internal_context->is_playing = 0;
-    internal_context->start_time = 0;
-    internal_context->pause_time = 0;
+    internal_context->start_time = start;
+    internal_context->pause_time = NULL;
     memset(internal_context->error_message, 0, sizeof(internal_context->error_message));
 
     thread_manager_init(&internal_context->thread_manager, internal_context->settings);
     thread_manager_start_pipeline(internal_context->thread_manager);
 
     context->internal_state = internal_context;
+    context->is_initialized = 1;
+
+    return 0;
+}
+
+int
+sav1_destroy_context(Sav1Context *context) {
+    if (CHECK_CTX_INITIALIZED(context->internal_state, context) < 0) {  // CHECK_CTX_INITIALIZED doesn't make sense right now
+        return -1;
+    }
+
+    free(context->internal_state->settings);
+    free(context->internal_state->thread_manager);
+    free(context->internal_state->start_time);
+    if (context->internal_state->pause_time != NULL) {
+        free(context->internal_state->pause_time);
+    }
+
+    free(context->internal_state);
+    context->is_initialized = 0;
+
+    return 0;
 }
 
 int
