@@ -1,7 +1,6 @@
 #include "sav1.h"
 #include "sav1_internal.h"
 
-
 #include "string.h"
 
 #define CHECK_CTX_VALID(ctx)                                                            \
@@ -10,8 +9,8 @@
         return -1;                                                                      \
     }
 
-#define CHECK_CTX_INITIALIZED(ctx)                                                      \
-    if (!ctx->is_initialized) {                                                         \
+#define CHECK_CTX_INITIALIZED(ctx, context)                                             \
+    if (!context->is_initialized) {                                                     \
         sav1_set_error(ctx, "Uninitialized context: sav1_create_context() not called"); \
         return -1;                                                                      \
     }
@@ -21,9 +20,15 @@
         return -1;                    \
     }
 
+#define RAISE(ctx, error)       \
+    sav1_set_error(ctx, error); \
+    return -1;
+
 int
-sav1_create_context(Sav1Context *context, Sav1Settings *settings) {
-    Sav1InternalContext *internal_context = (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext));
+sav1_create_context(Sav1Context *context, Sav1Settings *settings)
+{
+    Sav1InternalContext *internal_context =
+        (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext));
     ThreadManager *manager;
     internal_context->settings = settings;
     internal_context->thread_manager = manager;
@@ -44,8 +49,51 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
 {
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
-    CHECK_CTX_INITIALIZED(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    if (ctx->settings->codec_target && SAV1_CODEC_AV1 != 0) {
+        RAISE(ctx, "Can't get video when not targeting video in settings")
+    }
+}
+
+int
+sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
+{
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    if (ctx->settings->codec_target && SAV1_CODEC_OPUS != 0) {
+        RAISE(ctx, "Can't get audio when not targeting audio in settings")
+    }
+}
+
+int
+sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
+{
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    if (ctx->settings->codec_target && SAV1_CODEC_AV1 != 0) {
+        RAISE(ctx, "Can't get video when not targeting video in settings")
+    }
+}
+
+int
+sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
+{
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    if (ctx->settings->codec_target && SAV1_CODEC_OPUS != 0) {
+        RAISE(ctx, "Can't get audio when not targeting audio in settings")
+    }
 }
 
 int
