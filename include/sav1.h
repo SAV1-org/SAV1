@@ -34,7 +34,7 @@ int
 sav1_start_playback(Sav1Context *context);
 
 int
-sav1_pause_playback(Sav1Context *context, int pause);
+sav1_stop_playback(Sav1Context *context);
 
 int
 sav1_get_paused(Sav1Context *context);

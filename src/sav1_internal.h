@@ -11,14 +11,14 @@ typedef struct Sav1InternalContext {
     uint8_t critical_error_flag;
     uint8_t is_initialized;
     uint8_t is_playing;
-    uint64_t start_time;
-    uint64_t pause_time;
+    struct timespec *start_time;
+    struct timespec *pause_time;
 } Sav1InternalContext;
 
 void
 sav1_set_error(Sav1InternalContext *ctx, char *message);
 
 void
-sav1_set_error_flag();
+sav1_set_error_format(Sav1InternalContext *ctx, char *message);
 
 #endif
