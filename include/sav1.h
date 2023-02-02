@@ -38,7 +38,10 @@ int
 sav1_stop_playback(Sav1Context *context);
 
 int
-sav1_get_paused(Sav1Context *context);
+sav1_get_playback_status(Sav1Context *context, int *status);
+
+int
+sav1_get_playback_time(Sav1Context *context, uint64_t *time_ms);
 
 int
 sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms);

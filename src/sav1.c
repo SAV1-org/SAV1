@@ -1,16 +1,16 @@
 #include "sav1.h"
 #include "sav1_internal.h"
 
-#include "string.h"
+#include <string.h>
+#include <time.h>
 
-#define CHECK_CTX_VALID(ctx)                                                            \
-    if (ctx == NULL) {                                                                  \
-        sav1_set_error(ctx, "Uninitialized context: sav1_create_context() not called"); \
-        return -1;                                                                      \
+#define CHECK_CTX_VALID(ctx) \
+    if (ctx == NULL) {       \
+        return -1;           \
     }
 
 #define CHECK_CTX_INITIALIZED(ctx, context)                                             \
-    if (!context->is_initialized) {                                                     \
+    if (context->is_initialized != 1) {                                                 \
         sav1_set_error(ctx, "Uninitialized context: sav1_create_context() not called"); \
         return -1;                                                                      \
     }
@@ -35,28 +35,25 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     CHECK_CONTEXT_VALID(context)
 
     if (context->is_initialized == 1) {
-        sav1_set_error(context->internal_state,
-                       "Context already created: sav1_create_context() failed");
-        return -1;
+        Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+        RAISE(ctx, "Context already created: sav1_create_context() failed")
     }
 
-    Sav1InternalContext *internal_context =
-        (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext));
-    ThreadManager *manager;
-    struct timespec start;
+    Sav1InternalContext *ctx = (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext));
 
-    internal_context->settings = settings;
-    internal_context->thread_manager = manager;
-    internal_context->critical_error_flag = 0;
-    internal_context->is_playing = 0;
-    internal_context->start_time = start;
-    internal_context->pause_time = NULL;
-    memset(internal_context->error_message, 0, sizeof(internal_context->error_message));
+    ctx->settings = settings;
+    ctx->critical_error_flag = 0;
+    ctx->is_playing = 0;
+    ctx->start_time = (struct timespec *)malloc(sizeof(struct timespec));
+    ctx->pause_time = NULL;
+    ctx->curr_video_frame = NULL;
+    ctx->curr_audio_frame = NULL;
+    memset(ctx->error_message, 0, SAV1_ERROR_MESSAGE_SIZE);
 
-    thread_manager_init(&internal_context->thread_manager, internal_context->settings);
-    thread_manager_start_pipeline(internal_context->thread_manager);
+    thread_manager_init(&(ctx->thread_manager), ctx->settings);
+    thread_manager_start_pipeline(ctx->thread_manager);
 
-    context->internal_state = internal_context;
+    context->internal_state = (void *)ctx;
     context->is_initialized = 1;
 
     return 0;
@@ -66,20 +63,22 @@ int
 sav1_destroy_context(Sav1Context *context)
 {
     CHECK_CONTEXT_VALID(context)
-    
-    if (CHECK_CTX_INITIALIZED(context->internal_state, context) <
-        0) {  // CHECK_CTX_INITIALIZED doesn't make sense right now
-        return -1;
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+
+    // TODO: error check these
+    thread_manager_kill_pipeline(ctx->thread_manager);
+    thread_manager_destroy(ctx->thread_manager);
+
+    free(ctx->start_time);
+    if (ctx->pause_time != NULL) {
+        free(ctx->pause_time);
     }
 
-    free(context->internal_state->settings);
-    free(context->internal_state->thread_manager);
-    free(context->internal_state->start_time);
-    if (context->internal_state->pause_time != NULL) {
-        free(context->internal_state->pause_time);
-    }
+    // TODO: free sav1 video and audio frames
 
-    free(context->internal_state);
+    free(ctx);
     context->is_initialized = 0;
 
     return 0;
@@ -89,12 +88,12 @@ char *
 sav1_get_error(Sav1Context *context)
 {
     if (context == NULL) {
-        return "Sav1Context context passed as NULL";
+        return (char *)"Sav1Context context passed as NULL";
     }
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
 
     if (ctx == NULL) {
-        return "Uninitialized context: sav1_create_context() not called";
+        return (char *)"Uninitialized context: sav1_create_context() not called";
     }
     else {
         return ctx->error_message;
@@ -114,7 +113,8 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
 
-    return ctx->curr_video_frame;
+    // return ctx->curr_video_frame;
+    return 0;
 }
 
 int
@@ -130,7 +130,8 @@ sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
 
-    return ctx->curr_audio_frame;
+    // return ctx->curr_audio_frame;
+    return 0;
 }
 
 int
@@ -145,6 +146,8 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
     if (ctx->settings->codec_target & SAV1_CODEC_AV1 == 0) {
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
+
+    return 0;
 }
 
 int
@@ -159,6 +162,8 @@ sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
     if (ctx->settings->codec_target & SAV1_CODEC_OPUS == 0) {
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
+
+    return 0;
 }
 
 int
@@ -197,14 +202,54 @@ sav1_start_playback(Sav1Context *context)
                 ctx, "clock_gettime() in sav1_start_playback() returned %d", status);
             return -1;
         }
-        start_time.tv_sec += curr_time.tv_sec - ctx->pause_time->tv_sec;
-        start_time.tv_sec += (curr_time.tv_nsec - ctx->pause_time->tv_nsec) / 1000000000;
-        start_time.tv_nsec += (curr_time.tv_nsec - ctx->pause_time->tv_nsec) % 1000000000;
+        ctx->start_time->tv_sec += curr_time.tv_sec - ctx->pause_time->tv_sec;
+        ctx->start_time->tv_sec +=
+            (curr_time.tv_nsec - ctx->pause_time->tv_nsec) / 1000000000;
+        ctx->start_time->tv_nsec +=
+            (curr_time.tv_nsec - ctx->pause_time->tv_nsec) % 1000000000;
 
         // free the pause time
         free(ctx->pause_time);
         ctx->pause_time = NULL;
     }
 
+    return 0;
+}
+
+int
+sav1_get_playback_time(Sav1Context *context, uint64_t *time_ms)
+{
+    CHECK_CONTEXT_VALID(context)
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    // handle cases when video isn't playing
+    if (!ctx->is_playing) {
+        // check if video is paused or just hasn't been started
+        if (ctx->pause_time == NULL) {
+            RAISE(ctx,
+                  "sav1_get_playback_time() called without calling sav1_start_playback()")
+        }
+
+        // calculate the offset from the pause time to the start time
+        *time_ms = ((ctx->pause_time->tv_sec - ctx->start_time->tv_sec) * 1000) +
+                   ((ctx->pause_time->tv_nsec - ctx->start_time->tv_nsec) / 1000000);
+        return 0;
+    }
+
+    // get the current time
+    struct timespec curr_time;
+    int status = clock_gettime(CLOCK_MONOTONIC, &curr_time);
+    if (status) {
+        sav1_set_error_with_code(
+            ctx, "clock_gettime() in sav1_get_playback_time_ms() returned %d", status);
+        return -1;
+    }
+
+    // calculate the offset from the current time to the start time
+    *time_ms = ((curr_time.tv_sec - ctx->start_time->tv_sec) * 1000) +
+               ((curr_time.tv_nsec - ctx->start_time->tv_nsec) / 1000000);
     return 0;
 }
