@@ -9,7 +9,6 @@ typedef struct Sav1InternalContext {
     ThreadManager *thread_manager;
     char error_message[128];
     uint8_t critical_error_flag;
-    uint8_t is_initialized;
     uint8_t is_playing;
     struct timespec *start_time;
     struct timespec *pause_time;

@@ -7,6 +7,7 @@
 
 typedef struct Sav1Context {
     void *internal_state;
+    uint8_t is_initialized;
 } Sav1Context;
 
 int
