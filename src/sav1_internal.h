@@ -18,6 +18,9 @@ void
 sav1_set_error(Sav1InternalContext *ctx, char *message);
 
 void
-sav1_set_error_format(Sav1InternalContext *ctx, char *message);
+sav1_set_error_with_code(Sav1InternalContext *ctx, char *message, int code);
+
+void
+sav1_set_error_flag();
 
 #endif
