@@ -6,7 +6,7 @@ void
 sav1_default_settings(Sav1Settings *settings, char *file_name)
 {
     settings->file_name = file_name;
-    settings->codec_target = SAV1_CODEC_TARGET_AV1 | SAV1_CODEC_TARGET_OPUS;
+    settings->codec_target = SAV1_CODEC_AV1 | SAV1_CODEC_OPUS;
     settings->desired_pixel_format = SAV1_PIXEL_FORMAT_RGBA;
     settings->queue_size = 20;
     settings->use_custom_processing = 0;
@@ -18,6 +18,7 @@ sav1_default_settings(Sav1Settings *settings, char *file_name)
     settings->custom_audio_frame_processing_cookie = NULL;
     settings->frequency = SAV1_AUDIO_FREQ_48KHZ;
     settings->channels = SAV1_AUDIO_STEREO;
+    settings->playback_mode = SAV1_PLAYBACK_TIMED;
 }
 
 void

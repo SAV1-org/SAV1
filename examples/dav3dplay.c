@@ -316,13 +316,20 @@ main(int argc, char *argv[])
                     else if (event.key.keysym.sym == SDLK_j) {
                         thread_manager_seek_to_time(manager, 5000);
                         SDL_ClearQueuedAudio(audio_device);
-                        // struct timespec curr_time;
-                        // clock_gettime(CLOCK_MONOTONIC, &curr_time);
-                        // start_time.tv_sec = curr_time.tv_sec - 5;
-                        // start_time.tv_nsec = curr_time.tv_nsec;
+                        struct timespec curr_time;
+                        clock_gettime(CLOCK_MONOTONIC, &curr_time);
+                        start_time.tv_sec = curr_time.tv_sec - 5;
+                        start_time.tv_nsec = curr_time.tv_nsec;
+
+                        // while (sav1_frame->timecode > 5500) {
+                        //     printf("X: %llu\n", sav1_frame->timecode);
+                        //     free(sav1_frame->data);
+                        //     free(sav1_frame);
+                        //     sav1_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
+                        //         manager->video_output_queue);
+                        // }
                     }
                     break;
-
                 case SDL_WINDOWEVENT:
                     if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                         screen_width = event.window.data1;

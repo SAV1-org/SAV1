@@ -29,7 +29,7 @@ class Sav1Callback : public Callback {
         this->av1_track_number = PARSE_TRACK_NUMBER_NOT_SPECIFIED;
         this->opus_track_number = PARSE_TRACK_NUMBER_NOT_SPECIFIED;
         this->current_track_number = 0;
-        this->timecode_scale = 0;
+        this->timecode_scale = 1;
         this->cluster_timecode = 0;
         this->timecode = 0;
         this->av1_codec_delay = 0;
@@ -127,7 +127,8 @@ class Sav1Callback : public Callback {
                     this->av1_track_number = track_entry.track_number.value();
                 }
                 if (track_entry.codec_delay.is_present()) {
-                    this->av1_codec_delay = track_entry.codec_delay.value();
+                    this->av1_codec_delay =
+                        (track_entry.codec_delay.value() * 1) / 1000000;
                 }
             }
             else if (track_entry.codec_id.value() == "A_OPUS") {
@@ -135,7 +136,8 @@ class Sav1Callback : public Callback {
                     this->opus_track_number = track_entry.track_number.value();
                 }
                 if (track_entry.codec_delay.is_present()) {
-                    this->opus_codec_delay = track_entry.codec_delay.value();
+                    this->opus_codec_delay =
+                        (track_entry.codec_delay.value() * 1) / 1000000;
                 }
             }
         }
@@ -148,9 +150,9 @@ class Sav1Callback : public Callback {
     {
         assert(action != nullptr);
         if ((simple_block.track_number == this->av1_track_number &&
-             this->context->codec_target & SAV1_CODEC_TARGET_AV1) ||
+             this->context->codec_target & SAV1_CODEC_AV1) ||
             (simple_block.track_number == this->opus_track_number &&
-             this->context->codec_target & SAV1_CODEC_TARGET_OPUS)) {
+             this->context->codec_target & SAV1_CODEC_OPUS)) {
             *action = Action::kRead;
             this->current_track_number = simple_block.track_number;
             this->calculate_timecode(simple_block.timecode);
@@ -166,9 +168,9 @@ class Sav1Callback : public Callback {
     {
         assert(action != nullptr);
         if ((block.track_number == this->av1_track_number &&
-             this->context->codec_target & SAV1_CODEC_TARGET_AV1) ||
+             this->context->codec_target & SAV1_CODEC_AV1) ||
             (block.track_number == this->opus_track_number &&
-             this->context->codec_target & SAV1_CODEC_TARGET_OPUS)) {
+             this->context->codec_target & SAV1_CODEC_OPUS)) {
             *action = Action::kRead;
             this->current_track_number = block.track_number;
             this->calculate_timecode(block.timecode);
@@ -200,16 +202,6 @@ class Sav1Callback : public Callback {
         webm_frame_init(&frame, *bytes_remaining);
         frame->timecode = this->timecode;
 
-        // mark the WebMFrame to be discarded later when seeking
-        if (thread_atomic_int_load(&(this->context->do_seek))) {
-            if (this->timecode < this->context->seek_timecode) {
-                frame->do_discard = 1;
-            }
-            else {
-                thread_atomic_int_store(&(this->context->do_seek), 0);
-            }
-        }
-
         // read frame data until there's no more to read
         std::uint8_t *buffer_location = frame->data;
         std::uint64_t num_read;
@@ -221,15 +213,36 @@ class Sav1Callback : public Callback {
         } while (status.code == Status::kOkPartial);
 
         // fill in type-specific information
+        int do_seek = thread_atomic_int_load(&(this->context->do_seek));
         if (this->current_track_number == this->av1_track_number &&
-            this->context->codec_target & SAV1_CODEC_TARGET_AV1 &&
+            this->context->codec_target & SAV1_CODEC_AV1 &&
             this->context->video_output_queue != NULL) {
+            // mark the WebMFrame to be discarded later when seeking
+            if (do_seek & SAV1_CODEC_AV1) {
+                if (this->timecode < this->context->seek_timecode) {
+                    frame->do_discard = 1;
+                }
+                else {
+                    thread_atomic_int_store(&(this->context->do_seek),
+                                            do_seek ^ SAV1_CODEC_AV1);
+                }
+            }
             frame->codec = PARSE_FRAME_TYPE_AV1;
             sav1_thread_queue_push(this->context->video_output_queue, frame);
         }
         else if (this->current_track_number == this->opus_track_number &&
-                 this->context->codec_target & SAV1_CODEC_TARGET_OPUS &&
+                 this->context->codec_target & SAV1_CODEC_OPUS &&
                  this->context->audio_output_queue != NULL) {
+            // mark the WebMFrame to be discarded later when seeking
+            if (do_seek & SAV1_CODEC_OPUS) {
+                if (this->timecode < this->context->seek_timecode) {
+                    frame->do_discard = 1;
+                }
+                else {
+                    thread_atomic_int_store(&(this->context->do_seek),
+                                            do_seek ^ SAV1_CODEC_OPUS);
+                }
+            }
             frame->codec = PARSE_FRAME_TYPE_OPUS;
             sav1_thread_queue_push(this->context->audio_output_queue, frame);
         }
@@ -408,6 +421,6 @@ parse_seek_to_time(ParseContext *context, uint64_t timecode)
 {
     // TODO: busy wait while we're in the middle of seeking
     context->seek_timecode = timecode;
-    thread_atomic_int_store(&(context->do_seek), 1);
+    thread_atomic_int_store(&(context->do_seek), context->codec_target);
     thread_atomic_int_store(&(context->do_parse), 0);
 }

@@ -3,8 +3,6 @@
 
 #include <cstdint>
 
-#define SAV1_CODEC_OPUS 1
-
 typedef struct Sav1AudioFrame {
     uint8_t *data;
     size_t size;

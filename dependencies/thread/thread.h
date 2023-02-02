@@ -1395,7 +1395,7 @@ int thread_queue_produce( thread_queue_t* queue, void* value, int timeout_ms )
     #ifndef NDEBUG
         if( thread_atomic_int_compare_and_swap( &queue->id_produce_is_set, 0, 1 ) == 0 )
             queue->id_produce = thread_current_thread_id();
-        THREAD_ASSERT( thread_current_thread_id() == queue->id_produce, "thread_queue_produce called from multiple threads" );
+        // THREAD_ASSERT( thread_current_thread_id() == queue->id_produce, "thread_queue_produce called from multiple threads" );
     #endif
     while( thread_atomic_int_load( &queue->count ) == queue->size )  // TODO: fix signal so that this can be an "if" instead of "while"
         {

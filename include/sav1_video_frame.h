@@ -3,8 +3,6 @@
 
 #include <cstdint>
 
-#define SAV1_CODEC_AV1 1
-
 typedef struct Sav1VideoFrame {
     uint8_t *data;
     size_t size;

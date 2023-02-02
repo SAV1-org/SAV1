@@ -4,8 +4,8 @@
 #include "sav1_video_frame.h"
 #include "sav1_audio_frame.h"
 
-#define SAV1_CODEC_TARGET_AV1 1
-#define SAV1_CODEC_TARGET_OPUS 2
+#define SAV1_CODEC_AV1 1
+#define SAV1_CODEC_OPUS 2
 
 #define SAV1_USE_CUSTOM_PROCESSING_VIDEO 1
 #define SAV1_USE_CUSTOM_PROCESSING_AUDIO 2
@@ -26,9 +26,11 @@ typedef enum {
     SAV1_AUDIO_FREQ_16KHZ = 16000,
     SAV1_AUDIO_FREQ_24KHZ = 24000,
     SAV1_AUDIO_FREQ_48KHZ = 48000,
-} SAV1_AudioFrequency;
+} Sav1AudioFrequency;
 
-typedef enum { SAV1_AUDIO_MONO = 1, SAV1_AUDIO_STEREO = 2 } SAV1_AudioChannel;
+typedef enum { SAV1_AUDIO_MONO = 1, SAV1_AUDIO_STEREO = 2 } Sav1AudioChannel;
+
+typedef enum { SAV1_PLAYBACK_TIMED, SAV1_PLAYBACK_FAST } Sav1PlaybackMode;
 
 typedef struct Sav1Settings {
     char *file_name;
@@ -36,14 +38,17 @@ typedef struct Sav1Settings {
     int desired_pixel_format;
     size_t queue_size;
     int use_custom_processing;
+    double playback_speed;
+    int on_video_end;
     void *(*custom_video_frame_processing)(Sav1VideoFrame *, void *);
     void (*custom_video_frame_destroy)(void *, void *);
     void *custom_video_frame_processing_cookie;
     void *(*custom_audio_frame_processing)(Sav1AudioFrame *, void *);
     void (*custom_audio_frame_destroy)(void *, void *);
     void *custom_audio_frame_processing_cookie;
-    SAV1_AudioFrequency frequency;
-    SAV1_AudioChannel channels;
+    Sav1AudioFrequency frequency;
+    Sav1AudioChannel channels;
+    Sav1PlaybackMode playback_mode;
 } Sav1Settings;
 
 void
