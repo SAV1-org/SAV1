@@ -16,7 +16,7 @@ typedef struct Sav1InternalContext {
 } Sav1InternalContext;
 
 void
-sav1_set_error(Sav1Context *context, char *message);
+sav1_set_error(Sav1InternalContext *ctx, char *message);
 
 void
 sav1_set_error_flag();
