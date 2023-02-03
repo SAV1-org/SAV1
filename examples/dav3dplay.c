@@ -1,14 +1,12 @@
+#include "thread_manager.h"
+#include "thread_queue.h"
 #include "sav1_video_frame.h"
 #include "sav1_audio_frame.h"
 #include "sav1_settings.h"
-#include "thread_manager.h"
-#include "thread_queue.h"
 
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
-
-#include <dav1d/dav1d.h>
 
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
@@ -103,14 +101,6 @@ video_custom_destroy_func(void *frame, void *)
 
     free(sav1_frame->data);
     free(sav1_frame);
-}
-
-void
-switch_window_surface(SDL_Window *window, SDL_Surface **existing)
-{
-    SDL_FreeSurface(*existing);
-    SDL_Surface *new_surf = SDL_GetWindowSurface(window);
-    *existing = new_surf;
 }
 
 void

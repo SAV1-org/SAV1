@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-// duplicate declaration
+// forward declaration to avoid circular dependency
 typedef struct Sav1Context Sav1Context;
 
 typedef struct Sav1VideoFrame {
