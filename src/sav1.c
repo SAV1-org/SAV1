@@ -254,7 +254,7 @@ sav1_stop_playback(Sav1Context *context)
 }
 
 int
-sav1_get_playback_time(Sav1Context *context, uint64_t *time_ms)
+sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
 {
     CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
@@ -271,8 +271,8 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *time_ms)
         }
 
         // calculate the offset from the pause time to the start time
-        *time_ms = ((ctx->pause_time->tv_sec - ctx->start_time->tv_sec) * 1000) +
-                   ((ctx->pause_time->tv_nsec - ctx->start_time->tv_nsec) / 1000000);
+        *timecode_ms = ((ctx->pause_time->tv_sec - ctx->start_time->tv_sec) * 1000) +
+                       ((ctx->pause_time->tv_nsec - ctx->start_time->tv_nsec) / 1000000);
         return 0;
     }
 
@@ -281,12 +281,30 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *time_ms)
     int status = clock_gettime(CLOCK_MONOTONIC, &curr_time);
     if (status) {
         sav1_set_error_with_code(
-            ctx, "clock_gettime() in sav1_get_playback_time_ms() returned %d", status);
+            ctx, "clock_gettime() in sav1_get_playback_time() returned %d", status);
         return -1;
     }
 
     // calculate the offset from the current time to the start time
-    *time_ms = ((curr_time.tv_sec - ctx->start_time->tv_sec) * 1000) +
-               ((curr_time.tv_nsec - ctx->start_time->tv_nsec) / 1000000);
+    *timecode_ms = ((curr_time.tv_sec - ctx->start_time->tv_sec) * 1000) +
+                   ((curr_time.tv_nsec - ctx->start_time->tv_nsec) / 1000000);
+    return 0;
+}
+
+int
+sav1_get_playback_duration(Sav1Context *context, uint64_t *duration_ms)
+{
+    CHECK_CONTEXT_VALID(context)
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    uint64_t duration = thread_manager_get_duration(ctx->thread_manager);
+    if (duration == 0) {
+        RAISE(ctx, "Duration is unknown in call to sav1_get_playback_duration()")
+    }
+    *duration_ms = duration;
+
     return 0;
 }

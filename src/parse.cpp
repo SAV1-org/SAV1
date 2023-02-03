@@ -86,6 +86,11 @@ class Sav1Callback : public Callback {
         if (info.timecode_scale.is_present()) {
             this->timecode_scale = info.timecode_scale.value();
         }
+        if (info.duration.is_present()) {
+            this->context->duration = (std::uint64_t)(
+                (info.duration.value() * this->timecode_scale) / 1000000.0);
+            ;
+        }
         return Status(Status::kOkCompleted);
     }
 
@@ -301,6 +306,8 @@ parse_init(ParseContext **context, char *file_name, int codec_target,
     parse_context->codec_target = codec_target;
     parse_context->video_output_queue = video_output_queue;
     parse_context->audio_output_queue = audio_output_queue;
+    parse_context->duration = 0;
+    parse_context->seek_timecode = 0;
     thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
 
     // initialize the callback class

@@ -289,3 +289,13 @@ thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
 
     parse_seek_to_time(manager->parse_context, timecode);
 }
+
+uint64_t
+thread_manager_get_duration(ThreadManager *manager)
+{
+    if (manager->parse_context == NULL) {
+        return 0;
+    }
+
+    return manager->parse_context->duration;
+}

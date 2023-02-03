@@ -19,6 +19,7 @@ typedef struct ParseContext {
     thread_atomic_int_t do_parse;
     thread_atomic_int_t do_seek;
     uint64_t seek_timecode;
+    uint64_t duration;
     void *internal_state;  // internal webm_parser variables
 } ParseContext;
 

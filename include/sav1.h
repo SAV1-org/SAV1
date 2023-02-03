@@ -43,7 +43,10 @@ int
 sav1_get_playback_status(Sav1Context *context, int *status);
 
 int
-sav1_get_playback_time(Sav1Context *context, uint64_t *time_ms);
+sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms);
+
+int
+sav1_get_playback_duration(Sav1Context *context, uint64_t *duration_ms);
 
 int
 sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms);

@@ -55,4 +55,7 @@ thread_manager_unlock_pipeline(ThreadManager *manager);
 void
 thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode);
 
+uint64_t
+thread_manager_get_duration(ThreadManager *manager);
+
 #endif
