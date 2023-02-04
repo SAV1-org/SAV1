@@ -297,5 +297,8 @@ thread_manager_get_duration(ThreadManager *manager)
         return 0;
     }
 
-    return manager->parse_context->duration;
+    thread_mutex_lock(manager->parse_context->duration_lock);
+    uint64_t duration = manager->parse_context->duration;
+    thread_mutex_unlock(manager->parse_context->duration_lock);
+    return duration;
 }

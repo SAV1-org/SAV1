@@ -87,9 +87,11 @@ class Sav1Callback : public Callback {
             this->timecode_scale = info.timecode_scale.value();
         }
         if (info.duration.is_present()) {
+            thread_mutex_lock(this->context->duration_lock);
             this->context->duration = (std::uint64_t)(
                 (info.duration.value() * this->timecode_scale) / 1000000.0);
             ;
+            thread_mutex_unlock(this->context->duration_lock);
         }
         return Status(Status::kOkCompleted);
     }
@@ -306,9 +308,11 @@ parse_init(ParseContext **context, char *file_name, int codec_target,
     parse_context->codec_target = codec_target;
     parse_context->video_output_queue = video_output_queue;
     parse_context->audio_output_queue = audio_output_queue;
+    parse_context->duration_lock = new thread_mutex_t;
     parse_context->duration = 0;
     parse_context->seek_timecode = 0;
     thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
+    thread_mutex_init(parse_context->duration_lock);
 
     // initialize the callback class
     state->callback->init(parse_context, state->reader);
@@ -325,6 +329,9 @@ parse_destroy(ParseContext *context)
     delete state->reader;
     delete state->parser;
     delete state;
+
+    thread_mutex_term(context->duration_lock);
+    delete context->duration_lock;
 
     // clean up the context
     delete context;
