@@ -56,6 +56,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->curr_audio_frame = NULL;
     memset(ctx->error_message, 0, SAV1_ERROR_MESSAGE_SIZE);
 
+    // TODO: error check these eventually
     thread_manager_init(&(ctx->thread_manager), ctx->settings);
     thread_manager_start_pipeline(ctx->thread_manager);
 

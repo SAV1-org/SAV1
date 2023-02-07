@@ -14,7 +14,7 @@ convert_yuv_to_rgba_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
                                          ptrdiff_t UV_stride,
                                          Sav1VideoFrame *output_frame,
                                          Dav1dPixelLayout layout,
-                                         int desired_pixel_format)
+                                         Sav1PixelFormat desired_pixel_format)
 {
     // determine chroma sampling in both axes
     size_t chroma_sampling_horizontal = 1;
@@ -207,7 +207,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
     output_frame->width = picture->p.w;
     output_frame->height = picture->p.h;
 
-    int desired_pixel_format = output_frame->pixel_format;
+    Sav1PixelFormat desired_pixel_format = output_frame->pixel_format;
 
     uint8_t *Y_data = (uint8_t *)picture->data[0];
     uint8_t *U_data = (uint8_t *)picture->data[1];
@@ -423,7 +423,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
 }
 
 void
-convert_av1_init(ConvertAv1Context **context, int desired_pixel_format,
+convert_av1_init(ConvertAv1Context **context, Sav1PixelFormat desired_pixel_format,
                  Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     ConvertAv1Context *convert_context =

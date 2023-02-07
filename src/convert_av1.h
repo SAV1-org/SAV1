@@ -3,17 +3,18 @@
 
 #include <libyuv.h>
 
+#include "sav1_settings.h"
 #include "thread_queue.h"
 
 typedef struct ConvertAv1Context {
     Sav1ThreadQueue *input_queue;
     Sav1ThreadQueue *output_queue;
     thread_atomic_int_t do_convert;
-    int desired_pixel_format;
+    Sav1PixelFormat desired_pixel_format;
 } ConvertAv1Context;
 
 void
-convert_av1_init(ConvertAv1Context **context, int desired_pixel_format,
+convert_av1_init(ConvertAv1Context **context, Sav1PixelFormat desired_pixel_format,
                  Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue);
 
 void

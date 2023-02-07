@@ -6,6 +6,20 @@
 // forward declaration to avoid circular dependency
 typedef struct Sav1Context Sav1Context;
 
+// storing this here to again avoid a circular dependency
+// TODO: figure out a better solution
+typedef enum {
+    SAV1_PIXEL_FORMAT_RGBA = 0,
+    SAV1_PIXEL_FORMAT_ARGB = 1,
+    SAV1_PIXEL_FORMAT_BGRA = 2,
+    SAV1_PIXEL_FORMAT_ABGR = 3,
+    SAV1_PIXEL_FORMAT_RGB = 4,
+    SAV1_PIXEL_FORMAT_BGR = 5,
+    SAV1_PIXEL_FORMAT_YUY2 = 6,
+    SAV1_PIXEL_FORMAT_UYVY = 7,
+    SAV1_PIXEL_FORMAT_YVYU = 8,
+} Sav1PixelFormat;
+
 typedef struct Sav1VideoFrame {
     uint8_t *data;
     size_t size;
@@ -15,7 +29,7 @@ typedef struct Sav1VideoFrame {
     uint64_t timecode;
     uint8_t color_depth;
     int codec;
-    int pixel_format;
+    Sav1PixelFormat pixel_format;
 } Sav1VideoFrame;
 
 int

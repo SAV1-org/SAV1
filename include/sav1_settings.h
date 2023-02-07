@@ -10,16 +10,6 @@
 #define SAV1_USE_CUSTOM_PROCESSING_VIDEO 1
 #define SAV1_USE_CUSTOM_PROCESSING_AUDIO 2
 
-#define SAV1_PIXEL_FORMAT_RGBA 0
-#define SAV1_PIXEL_FORMAT_ARGB 1
-#define SAV1_PIXEL_FORMAT_BGRA 2
-#define SAV1_PIXEL_FORMAT_ABGR 3
-#define SAV1_PIXEL_FORMAT_RGB 4
-#define SAV1_PIXEL_FORMAT_BGR 5
-#define SAV1_PIXEL_FORMAT_YUY2 6
-#define SAV1_PIXEL_FORMAT_UYVY 7
-#define SAV1_PIXEL_FORMAT_YVYU 8
-
 typedef enum {
     SAV1_AUDIO_FREQ_8KHZ = 8000,
     SAV1_AUDIO_FREQ_12KHZ = 12000,
@@ -35,7 +25,6 @@ typedef enum { SAV1_PLAYBACK_TIMED, SAV1_PLAYBACK_FAST } Sav1PlaybackMode;
 typedef struct Sav1Settings {
     char *file_name;
     int codec_target;
-    int desired_pixel_format;
     size_t queue_size;
     int use_custom_processing;
     double playback_speed;
@@ -46,6 +35,7 @@ typedef struct Sav1Settings {
     void *(*custom_audio_frame_processing)(Sav1AudioFrame *, void *);
     void (*custom_audio_frame_destroy)(void *, void *);
     void *custom_audio_frame_processing_cookie;
+    Sav1PixelFormat desired_pixel_format;
     Sav1AudioFrequency frequency;
     Sav1AudioChannel channels;
     Sav1PlaybackMode playback_mode;
