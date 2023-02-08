@@ -47,6 +47,8 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
 
     Sav1InternalContext *ctx = (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext));
 
+    // TODO: memcpy settings to ensure they don't change it
+
     ctx->settings = settings;
     ctx->critical_error_flag = 0;
     ctx->is_playing = 0;
