@@ -81,7 +81,7 @@ sav1_destroy_context(Sav1Context *context)
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)
 
-    // TODO: error check these
+    // TODO: error check these eventually
     thread_manager_kill_pipeline(ctx->thread_manager);
     thread_manager_destroy(ctx->thread_manager);
 
@@ -90,7 +90,7 @@ sav1_destroy_context(Sav1Context *context)
         free(ctx->pause_time);
     }
 
-    // TODO: free sav1 video and audio frames
+    // TODO: free sav1 video and audio frames conditionally
 
     free(ctx);
     context->is_initialized = 0;
@@ -127,6 +127,9 @@ sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms)
             ctx->video_frame_ready = 1;  // mark ready, there is new content
         }
     }
+
+    // TODO: just because next frame isn't ready doesn't mean this frame isn't ready
+    // TODO: add different logic for fast mode somewhere
 
     if (ctx->next_video_frame == NULL) {
         // if no new video frame is ready we can't go into the cycler loop
@@ -170,6 +173,9 @@ sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms)
             ctx->audio_frame_ready = 1;  // mark ready, there is new content
         }
     }
+
+    // TODO: just because next frame isn't ready doesn't mean this frame isn't ready
+    // TODO: add different logic for fast mode somewhere
 
     if (ctx->next_audio_frame == NULL) {
         // if no new audio frame is ready we can't go into the cycler loop
