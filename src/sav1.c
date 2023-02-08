@@ -148,15 +148,13 @@ sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms)
         ctx->curr_video_frame = ctx->next_video_frame;
         ctx->video_frame_ready = 1;  // mark ready, there is new content
 
-        // if there is another frame to pull, check whether it should be the current frame
-        if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) > 0) {
-            ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
-                ctx->thread_manager->video_output_queue);
-        }
-        else {
+        // stop cycling if there are no more frames to pull
+        if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) == 0) {
             ctx->next_video_frame = NULL;
             return;
         }
+        ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
+            ctx->thread_manager->video_output_queue);
     }
 }
 
@@ -194,15 +192,13 @@ sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms)
         ctx->curr_audio_frame = ctx->next_audio_frame;
         ctx->audio_frame_ready = 1;  // mark ready, there is new content
 
-        // if there is another frame to pull, check whether it should be the current frame
-        if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) > 0) {
-            ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
-                ctx->thread_manager->audio_output_queue);
-        }
-        else {
+        // stop cycling if there are no more frames to pull
+        if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) == 0) {
             ctx->next_audio_frame = NULL;
             return;
         }
+        ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
+            ctx->thread_manager->audio_output_queue);
     }
 }
 

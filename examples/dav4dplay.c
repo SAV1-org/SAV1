@@ -85,7 +85,7 @@ main(int argc, char *argv[])
             frame_width = sav1_frame->width;
             frame_height = sav1_frame->height;
             if (needs_initial_resize) {
-                SDL_SetWindowSize(window, frame_width, frame_height);
+                SDL_SetWindowSize(window, 2 * frame_width / 3, 2 * frame_height / 3);
                 needs_initial_resize = 0;
             }
             SDL_FreeSurface(frame);
@@ -99,7 +99,11 @@ main(int argc, char *argv[])
         if (frame_ready) {
             Sav1AudioFrame *sav1_frame;
             sav1_get_audio_frame(&context, &sav1_frame);
-            SDL_ClearQueuedAudio(audio_device);
+            // SDL_ClearQueuedAudio(audio_device);
+            //              OR...
+            // if (SDL_GetQueuedAudioSize(audio_device) == 0) {
+            //     SDL_QueueAudio(audio_device, sav1_frame->data, sav1_frame->size);
+            // }
             SDL_QueueAudio(audio_device, sav1_frame->data, sav1_frame->size);
         }
 
