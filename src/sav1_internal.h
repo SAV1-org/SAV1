@@ -15,7 +15,11 @@ typedef struct Sav1InternalContext {
     struct timespec *start_time;
     struct timespec *pause_time;
     Sav1VideoFrame *curr_video_frame;
+    Sav1VideoFrame *next_video_frame;
+    uint8_t video_frame_ready;
     Sav1AudioFrame *curr_audio_frame;
+    Sav1AudioFrame *next_audio_frame;
+    uint8_t audio_frame_ready;
 } Sav1InternalContext;
 
 void
@@ -26,5 +30,11 @@ sav1_set_error_with_code(Sav1InternalContext *ctx, const char *message, int code
 
 void
 sav1_set_critical_error_flag(Sav1InternalContext *ctx);
+
+void
+_sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms);
+
+void
+_sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms);
 
 #endif

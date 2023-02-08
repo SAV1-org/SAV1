@@ -53,7 +53,12 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->start_time = (struct timespec *)malloc(sizeof(struct timespec));
     ctx->pause_time = NULL;
     ctx->curr_video_frame = NULL;
+    ctx->next_video_frame = NULL;
+    ctx->video_frame_ready = 0;
     ctx->curr_audio_frame = NULL;
+    ctx->next_audio_frame = NULL;
+    ctx->audio_frame_ready = 0;
+
     memset(ctx->error_message, 0, SAV1_ERROR_MESSAGE_SIZE);
 
     // TODO: error check these eventually
@@ -120,7 +125,12 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
 
-    // return ctx->curr_video_frame;
+    uint64_t curr_ms;
+    sav1_get_playback_time(context, &curr_ms);
+    _sav1_pump_video_frames(context, curr_ms);
+
+    *frame = ctx->curr_video_frame;
+    ctx->video_frame_ready = 0;
     return 0;
 }
 
@@ -137,7 +147,12 @@ sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
 
-    // return ctx->curr_audio_frame;
+    uint64_t curr_ms;
+    sav1_get_playback_time(context, &curr_ms);
+    _sav1_pump_audio_frames(context, curr_ms);
+
+    *frame = ctx->curr_audio_frame;
+    ctx->audio_frame_ready = 0;
     return 0;
 }
 
@@ -154,7 +169,11 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
 
-    *is_ready = 0;
+    uint64_t curr_ms;
+    sav1_get_playback_time(context, &curr_ms);
+    _sav1_pump_video_frames(context, curr_ms);
+
+    *is_ready = ctx->video_frame_ready;
 
     return 0;
 }
@@ -172,7 +191,11 @@ sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
 
-    *is_ready = 0;
+    uint64_t curr_ms;
+    sav1_get_playback_time(context, &curr_ms);
+    _sav1_pump_audio_frames(context, curr_ms);
+
+    *is_ready = ctx->audio_frame_ready;
 
     return 0;
 }

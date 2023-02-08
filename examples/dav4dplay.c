@@ -55,7 +55,7 @@ main(int argc, char *argv[])
     SDL_AudioSpec obtained = {0};
     SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 
-    SDL_Window *window = SDL_CreateWindow("Dav40 video player", SDL_WINDOWPOS_UNDEFINED,
+    SDL_Window *window = SDL_CreateWindow("Dav4d video player", SDL_WINDOWPOS_UNDEFINED,
                                           SDL_WINDOWPOS_UNDEFINED, screen_width,
                                           screen_height, SDL_WINDOW_RESIZABLE);
     SDL_Surface *screen = SDL_GetWindowSurface(window);
