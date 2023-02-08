@@ -83,13 +83,13 @@ _sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms)
         if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) > 0) {
             ctx->curr_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->video_output_queue);
+            ctx->video_frame_ready = 1;  // mark ready, there is new content
         }
-        ctx->video_frame_ready = 1;  // mark ready, there is new content
     }
 
     if (ctx->next_video_frame == NULL) {
         if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) > 0) {
-            ctx->curr_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
+            ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->video_output_queue);
         }
     }

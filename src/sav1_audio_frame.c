@@ -83,13 +83,13 @@ _sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms)
         if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) > 0) {
             ctx->curr_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->audio_output_queue);
+            ctx->audio_frame_ready = 1;  // mark ready, there is new content
         }
-        ctx->audio_frame_ready = 1;  // mark ready, there is new content
     }
 
     if (ctx->next_audio_frame == NULL) {
         if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) > 0) {
-            ctx->curr_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
+            ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->audio_output_queue);
         }
     }
