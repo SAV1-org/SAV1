@@ -31,10 +31,4 @@ sav1_set_error_with_code(Sav1InternalContext *ctx, const char *message, int code
 void
 sav1_set_critical_error_flag(Sav1InternalContext *ctx);
 
-void
-_sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms);
-
-void
-_sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms);
-
 #endif
