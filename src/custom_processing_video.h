@@ -16,7 +16,8 @@ typedef struct CustomProcessingVideoContext {
 } CustomProcessingVideoContext;
 
 void
-custom_processing_video_init(CustomProcessingVideoContext **context, Sav1InternalContext *ctx,
+custom_processing_video_init(CustomProcessingVideoContext **context,
+                             Sav1InternalContext *ctx,
                              void *(*process_function)(Sav1VideoFrame *, void *),
                              void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue);

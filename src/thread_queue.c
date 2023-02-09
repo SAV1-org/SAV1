@@ -4,7 +4,8 @@
 #include "sav1_internal.h"
 
 void
-sav1_thread_queue_init(Sav1ThreadQueue **sav1_queue, Sav1InternalContext *ctx, size_t capacity)
+sav1_thread_queue_init(Sav1ThreadQueue **sav1_queue, Sav1InternalContext *ctx,
+                       size_t capacity)
 {
     *sav1_queue = (Sav1ThreadQueue *)malloc(sizeof(Sav1ThreadQueue));
     (*sav1_queue)->data = (void **)malloc(capacity * sizeof(void *));

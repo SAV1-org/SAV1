@@ -15,7 +15,7 @@ typedef struct DecodeAv1Context {
 } DecodeAv1Context;
 
 void
-decode_av1_init(DecodeAv1Context **context, Sav1InternalContext *ctx, 
+decode_av1_init(DecodeAv1Context **context, Sav1InternalContext *ctx,
                 Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue);
 
 void

@@ -5,7 +5,8 @@
 #include "sav1_internal.h"
 
 void
-custom_processing_audio_init(CustomProcessingAudioContext **context, Sav1InternalContext *ctx,
+custom_processing_audio_init(CustomProcessingAudioContext **context,
+                             Sav1InternalContext *ctx,
                              void *(*process_function)(Sav1AudioFrame *, void *),
                              void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)

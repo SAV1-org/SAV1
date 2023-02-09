@@ -16,7 +16,8 @@ typedef struct Sav1ThreadQueue {
 } Sav1ThreadQueue;
 
 void
-sav1_thread_queue_init(Sav1ThreadQueue **sav1_queue, Sav1InternalContext *ctx, size_t capacity);
+sav1_thread_queue_init(Sav1ThreadQueue **sav1_queue, Sav1InternalContext *ctx,
+                       size_t capacity);
 
 void
 sav1_thread_queue_destroy(Sav1ThreadQueue *sav1_queue);

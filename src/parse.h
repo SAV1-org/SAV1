@@ -29,7 +29,7 @@ typedef struct ParseContext {
 } ParseContext;
 
 void
-parse_init(ParseContext **context, Sav1InternalContext *ctx, 
+parse_init(ParseContext **context, Sav1InternalContext *ctx,
            Sav1ThreadQueue *video_output_queue, Sav1ThreadQueue *audio_output_queue);
 
 void

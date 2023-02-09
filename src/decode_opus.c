@@ -81,8 +81,7 @@ decode_opus_start(void *context)
         // if the audio is stereo, each sample is twice as long, so we multiply by 2-
         // this is accomplished by using the values of SAV1_AUDIO_MONO and
         // SAV1_AUDIO_STEREO
-        output_frame->size =
-            num_samples * sizeof(uint16_t) * decode_context->channels;
+        output_frame->size = num_samples * sizeof(uint16_t) * decode_context->channels;
         output_frame->data = (uint8_t *)malloc(output_frame->size);
         memcpy(output_frame->data, decode_context->decode_buffer, output_frame->size);
 

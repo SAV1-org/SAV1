@@ -7,7 +7,7 @@
 
 void
 sav1_set_error(Sav1InternalContext *ctx, const char *message)
-{   
+{
     int message_len = strlen(message);
     assert(message_len < SAV1_ERROR_MESSAGE_SIZE);
     memcpy(ctx->error_message, message, message_len);
