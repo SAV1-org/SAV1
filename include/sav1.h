@@ -4,10 +4,6 @@
 #include <cstdint>
 #include <cstddef>
 
-typedef struct Sav1VideoFrame Sav1VideoFrame;
-typedef struct Sav1AudioFrame Sav1AudioFrame;
-typedef struct Sav1InternalContext Sav1InternalContext;
-
 typedef struct Sav1Context {
     void *internal_state;
     uint8_t is_initialized;
