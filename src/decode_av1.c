@@ -85,6 +85,12 @@ decode_av1_start(void *context)
                 if (status == 0) {
                     // save the timecode into the dav1dPicture
                     picture->m.timestamp = input_frame->timecode;
+                    if (input_frame->sentinel) {
+                        picture->m.user_data.data = (const uint8_t *)1;
+                    }
+                    else {
+                        picture->m.user_data.data = NULL;
+                    }
 
                     if (input_frame->do_discard) {
                         // throw this dav1dPicture away since it was marked for discard

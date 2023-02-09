@@ -64,11 +64,11 @@ custom_processing_audio_stop(CustomProcessingAudioContext *context)
     }
 
     // drain the output queue
-    custom_processing_audio_drain_queue(context);
+    custom_processing_audio_drain_output_queue(context);
 }
 
 void
-custom_processing_audio_drain_queue(CustomProcessingAudioContext *context)
+custom_processing_audio_drain_output_queue(CustomProcessingAudioContext *context)
 {
     while (1) {
         Sav1AudioFrame *frame =

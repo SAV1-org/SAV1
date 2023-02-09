@@ -130,7 +130,7 @@ main(int argc, char *argv[])
                     if (event.key.keysym.sym == SDLK_ESCAPE) {
                         running = 0;
                     }
-                    if (event.key.keysym.sym == SDLK_SPACE) {
+                    else if (event.key.keysym.sym == SDLK_SPACE) {
                         if (is_paused) {
                             sav1_start_playback(&context);
                         }
@@ -139,13 +139,17 @@ main(int argc, char *argv[])
                         }
                         is_paused = is_paused ? 0 : 1;
                     }
-                    if (event.key.keysym.sym == SDLK_f) {
+                    else if (event.key.keysym.sym == SDLK_f) {
                         SDL_SetWindowFullscreen(
+
                             window, is_fullscreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                         SDL_FreeSurface(screen);
                         screen = SDL_GetWindowSurface(window);
 
                         is_fullscreen = is_fullscreen ? 0 : 1;
+                    }
+                    else if (event.key.keysym.sym == SDLK_LEFT) {
+                        sav1_seek_playback(&context, 5000);
                     }
                     break;
 

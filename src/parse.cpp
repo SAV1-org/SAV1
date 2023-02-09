@@ -223,8 +223,7 @@ class Sav1Callback : public Callback {
         // fill in type-specific information
         int do_seek = thread_atomic_int_load(&(this->context->do_seek));
         if (this->current_track_number == this->av1_track_number &&
-            this->context->codec_target & SAV1_CODEC_AV1 &&
-            this->context->video_output_queue != NULL) {
+            this->context->codec_target & SAV1_CODEC_AV1) {
             // mark the WebMFrame to be discarded later when seeking
             if (do_seek & SAV1_CODEC_AV1) {
                 if (this->timecode < this->context->seek_timecode) {
@@ -233,14 +232,14 @@ class Sav1Callback : public Callback {
                 else {
                     thread_atomic_int_store(&(this->context->do_seek),
                                             do_seek ^ SAV1_CODEC_AV1);
+                    frame->sentinel = 1;
                 }
             }
-            frame->codec = PARSE_FRAME_TYPE_AV1;
+            frame->codec = SAV1_CODEC_AV1;
             sav1_thread_queue_push(this->context->video_output_queue, frame);
         }
         else if (this->current_track_number == this->opus_track_number &&
-                 this->context->codec_target & SAV1_CODEC_OPUS &&
-                 this->context->audio_output_queue != NULL) {
+                 this->context->codec_target & SAV1_CODEC_OPUS) {
             // mark the WebMFrame to be discarded later when seeking
             if (do_seek & SAV1_CODEC_OPUS) {
                 if (this->timecode < this->context->seek_timecode) {
@@ -249,9 +248,10 @@ class Sav1Callback : public Callback {
                 else {
                     thread_atomic_int_store(&(this->context->do_seek),
                                             do_seek ^ SAV1_CODEC_OPUS);
+                    frame->sentinel = 1;
                 }
             }
-            frame->codec = PARSE_FRAME_TYPE_OPUS;
+            frame->codec = SAV1_CODEC_OPUS;
             sav1_thread_queue_push(this->context->audio_output_queue, frame);
         }
         else {
@@ -286,7 +286,7 @@ typedef struct ParseInternalState {
 } ParseInternalState;
 
 void
-parse_init(ParseContext **context, Sav1InternalContext *ctx, 
+parse_init(ParseContext **context, Sav1InternalContext *ctx,
            Sav1ThreadQueue *video_output_queue, Sav1ThreadQueue *audio_output_queue)
 {
     // create the internal state

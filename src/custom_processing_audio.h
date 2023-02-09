@@ -32,6 +32,6 @@ void
 custom_processing_audio_stop(CustomProcessingAudioContext *context);
 
 void
-custom_processing_audio_drain_queue(CustomProcessingAudioContext *context);
+custom_processing_audio_drain_output_queue(CustomProcessingAudioContext *context);
 
 #endif

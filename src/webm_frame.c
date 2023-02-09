@@ -13,6 +13,7 @@ webm_frame_init(WebMFrame **frame, size_t size)
     webm_frame->timecode = 0;
     webm_frame->codec = 0;
     webm_frame->do_discard = 0;
+    webm_frame->sentinel = 0;
 }
 
 void

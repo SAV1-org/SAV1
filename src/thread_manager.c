@@ -276,7 +276,8 @@ thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
         convert_av1_drain_output_queue(manager->convert_av1_context);
         if (manager->ctx->settings->use_custom_processing &
             SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
-            custom_processing_video_drain_queue(manager->custom_processing_video_context);
+            custom_processing_video_drain_output_queue(
+                manager->custom_processing_video_context);
         }
     }
 
@@ -285,7 +286,8 @@ thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
         decode_opus_drain_output_queue(manager->decode_opus_context);
         if (manager->ctx->settings->use_custom_processing &
             SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
-            custom_processing_audio_drain_queue(manager->custom_processing_audio_context);
+            custom_processing_audio_drain_output_queue(
+                manager->custom_processing_audio_context);
         }
     }
 

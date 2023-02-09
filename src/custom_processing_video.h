@@ -32,6 +32,6 @@ void
 custom_processing_video_stop(CustomProcessingVideoContext *context);
 
 void
-custom_processing_video_drain_queue(CustomProcessingVideoContext *context);
+custom_processing_video_drain_output_queue(CustomProcessingVideoContext *context);
 
 #endif

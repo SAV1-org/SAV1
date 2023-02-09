@@ -13,6 +13,7 @@ typedef struct Sav1AudioFrame {
     double sampling_frequency;
     size_t num_channels;
     int codec;
+    int sentinel;
 } Sav1AudioFrame;
 
 int

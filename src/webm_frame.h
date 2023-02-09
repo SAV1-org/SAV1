@@ -10,6 +10,7 @@ typedef struct WebMFrame {
     uint64_t timecode;  // the timestamp of the frame in milliseconds
     int codec;
     int do_discard;
+    int sentinel;
 } WebMFrame;
 
 void

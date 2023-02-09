@@ -73,9 +73,8 @@ decode_opus_start(void *context)
         Sav1AudioFrame *output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame));
         output_frame->codec = SAV1_CODEC_OPUS;
         output_frame->timecode = input_frame->timecode;
+        output_frame->sentinel = input_frame->sentinel;
         webm_frame_destroy(input_frame);
-        // output_frame->sampling_frequency = input_frame->opus_sampling_frequency;
-        // output_frame->num_channels = input_frame->opus_num_channels;
 
         // copy the decoded audio data
         // if the audio is stereo, each sample is twice as long, so we multiply by 2-

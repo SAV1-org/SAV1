@@ -416,3 +416,80 @@ sav1_get_playback_duration(Sav1Context *context, uint64_t *duration_ms)
 
     return 0;
 }
+
+int
+sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
+{
+    CHECK_CONTEXT_VALID(context)
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    thread_manager_seek_to_time(ctx->thread_manager, timecode_ms);
+
+    struct timespec curr_time;
+    clock_gettime(CLOCK_MONOTONIC, &curr_time);
+    ctx->start_time->tv_sec = curr_time.tv_sec - timecode_ms / 1000;
+    uint64_t timecode_ns = (timecode_ms % 1000) * 1000000;
+    if (timecode_ns > curr_time.tv_nsec) {
+        ctx->start_time->tv_sec--;
+        ctx->start_time->tv_nsec = curr_time.tv_nsec + 1000000000 - timecode_ns;
+    }
+    else {
+        ctx->start_time->tv_nsec = curr_time.tv_nsec - timecode_ns;
+    }
+
+    // remove all our currently queued frames
+    if (ctx->curr_video_frame != NULL) {
+        sav1_video_frame_destroy(context, ctx->curr_video_frame);
+        ctx->curr_video_frame = NULL;
+    }
+    if (ctx->next_video_frame != NULL) {
+        sav1_video_frame_destroy(context, ctx->next_video_frame);
+        ctx->next_video_frame = NULL;
+    }
+    if (ctx->curr_audio_frame != NULL) {
+        sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
+        ctx->curr_audio_frame = NULL;
+    }
+    if (ctx->next_audio_frame != NULL) {
+        sav1_audio_frame_destroy(context, ctx->next_audio_frame);
+        ctx->next_audio_frame = NULL;
+    }
+
+    printf("A\n");
+
+    int frame_needs = ctx->settings->codec_target;
+    while (frame_needs) {
+        if (frame_needs & SAV1_CODEC_AV1 &&
+            sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) > 0) {
+            ctx->curr_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
+                ctx->thread_manager->video_output_queue);
+            if (ctx->curr_video_frame->sentinel) {
+                sav1_video_frame_destroy(context, ctx->curr_video_frame);
+            }
+            else {
+                frame_needs ^= SAV1_CODEC_AV1;
+            }
+        }
+
+        if (frame_needs & SAV1_CODEC_OPUS &&
+            sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) > 0) {
+            ctx->curr_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
+                ctx->thread_manager->audio_output_queue);
+            if (ctx->curr_audio_frame->sentinel) {
+                sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
+            }
+            else {
+                frame_needs ^= SAV1_CODEC_OPUS;
+            }
+        }
+
+        printf("C\n");
+    }
+
+    printf("B\n");
+
+    return 0;
+}

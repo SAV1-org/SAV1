@@ -15,6 +15,7 @@ typedef struct Sav1VideoFrame {
     uint8_t color_depth;
     int codec;
     Sav1PixelFormat pixel_format;
+    int sentinel;
 } Sav1VideoFrame;
 
 int

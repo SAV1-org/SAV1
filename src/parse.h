@@ -11,8 +11,6 @@ typedef struct Sav1InternalContext Sav1InternalContext;
 #define PARSE_STATUS_OK 0
 #define PARSE_STATUS_END_OF_FILE 1
 #define PARSE_STATUS_ERROR 2
-#define PARSE_FRAME_TYPE_AV1 1
-#define PARSE_FRAME_TYPE_OPUS 2
 
 typedef struct ParseContext {
     Sav1ThreadQueue *video_output_queue;

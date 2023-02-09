@@ -471,6 +471,7 @@ convert_av1_start(void *context)
         output_frame->pixel_format = convert_context->desired_pixel_format;
         output_frame->color_depth = 8;
         output_frame->timecode = dav1d_pic->m.timestamp;
+        output_frame->sentinel = dav1d_pic->m.user_data.data == NULL ? 0 : 1;
 
         // convert the color space
         convert_dav1d_picture(dav1d_pic, output_frame);
@@ -506,6 +507,7 @@ convert_av1_drain_output_queue(ConvertAv1Context *context)
         if (frame == NULL) {
             break;
         }
+        // TODO: use destroy function here and for opus
         free(frame->data);
         free(frame);
     }

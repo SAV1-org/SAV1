@@ -64,11 +64,11 @@ custom_processing_video_stop(CustomProcessingVideoContext *context)
     }
 
     // drain the output queue
-    custom_processing_video_drain_queue(context);
+    custom_processing_video_drain_output_queue(context);
 }
 
 void
-custom_processing_video_drain_queue(CustomProcessingVideoContext *context)
+custom_processing_video_drain_output_queue(CustomProcessingVideoContext *context)
 {
     while (1) {
         Sav1VideoFrame *frame =
