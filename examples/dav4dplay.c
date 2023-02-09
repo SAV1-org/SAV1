@@ -35,6 +35,7 @@ main(int argc, char *argv[])
     int screen_width = 1200;
     int screen_height = 760;
     int frame_width, frame_height;
+    int paused = 0;
 
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
@@ -127,6 +128,15 @@ main(int argc, char *argv[])
                 case SDL_KEYDOWN:
                     if (event.key.keysym.sym == SDLK_ESCAPE) {
                         running = 0;
+                    }
+                    if (event.key.keysym.sym == SDLK_SPACE) {
+                        if (paused) {
+                            sav1_start_playback(&context);
+                        }
+                        else {
+                            sav1_stop_playback(&context);
+                        }
+                        paused = paused ? 0 : 1;
                     }
                     break;
 
