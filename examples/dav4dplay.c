@@ -139,9 +139,8 @@ main(int argc, char *argv[])
                         }
                         is_paused = is_paused ? 0 : 1;
                     }
-                    else if (event.key.keysym.sym == SDLK_f) {
+                    if (event.key.keysym.sym == SDLK_f) {
                         SDL_SetWindowFullscreen(
-
                             window, is_fullscreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                         SDL_FreeSurface(screen);
                         screen = SDL_GetWindowSurface(window);

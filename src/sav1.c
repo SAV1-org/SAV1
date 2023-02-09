@@ -49,6 +49,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
         return -1;  // Internal Context Malloc Failed
     }
 
+    // initialize context values
     ctx->critical_error_flag = 0;
     ctx->is_playing = 0;
     ctx->start_time = (struct timespec *)malloc(sizeof(struct timespec));
@@ -59,8 +60,17 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->curr_audio_frame = NULL;
     ctx->next_audio_frame = NULL;
     ctx->audio_frame_ready = 0;
+    ctx->settings = (Sav1Settings *)malloc(sizeof(Sav1Settings));
 
-    memcpy(&ctx->settings, &settings, sizeof(settings));
+    // error check malloc calls
+    if (ctx->start_time == NULL || ctx->settings == NULL) {
+        return -1;
+    }
+
+    // copy over settings to prevent future modifications (except to file_name)
+    memcpy(ctx->settings, settings, sizeof(Sav1Settings));
+
+    // clear error string
     memset(ctx->error_message, 0, SAV1_ERROR_MESSAGE_SIZE);
 
     // TODO: error check these eventually
@@ -85,6 +95,7 @@ sav1_destroy_context(Sav1Context *context)
     thread_manager_kill_pipeline(ctx->thread_manager);
     thread_manager_destroy(ctx->thread_manager);
 
+    free(ctx->settings);
     free(ctx->start_time);
     if (ctx->pause_time != NULL) {
         free(ctx->pause_time);
