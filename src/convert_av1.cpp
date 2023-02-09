@@ -5,6 +5,7 @@
 #include "convert_av1.h"
 #include "sav1_video_frame.h"
 #include "sav1_settings.h"
+#include "sav1_internal.h"
 
 using namespace libyuv;
 
@@ -423,7 +424,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
 }
 
 void
-convert_av1_init(ConvertAv1Context **context, Sav1PixelFormat desired_pixel_format,
+convert_av1_init(ConvertAv1Context **context, Sav1InternalContext *ctx,
                  Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     ConvertAv1Context *convert_context =
@@ -432,7 +433,7 @@ convert_av1_init(ConvertAv1Context **context, Sav1PixelFormat desired_pixel_form
 
     convert_context->input_queue = input_queue;
     convert_context->output_queue = output_queue;
-    convert_context->desired_pixel_format = desired_pixel_format;
+    convert_context->desired_pixel_format = ctx->settings->desired_pixel_format;
 }
 
 void

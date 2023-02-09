@@ -1,10 +1,9 @@
 #ifndef SAV1_AUDIO_FRAME_H
 #define SAV1_AUDIO_FRAME_H
 
-#include <cstdint>
+#include "sav1.h"
 
-// forward declaration to avoid circular dependency
-typedef struct Sav1Context Sav1Context;
+#include <cstdint>
 
 typedef struct Sav1AudioFrame {
     uint8_t *data;

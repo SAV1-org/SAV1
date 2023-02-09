@@ -3,8 +3,8 @@
 #include <cstring>
 
 #include "webm_frame.h"
-#include "thread_queue.h"
 #include "decode_av1.h"
+#include "sav1_internal.h"
 
 void
 fake_dealloc(const uint8_t *, void *)
@@ -13,13 +13,14 @@ fake_dealloc(const uint8_t *, void *)
 }
 
 void
-decode_av1_init(DecodeAv1Context **context, Sav1ThreadQueue *input_queue,
-                Sav1ThreadQueue *output_queue)
+decode_av1_init(DecodeAv1Context **context, Sav1InternalContext *ctx, 
+                Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     DecodeAv1Context *decode_context =
         (DecodeAv1Context *)malloc(sizeof(DecodeAv1Context));
     *context = decode_context;
 
+    decode_context->ctx = ctx;
     decode_context->input_queue = input_queue;
     decode_context->output_queue = output_queue;
 

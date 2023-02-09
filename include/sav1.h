@@ -1,16 +1,21 @@
 #ifndef SAV1_H
 #define SAV1_H
 
-#include "sav1_settings.h"
-#include "sav1_video_frame.h"
-#include "sav1_audio_frame.h"
-
 #include <cstdint>
+#include <cstddef>
+
+typedef struct Sav1VideoFrame Sav1VideoFrame;
+typedef struct Sav1AudioFrame Sav1AudioFrame;
+typedef struct Sav1InternalContext Sav1InternalContext;
 
 typedef struct Sav1Context {
     void *internal_state;
     uint8_t is_initialized;
 } Sav1Context;
+
+#include "sav1_settings.h"
+#include "sav1_video_frame.h"
+#include "sav1_audio_frame.h"
 
 int
 sav1_create_context(Sav1Context *context, Sav1Settings *settings);

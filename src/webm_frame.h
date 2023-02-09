@@ -2,6 +2,7 @@
 #define WEBM_FRAME_H
 
 #include <cstdint>
+#include <cstddef>
 
 typedef struct WebMFrame {
     uint8_t *data;      // the frame data bytes

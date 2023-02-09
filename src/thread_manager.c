@@ -1,41 +1,41 @@
 #include <cstdlib>
 
 #include "thread_manager.h"
+#include "sav1_internal.h"
 
 void
-thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
+thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)
 {
     ThreadManager *thread_manager = (ThreadManager *)malloc(sizeof(ThreadManager));
     *manager = thread_manager;
 
     // always create the output queues
-    sav1_thread_queue_init(&(thread_manager->video_output_queue), settings->queue_size);
-    sav1_thread_queue_init(&(thread_manager->audio_output_queue), settings->queue_size);
+    sav1_thread_queue_init(&(thread_manager->video_output_queue), ctx, ctx->settings->queue_size);
+    sav1_thread_queue_init(&(thread_manager->audio_output_queue), ctx, ctx->settings->queue_size);
 
     // setup video if requested
-    if (settings->codec_target & SAV1_CODEC_AV1) {
+    if (ctx->settings->codec_target & SAV1_CODEC_AV1) {
         // initialize the thread queues
-        sav1_thread_queue_init(&(thread_manager->video_webm_frame_queue),
-                               settings->queue_size);
-        sav1_thread_queue_init(&(thread_manager->video_dav1d_picture_queue),
-                               settings->queue_size);
-        decode_av1_init(&(thread_manager->decode_av1_context),
+        sav1_thread_queue_init(&(thread_manager->video_webm_frame_queue), ctx,
+                               ctx->settings->queue_size);
+        sav1_thread_queue_init(&(thread_manager->video_dav1d_picture_queue), ctx,
+                               ctx->settings->queue_size);
+        decode_av1_init(&(thread_manager->decode_av1_context), ctx,
                         thread_manager->video_webm_frame_queue,
                         thread_manager->video_dav1d_picture_queue);
 
-        if (settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
+        if (ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
             // setup video processing with custom stage
-            sav1_thread_queue_init(&(thread_manager->video_custom_processing_queue),
-                                   settings->queue_size);
+            sav1_thread_queue_init(&(thread_manager->video_custom_processing_queue), ctx,
+                                   ctx->settings->queue_size);
             convert_av1_init(&(thread_manager->convert_av1_context),
-                             settings->desired_pixel_format,
+                             ctx,
                              thread_manager->video_dav1d_picture_queue,
                              thread_manager->video_custom_processing_queue);
             custom_processing_video_init(
-                &(thread_manager->custom_processing_video_context),
-                settings->custom_video_frame_processing,
-                settings->custom_video_frame_destroy,
-                settings->custom_video_frame_processing_cookie,
+                &(thread_manager->custom_processing_video_context), ctx,
+                ctx->settings->custom_video_frame_processing,
+                ctx->settings->custom_video_frame_destroy,
                 thread_manager->video_custom_processing_queue,
                 thread_manager->video_output_queue);
         }
@@ -44,7 +44,7 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
             thread_manager->custom_processing_video_context = NULL;
             thread_manager->video_custom_processing_queue = NULL;
             convert_av1_init(&(thread_manager->convert_av1_context),
-                             settings->desired_pixel_format,
+                             ctx,
                              thread_manager->video_dav1d_picture_queue,
                              thread_manager->video_output_queue);
         }
@@ -55,29 +55,28 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
     }
 
     // setup audio if requested
-    if (settings->codec_target & SAV1_CODEC_OPUS) {
+    if (ctx->settings->codec_target & SAV1_CODEC_OPUS) {
         // initialize thread queue
-        sav1_thread_queue_init(&(thread_manager->audio_webm_frame_queue),
-                               settings->queue_size);
+        sav1_thread_queue_init(&(thread_manager->audio_webm_frame_queue), ctx,
+                               ctx->settings->queue_size);
 
-        if (settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
+        if (ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
             // setup audio processing with custom stage
-            sav1_thread_queue_init(&(thread_manager->audio_custom_processing_queue),
-                                   settings->queue_size);
-            decode_opus_init(&(thread_manager->decode_opus_context), settings,
+            sav1_thread_queue_init(&(thread_manager->audio_custom_processing_queue), ctx,
+                                   ctx->settings->queue_size);
+            decode_opus_init(&(thread_manager->decode_opus_context), ctx,
                              thread_manager->audio_webm_frame_queue,
                              thread_manager->audio_custom_processing_queue);
             custom_processing_audio_init(
-                &(thread_manager->custom_processing_audio_context),
-                settings->custom_audio_frame_processing,
-                settings->custom_audio_frame_destroy,
-                settings->custom_audio_frame_processing_cookie,
+                &(thread_manager->custom_processing_audio_context), ctx,
+                ctx->settings->custom_audio_frame_processing,
+                ctx->settings->custom_audio_frame_destroy,
                 thread_manager->audio_custom_processing_queue,
                 thread_manager->audio_output_queue);
         }
         else {
             // setup audio processing without custom stage
-            decode_opus_init(&(thread_manager->decode_opus_context), settings,
+            decode_opus_init(&(thread_manager->decode_opus_context), ctx,
                              thread_manager->audio_webm_frame_queue,
                              thread_manager->audio_output_queue);
         }
@@ -87,12 +86,11 @@ thread_manager_init(ThreadManager **manager, Sav1Settings *settings)
     }
 
     // always create the webm parser
-    parse_init(&(thread_manager->parse_context), settings->file_name,
-               settings->codec_target, thread_manager->video_webm_frame_queue,
+    parse_init(&(thread_manager->parse_context), ctx, thread_manager->video_webm_frame_queue,
                thread_manager->audio_webm_frame_queue);
 
     // populate the thread manager struct
-    thread_manager->settings = settings;
+    thread_manager->ctx = ctx;
     thread_manager->parse_thread = NULL;
     thread_manager->decode_av1_thread = NULL;
     thread_manager->convert_av1_thread = NULL;
@@ -115,7 +113,7 @@ thread_manager_destroy(ThreadManager *manager)
     sav1_thread_queue_destroy(manager->audio_output_queue);
 
     // destroy video-specific resources
-    if (manager->settings->codec_target & SAV1_CODEC_AV1) {
+    if (manager->ctx->settings->codec_target & SAV1_CODEC_AV1) {
         // destroy the contexts
         decode_av1_destroy(manager->decode_av1_context);
         convert_av1_destroy(manager->convert_av1_context);
@@ -125,14 +123,14 @@ thread_manager_destroy(ThreadManager *manager)
         sav1_thread_queue_destroy(manager->video_webm_frame_queue);
 
         // optionally destroy custom processing
-        if (manager->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
+        if (manager->ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
             custom_processing_video_destroy(manager->custom_processing_video_context);
             sav1_thread_queue_destroy(manager->video_custom_processing_queue);
         }
     }
 
     // destroy audio-specific resources
-    if (manager->settings->codec_target & SAV1_CODEC_OPUS) {
+    if (manager->ctx->settings->codec_target & SAV1_CODEC_OPUS) {
         // destroy the contexts
         decode_opus_destroy(manager->decode_opus_context);
 
@@ -140,7 +138,7 @@ thread_manager_destroy(ThreadManager *manager)
         sav1_thread_queue_destroy(manager->audio_webm_frame_queue);
 
         // optionally destroy custom processing
-        if (manager->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
+        if (manager->ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
             custom_processing_audio_destroy(manager->custom_processing_audio_context);
             sav1_thread_queue_destroy(manager->audio_custom_processing_queue);
         }
@@ -157,7 +155,7 @@ thread_manager_start_pipeline(ThreadManager *manager)
         thread_create(parse_start, manager->parse_context, THREAD_STACK_SIZE_DEFAULT);
 
     // create video-specific resources
-    if (manager->settings->codec_target & SAV1_CODEC_AV1) {
+    if (manager->ctx->settings->codec_target & SAV1_CODEC_AV1) {
         // create the av1 decoding thread
         manager->decode_av1_thread = thread_create(
             decode_av1_start, manager->decode_av1_context, THREAD_STACK_SIZE_DEFAULT);
@@ -167,7 +165,7 @@ thread_manager_start_pipeline(ThreadManager *manager)
             convert_av1_start, manager->convert_av1_context, THREAD_STACK_SIZE_DEFAULT);
 
         // optionally create the video custom processing thread
-        if (manager->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
+        if (manager->ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
             manager->custom_processing_video_thread = thread_create(
                 custom_processing_video_start, manager->custom_processing_video_context,
                 THREAD_STACK_SIZE_DEFAULT);
@@ -175,13 +173,13 @@ thread_manager_start_pipeline(ThreadManager *manager)
     }
 
     // create audio-specific resources
-    if (manager->settings->codec_target & SAV1_CODEC_OPUS) {
+    if (manager->ctx->settings->codec_target & SAV1_CODEC_OPUS) {
         // create the opus decoding thread
         manager->decode_opus_thread = thread_create(
             decode_opus_start, manager->decode_opus_context, THREAD_STACK_SIZE_DEFAULT);
 
         // optionally create the audio custom processing thread
-        if (manager->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
+        if (manager->ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
             manager->custom_processing_audio_thread = thread_create(
                 custom_processing_audio_start, manager->custom_processing_audio_context,
                 THREAD_STACK_SIZE_DEFAULT);
@@ -268,18 +266,18 @@ thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
     sav1_thread_queue_lock(manager->audio_webm_frame_queue);
 
     // drain video queues
-    if (manager->settings->codec_target & SAV1_CODEC_AV1) {
+    if (manager->ctx->settings->codec_target & SAV1_CODEC_AV1) {
         decode_av1_drain_output_queue(manager->decode_av1_context);
         convert_av1_drain_output_queue(manager->convert_av1_context);
-        if (manager->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
+        if (manager->ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
             custom_processing_video_drain_queue(manager->custom_processing_video_context);
         }
     }
 
     // drain audio queues
-    if (manager->settings->codec_target & SAV1_CODEC_OPUS) {
+    if (manager->ctx->settings->codec_target & SAV1_CODEC_OPUS) {
         decode_opus_drain_output_queue(manager->decode_opus_context);
-        if (manager->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
+        if (manager->ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
             custom_processing_audio_drain_queue(manager->custom_processing_audio_context);
         }
     }

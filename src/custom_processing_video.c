@@ -2,11 +2,12 @@
 
 #include "thread_queue.h"
 #include "custom_processing_video.h"
+#include "sav1_internal.h"
 
 void
-custom_processing_video_init(CustomProcessingVideoContext **context,
+custom_processing_video_init(CustomProcessingVideoContext **context, Sav1InternalContext *ctx,
                              void *(*process_function)(Sav1VideoFrame *, void *),
-                             void (*destroy_function)(void *, void *), void *cookie,
+                             void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     CustomProcessingVideoContext *process_context =
@@ -15,9 +16,10 @@ custom_processing_video_init(CustomProcessingVideoContext **context,
 
     process_context->process_function = process_function;
     process_context->destroy_function = destroy_function;
-    process_context->cookie = cookie;
+    process_context->cookie = ctx->settings->custom_video_frame_processing_cookie;
     process_context->input_queue = input_queue;
     process_context->output_queue = output_queue;
+    process_context->ctx = ctx;
 }
 
 void

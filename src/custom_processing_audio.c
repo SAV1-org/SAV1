@@ -2,11 +2,12 @@
 
 #include "thread_queue.h"
 #include "custom_processing_audio.h"
+#include "sav1_internal.h"
 
 void
-custom_processing_audio_init(CustomProcessingAudioContext **context,
+custom_processing_audio_init(CustomProcessingAudioContext **context, Sav1InternalContext *ctx,
                              void *(*process_function)(Sav1AudioFrame *, void *),
-                             void (*destroy_function)(void *, void *), void *cookie,
+                             void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     CustomProcessingAudioContext *process_context =
@@ -15,9 +16,10 @@ custom_processing_audio_init(CustomProcessingAudioContext **context,
 
     process_context->process_function = process_function;
     process_context->destroy_function = destroy_function;
-    process_context->cookie = cookie;
+    process_context->cookie = ctx->settings->custom_audio_frame_processing_cookie;
     process_context->input_queue = input_queue;
     process_context->output_queue = output_queue;
+    process_context->ctx = ctx;
 }
 
 void

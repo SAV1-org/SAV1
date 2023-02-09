@@ -41,7 +41,7 @@ dav4dplay_win:
 	dependencies/libyuv/object_files/*.o \
 	examples/dav4dplay.c src/*.c src/*.cpp -Iinclude -Isrc -lwinmm
 
-dav3dplay_mac:
+dav4dplay_mac:
 	g++ -o dav4dplay -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/thread -Idependencies/libyuv/include -Idependencies/dav1d/include -Idependencies/opus/include -ldav1d -lSDL2 dependencies/libwebm/webm_parser/object_files/*.o dependencies/libyuv/object_files/*.o examples/dav4dplay.c src/*.c src/*.cpp -Iinclude -Isrc -lopus
 
 clean:

@@ -3,13 +3,14 @@
 
 #include "thread_queue.h"
 #include "thread.h"
-#include "sav1_settings.h"
 #include "parse.h"
 #include "decode_av1.h"
 #include "convert_av1.h"
 #include "custom_processing_video.h"
 #include "decode_opus.h"
 #include "custom_processing_audio.h"
+
+typedef struct Sav1InternalContext Sav1InternalContext;
 
 typedef struct ThreadManager {
     ParseContext *parse_context;
@@ -31,11 +32,11 @@ typedef struct ThreadManager {
     thread_ptr_t custom_processing_video_thread;
     thread_ptr_t decode_opus_thread;
     thread_ptr_t custom_processing_audio_thread;
-    Sav1Settings *settings;
+    Sav1InternalContext *ctx;
 } ThreadManager;
 
 void
-thread_manager_init(ThreadManager **manager, Sav1Settings *settings);
+thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx);
 
 void
 thread_manager_destroy(ThreadManager *manager);

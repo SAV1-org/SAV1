@@ -43,7 +43,7 @@ main(int argc, char *argv[])
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
     settings.channels = SAV1_AUDIO_STEREO;
 
-    Sav1Context context;
+    Sav1Context context = {0};
     sav1_create_context(&context, &settings);
 
     SDL_Init(SDL_INIT_EVERYTHING);

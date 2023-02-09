@@ -1,9 +1,12 @@
 #ifndef PARSE_H
 #define PARSE_H
 
+#include "thread_queue.h"
+
 #include <stddef.h>
 #include <cstdint>
-#include "thread_queue.h"
+
+typedef struct Sav1InternalContext Sav1InternalContext;
 
 #define PARSE_STATUS_OK 0
 #define PARSE_STATUS_END_OF_FILE 1
@@ -22,10 +25,11 @@ typedef struct ParseContext {
     uint64_t seek_timecode;
     uint64_t duration;
     void *internal_state;  // internal webm_parser variables
+    Sav1InternalContext *ctx;
 } ParseContext;
 
 void
-parse_init(ParseContext **context, char *file_name, int codec_target,
+parse_init(ParseContext **context, Sav1InternalContext *ctx, 
            Sav1ThreadQueue *video_output_queue, Sav1ThreadQueue *audio_output_queue);
 
 void

@@ -1,14 +1,29 @@
 #ifndef SAV1_SETTINGS_H
 #define SAV1_SETTINGS_H
 
-#include "sav1_video_frame.h"
-#include "sav1_audio_frame.h"
+#include <cstdint>
+#include <cstddef>
+
+typedef struct Sav1VideoFrame Sav1VideoFrame;
+typedef struct Sav1AudioFrame Sav1AudioFrame;
 
 #define SAV1_CODEC_AV1 1
 #define SAV1_CODEC_OPUS 2
 
 #define SAV1_USE_CUSTOM_PROCESSING_VIDEO 1
 #define SAV1_USE_CUSTOM_PROCESSING_AUDIO 2
+
+typedef enum {
+    SAV1_PIXEL_FORMAT_RGBA = 0,
+    SAV1_PIXEL_FORMAT_ARGB = 1,
+    SAV1_PIXEL_FORMAT_BGRA = 2,
+    SAV1_PIXEL_FORMAT_ABGR = 3,
+    SAV1_PIXEL_FORMAT_RGB = 4,
+    SAV1_PIXEL_FORMAT_BGR = 5,
+    SAV1_PIXEL_FORMAT_YUY2 = 6,
+    SAV1_PIXEL_FORMAT_UYVY = 7,
+    SAV1_PIXEL_FORMAT_YVYU = 8,
+} Sav1PixelFormat;
 
 typedef enum {
     SAV1_AUDIO_FREQ_8KHZ = 8000,

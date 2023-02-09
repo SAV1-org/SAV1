@@ -194,7 +194,7 @@ main(int argc, char *argv[])
 
     ThreadManager *manager;
     Sav1VideoFrame *sav1_frame = NULL;
-    thread_manager_init(&manager, &settings);
+    thread_manager_init(&manager, &settings);  // Settings needs to be Sav1InternalContext
     thread_manager_start_pipeline(manager);
     uint8_t *pixel_buffer = NULL;
     uint8_t *next_pixel_buffer = NULL;

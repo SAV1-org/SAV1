@@ -1,24 +1,9 @@
 #ifndef SAV1_VIDEO_FRAME_H
 #define SAV1_VIDEO_FRAME_H
 
+#include "sav1.h"
+
 #include <cstdint>
-
-// forward declaration to avoid circular dependency
-typedef struct Sav1Context Sav1Context;
-
-// storing this here to again avoid a circular dependency
-// TODO: figure out a better solution
-typedef enum {
-    SAV1_PIXEL_FORMAT_RGBA = 0,
-    SAV1_PIXEL_FORMAT_ARGB = 1,
-    SAV1_PIXEL_FORMAT_BGRA = 2,
-    SAV1_PIXEL_FORMAT_ABGR = 3,
-    SAV1_PIXEL_FORMAT_RGB = 4,
-    SAV1_PIXEL_FORMAT_BGR = 5,
-    SAV1_PIXEL_FORMAT_YUY2 = 6,
-    SAV1_PIXEL_FORMAT_UYVY = 7,
-    SAV1_PIXEL_FORMAT_YVYU = 8,
-} Sav1PixelFormat;
 
 typedef struct Sav1VideoFrame {
     uint8_t *data;

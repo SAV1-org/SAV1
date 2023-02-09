@@ -1,5 +1,6 @@
 #include "parse.h"
 #include "sav1_settings.h"
+#include "sav1_internal.h"
 #include "webm_frame.h"
 
 #include <stdio.h>
@@ -285,14 +286,14 @@ typedef struct ParseInternalState {
 } ParseInternalState;
 
 void
-parse_init(ParseContext **context, char *file_name, int codec_target,
+parse_init(ParseContext **context, Sav1InternalContext *ctx, 
            Sav1ThreadQueue *video_output_queue, Sav1ThreadQueue *audio_output_queue)
 {
     // create the internal state
     ParseInternalState *state = new ParseInternalState;
 
     // open the input file
-    state->file = std::fopen(file_name, "rb");
+    state->file = std::fopen(ctx->settings->file_name, "rb");
 
     // create the webmparser objects
     state->callback = new Sav1Callback();
@@ -305,7 +306,7 @@ parse_init(ParseContext **context, char *file_name, int codec_target,
 
     // populate the ParseContext
     parse_context->internal_state = (void *)state;
-    parse_context->codec_target = codec_target;
+    parse_context->codec_target = ctx->settings->codec_target;
     parse_context->video_output_queue = video_output_queue;
     parse_context->audio_output_queue = audio_output_queue;
     parse_context->duration_lock = new thread_mutex_t;

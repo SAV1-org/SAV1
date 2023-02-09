@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <time.h>
+#include <stdio.h>
 
 #define CHECK_CTX_VALID(ctx) \
     if (ctx == NULL) {       \
@@ -39,6 +40,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     CHECK_CONTEXT_VALID(context)
 
     if (context->is_initialized == 1) {
+        printf("in da error box\n");
         Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
         RAISE(ctx, "Context already created: sav1_create_context() failed")
     }
@@ -64,7 +66,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     memset(ctx->error_message, 0, SAV1_ERROR_MESSAGE_SIZE);
 
     // TODO: error check these eventually
-    thread_manager_init(&(ctx->thread_manager), ctx->settings);
+    thread_manager_init(&(ctx->thread_manager), ctx);
     thread_manager_start_pipeline(ctx->thread_manager);
 
     context->internal_state = (void *)ctx;
