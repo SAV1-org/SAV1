@@ -35,7 +35,8 @@ main(int argc, char *argv[])
     int screen_width = 1200;
     int screen_height = 760;
     int frame_width, frame_height;
-    int paused = 0;
+    int is_paused = 0;
+    int is_fullscreen = 0;
 
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
@@ -130,13 +131,20 @@ main(int argc, char *argv[])
                         running = 0;
                     }
                     if (event.key.keysym.sym == SDLK_SPACE) {
-                        if (paused) {
+                        if (is_paused) {
                             sav1_start_playback(&context);
                         }
                         else {
                             sav1_stop_playback(&context);
                         }
-                        paused = paused ? 0 : 1;
+                        is_paused = is_paused ? 0 : 1;
+                    }
+                    if (event.key.keysym.sym == SDLK_f) {
+                        SDL_SetWindowFullscreen(window, is_fullscreen ? 0: SDL_WINDOW_FULLSCREEN_DESKTOP);
+                        SDL_FreeSurface(screen);
+                        screen = SDL_GetWindowSurface(window);
+
+                        is_fullscreen = is_fullscreen ? 0 : 1;
                     }
                     break;
 
