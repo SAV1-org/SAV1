@@ -40,18 +40,15 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     CHECK_CONTEXT_VALID(context)
 
     if (context->is_initialized == 1) {
-        printf("in da error box\n");
         Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
         RAISE(ctx, "Context already created: sav1_create_context() failed")
     }
 
-    // TODO: error check mallocs
+    Sav1InternalContext *ctx;
+    if ((ctx = (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext))) == NULL) {
+        return -1;  // Internal Context Malloc Failed
+    }
 
-    Sav1InternalContext *ctx = (Sav1InternalContext *)malloc(sizeof(Sav1InternalContext));
-
-    // TODO: memcpy settings to ensure they don't change it
-
-    ctx->settings = settings;
     ctx->critical_error_flag = 0;
     ctx->is_playing = 0;
     ctx->start_time = (struct timespec *)malloc(sizeof(struct timespec));
@@ -63,6 +60,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->next_audio_frame = NULL;
     ctx->audio_frame_ready = 0;
 
+    memcpy(&ctx->settings, &settings, sizeof(settings));
     memset(ctx->error_message, 0, SAV1_ERROR_MESSAGE_SIZE);
 
     // TODO: error check these eventually
@@ -92,7 +90,21 @@ sav1_destroy_context(Sav1Context *context)
         free(ctx->pause_time);
     }
 
-    // TODO: free sav1 video and audio frames conditionally
+    if (ctx->curr_video_frame != NULL) {
+        sav1_video_frame_destroy(context, ctx->curr_video_frame);
+    }
+
+    if (ctx->next_video_frame != NULL) {
+        sav1_video_frame_destroy(context, ctx->next_video_frame);
+    }
+
+    if (ctx->curr_audio_frame != NULL) {
+        sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
+    }
+
+    if (ctx->next_audio_frame != NULL) {
+        sav1_audio_frame_destroy(context, ctx->next_audio_frame);
+    }
 
     free(ctx);
     context->is_initialized = 0;
