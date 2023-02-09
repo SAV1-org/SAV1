@@ -133,42 +133,30 @@ sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms)
 {
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
 
-    if (ctx->curr_video_frame == NULL) {
-        if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) > 0) {
-            ctx->curr_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
-                ctx->thread_manager->video_output_queue);
-            // TODO: time check this frame
-            ctx->video_frame_ready = 1;  // mark ready, there is new content
-        }
-    }
-
-    // TODO: just because next frame isn't ready doesn't mean this frame isn't ready
-    // TODO: add different logic for fast mode somewhere
-
+    // If we have no next frame, try to get one
     if (ctx->next_video_frame == NULL) {
-        // if no new video frame is ready we can't go into the cycler loop
-        if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) == 0) {
-            return;
+        if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) != 0) {
+            ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
+                ctx->thread_manager->video_output_queue);
         }
-        ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
-            ctx->thread_manager->video_output_queue);
     }
 
-    // while there is a "next frame" that should be displayed
-    while (ctx->next_video_frame->timecode < curr_ms) {
-        // clean up current frame before replacing it
-        sav1_video_frame_destroy(context, ctx->curr_video_frame);
+    // While we have a next frame, and the next frame is ahead of current time
+    while (ctx->next_video_frame != NULL && ctx->next_video_frame->timecode < curr_ms) {
+        // Clean up current frame before replacing it
+        if (ctx->curr_video_frame != NULL) {
+            sav1_video_frame_destroy(context, ctx->curr_video_frame);
+        }
 
         ctx->curr_video_frame = ctx->next_video_frame;
         ctx->video_frame_ready = 1;  // mark ready, there is new content
+        ctx->next_video_frame = NULL;
 
-        // stop cycling if there are no more frames to pull
-        if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) == 0) {
-            ctx->next_video_frame = NULL;
-            return;
+        // Try to get new next frame from queue
+        if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) != 0) {
+            ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
+                ctx->thread_manager->video_output_queue);
         }
-        ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
-            ctx->thread_manager->video_output_queue);
     }
 }
 
@@ -177,42 +165,30 @@ sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms)
 {
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
 
-    if (ctx->curr_audio_frame == NULL) {
-        if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) > 0) {
-            ctx->curr_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
-                ctx->thread_manager->audio_output_queue);
-            // TODO: time check this frame
-            ctx->audio_frame_ready = 1;  // mark ready, there is new content
-        }
-    }
-
-    // TODO: just because next frame isn't ready doesn't mean this frame isn't ready
-    // TODO: add different logic for fast mode somewhere
-
+    // If we have no next frame, try to get one
     if (ctx->next_audio_frame == NULL) {
-        // if no new audio frame is ready we can't go into the cycler loop
-        if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) == 0) {
-            return;
+        if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) != 0) {
+            ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
+                ctx->thread_manager->audio_output_queue);
         }
-        ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
-            ctx->thread_manager->audio_output_queue);
     }
 
-    // while there is a "next frame" that should be displayed
-    while (ctx->next_audio_frame->timecode < curr_ms) {
-        // clean up current frame before replacing it
-        sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
+    // While we have a next frame, and the next frame is ahead of current time
+    while (ctx->next_audio_frame != NULL && ctx->next_audio_frame->timecode < curr_ms) {
+        // Clean up current frame before replacing it
+        if (ctx->curr_audio_frame != NULL) {
+            sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
+        }
 
         ctx->curr_audio_frame = ctx->next_audio_frame;
         ctx->audio_frame_ready = 1;  // mark ready, there is new content
+        ctx->next_audio_frame = NULL;
 
-        // stop cycling if there are no more frames to pull
-        if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) == 0) {
-            ctx->next_audio_frame = NULL;
-            return;
+        // Try to get new next frame from queue
+        if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) != 0) {
+            ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
+                ctx->thread_manager->audio_output_queue);
         }
-        ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
-            ctx->thread_manager->audio_output_queue);
     }
 }
 
