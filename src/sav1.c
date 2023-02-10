@@ -60,6 +60,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->curr_audio_frame = NULL;
     ctx->next_audio_frame = NULL;
     ctx->audio_frame_ready = 0;
+    ctx->do_seek = 0;
     ctx->settings = (Sav1Settings *)malloc(sizeof(Sav1Settings));
 
     // error check malloc calls
@@ -152,11 +153,26 @@ sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms)
         }
     }
 
+    while (ctx->next_video_frame != NULL && ctx->do_seek & SAV1_CODEC_AV1) {
+        if (ctx->next_video_frame->sentinel) {
+            ctx->do_seek ^= SAV1_CODEC_AV1;
+        }
+        else {
+            sav1_video_frame_destroy(context, ctx->next_video_frame);
+            if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) ==
+                0) {
+                return;
+            }
+            ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
+                ctx->thread_manager->video_output_queue);
+        }
+    }
+
     // While we have a next frame, and the next frame is ahead of current time
     while (ctx->next_video_frame != NULL && ctx->next_video_frame->timecode < curr_ms) {
         // Clean up current frame before replacing it
         if (ctx->curr_video_frame != NULL) {
-            sav1_video_frame_destroy(context, ctx->curr_video_frame);
+            int status = sav1_video_frame_destroy(context, ctx->curr_video_frame);
         }
 
         ctx->curr_video_frame = ctx->next_video_frame;
@@ -179,6 +195,21 @@ sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms)
     // If we have no next frame, try to get one
     if (ctx->next_audio_frame == NULL) {
         if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) != 0) {
+            ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
+                ctx->thread_manager->audio_output_queue);
+        }
+    }
+
+    while (ctx->next_audio_frame != NULL && ctx->do_seek & SAV1_CODEC_OPUS) {
+        if (ctx->next_audio_frame->sentinel) {
+            ctx->do_seek ^= SAV1_CODEC_OPUS;
+        }
+        else {
+            sav1_audio_frame_destroy(context, ctx->next_audio_frame);
+            if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) ==
+                0) {
+                return;
+            }
             ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->audio_output_queue);
         }
@@ -386,7 +417,8 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
         // check if video is paused or just hasn't been started
         if (ctx->pause_time == NULL) {
             RAISE(ctx,
-                  "sav1_get_playback_time() called without calling sav1_start_playback()")
+                  "sav1_get_playback_time() called without calling "
+                  "sav1_start_playback()")
         }
 
         // calculate the offset from the pause time to the start time
@@ -437,6 +469,10 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
+    if (ctx->do_seek) {
+        return -1;
+    }
+
     thread_manager_seek_to_time(ctx->thread_manager, timecode_ms);
 
     struct timespec curr_time;
@@ -469,38 +505,10 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
         ctx->next_audio_frame = NULL;
     }
 
-    printf("A\n");
+    ctx->video_frame_ready = 0;
+    ctx->audio_frame_ready = 0;
 
-    int frame_needs = ctx->settings->codec_target;
-    while (frame_needs) {
-        if (frame_needs & SAV1_CODEC_AV1 &&
-            sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) > 0) {
-            ctx->curr_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
-                ctx->thread_manager->video_output_queue);
-            if (ctx->curr_video_frame->sentinel) {
-                sav1_video_frame_destroy(context, ctx->curr_video_frame);
-            }
-            else {
-                frame_needs ^= SAV1_CODEC_AV1;
-            }
-        }
-
-        if (frame_needs & SAV1_CODEC_OPUS &&
-            sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) > 0) {
-            ctx->curr_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
-                ctx->thread_manager->audio_output_queue);
-            if (ctx->curr_audio_frame->sentinel) {
-                sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
-            }
-            else {
-                frame_needs ^= SAV1_CODEC_OPUS;
-            }
-        }
-
-        printf("C\n");
-    }
-
-    printf("B\n");
+    ctx->do_seek = ctx->settings->codec_target;
 
     return 0;
 }

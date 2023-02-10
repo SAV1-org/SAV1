@@ -356,7 +356,7 @@ parse_start(void *context)
             break;
         }
 
-        // empty output cues
+        // empty output queues
         parse_stop(parse_context);
 
         // find the cue point to seek to

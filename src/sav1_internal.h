@@ -22,6 +22,7 @@ typedef struct Sav1InternalContext {
     Sav1AudioFrame *curr_audio_frame;
     Sav1AudioFrame *next_audio_frame;
     uint8_t audio_frame_ready;
+    uint8_t do_seek;
 } Sav1InternalContext;
 
 void

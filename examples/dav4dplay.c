@@ -149,6 +149,8 @@ main(int argc, char *argv[])
                     }
                     else if (event.key.keysym.sym == SDLK_LEFT) {
                         sav1_seek_playback(&context, 5000);
+                        SDL_FreeSurface(frame);
+                        frame = NULL;
                     }
                     break;
 
