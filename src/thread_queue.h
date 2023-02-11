@@ -35,12 +35,6 @@ sav1_thread_queue_lock(Sav1ThreadQueue *sav1_queue);
 void
 sav1_thread_queue_unlock(Sav1ThreadQueue *sav1_queue);
 
-void
-sav1_thread_queue_push_lock(Sav1ThreadQueue *sav1_queue);
-
-void
-sav1_thread_queue_push_unlock(Sav1ThreadQueue *sav1_queue);
-
 int
 sav1_thread_queue_get_size(Sav1ThreadQueue *sav1_queue);
 

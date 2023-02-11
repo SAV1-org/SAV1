@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <time.h>
+#include <cstdio>
 
 #define CHECK_CTX_VALID(ctx) \
     if (ctx == NULL) {       \
@@ -158,6 +159,7 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             sav1_video_frame_destroy(ctx->context, ctx->next_video_frame);
             if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) ==
                 0) {
+                ctx->next_video_frame = NULL;
                 return;
             }
             ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
@@ -169,7 +171,7 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
     while (ctx->next_video_frame != NULL && ctx->next_video_frame->timecode <= curr_ms) {
         // clean up current frame before replacing it
         if (ctx->curr_video_frame != NULL) {
-            int status = sav1_video_frame_destroy(ctx->context, ctx->curr_video_frame);
+            sav1_video_frame_destroy(ctx->context, ctx->curr_video_frame);
         }
 
         // mark ready, there is new content
@@ -202,10 +204,11 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             ctx->do_seek ^= SAV1_CODEC_OPUS;
         }
         else {
-            // throw out this frame and try another one if we can
+            // throw out this frame and try another one if we can;
             sav1_audio_frame_destroy(ctx->context, ctx->next_audio_frame);
             if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) ==
                 0) {
+                ctx->next_audio_frame = NULL;
                 return;
             }
             ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(

@@ -67,22 +67,6 @@ sav1_thread_queue_unlock(Sav1ThreadQueue *sav1_queue)
     }
 }
 
-void
-sav1_thread_queue_push_lock(Sav1ThreadQueue *sav1_queue)
-{
-    if (sav1_queue != NULL) {
-        thread_mutex_lock(sav1_queue->push_lock);
-    }
-}
-
-void
-sav1_thread_queue_push_unlock(Sav1ThreadQueue *sav1_queue)
-{
-    if (sav1_queue != NULL) {
-        thread_mutex_unlock(sav1_queue->push_lock);
-    }
-}
-
 int
 sav1_thread_queue_get_size(Sav1ThreadQueue *sav1_queue)
 {
