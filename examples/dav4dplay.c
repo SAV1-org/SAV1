@@ -57,9 +57,9 @@ main(int argc, char *argv[])
     SDL_AudioSpec obtained = {0};
     SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 
-    SDL_Window *window = SDL_CreateWindow("Dav4d video player", SDL_WINDOWPOS_UNDEFINED,
-                                          SDL_WINDOWPOS_UNDEFINED, screen_width,
-                                          screen_height, SDL_WINDOW_RESIZABLE);
+    SDL_Window *window = SDL_CreateWindow(
+        "Dav4teen video player", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        screen_width, screen_height, SDL_WINDOW_RESIZABLE);
     SDL_Surface *screen = SDL_GetWindowSurface(window);
     SDL_Rect screen_rect = {0, 0, screen_width, screen_height};
 
@@ -148,9 +148,9 @@ main(int argc, char *argv[])
                         is_fullscreen = is_fullscreen ? 0 : 1;
                     }
                     else if (event.key.keysym.sym == SDLK_LEFT) {
-                        sav1_seek_playback(&context, 5000);
                         SDL_FreeSurface(frame);
                         frame = NULL;
+                        sav1_seek_playback(&context, 5000);
                     }
                     break;
 

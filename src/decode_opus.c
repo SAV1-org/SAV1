@@ -113,7 +113,6 @@ decode_opus_drain_output_queue(DecodeOpusContext *context)
         if (output_frame == NULL) {
             break;
         }
-        free(output_frame->data);
-        free(output_frame);
+        sav1_audio_frame_destroy(context->ctx->context, output_frame);
     }
 }

@@ -3,7 +3,6 @@
 #include "sav1_internal.h"
 #include "webm_frame.h"
 
-#include <stdio.h>
 #include <cassert>
 #include <vector>
 #include <webm/callback.h>
@@ -310,10 +309,12 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
     parse_context->video_output_queue = video_output_queue;
     parse_context->audio_output_queue = audio_output_queue;
     parse_context->duration_lock = new thread_mutex_t;
+    parse_context->wait_before_seek = new thread_mutex_t;
     parse_context->duration = 0;
     parse_context->seek_timecode = 0;
     thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
     thread_mutex_init(parse_context->duration_lock);
+    thread_mutex_init(parse_context->wait_before_seek);
 
     // initialize the callback class
     state->callback->init(parse_context, state->reader);
@@ -332,7 +333,9 @@ parse_destroy(ParseContext *context)
     delete state;
 
     thread_mutex_term(context->duration_lock);
+    thread_mutex_term(context->wait_before_seek);
     delete context->duration_lock;
+    delete context->wait_before_seek;
 
     // clean up the context
     delete context;
@@ -351,13 +354,16 @@ parse_start(void *context)
     while (1) {
         status = state->parser->Feed(state->callback, state->reader);
 
+        // see if we should end the loop
         if (status.code != Status::kWouldBlock ||
             thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
             break;
         }
 
-        // empty output queues
-        parse_stop(parse_context);
+        // wait here until this mutex is unlocked
+        thread_mutex_lock(parse_context->wait_before_seek);
+        thread_mutex_unlock(parse_context->wait_before_seek);
+        ;
 
         // find the cue point to seek to
         std::vector<Sav1CuePoint> cue_points = state->callback->get_cue_points();
@@ -434,8 +440,7 @@ parse_found_opus_track(ParseContext *context)
 void
 parse_seek_to_time(ParseContext *context, uint64_t timecode)
 {
-    // TODO: busy wait while we're in the middle of seeking
-    context->seek_timecode = timecode;
     thread_atomic_int_store(&(context->do_seek), context->codec_target);
-    thread_atomic_int_store(&(context->do_parse), 0);
+    context->seek_timecode = timecode;
+    parse_stop(context);
 }

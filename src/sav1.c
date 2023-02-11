@@ -3,7 +3,6 @@
 
 #include <string.h>
 #include <time.h>
-#include <stdio.h>
 
 #define CHECK_CTX_VALID(ctx) \
     if (ctx == NULL) {       \
@@ -50,6 +49,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     }
 
     // initialize context values
+    ctx->context = context;
     ctx->critical_error_flag = 0;
     ctx->is_playing = 0;
     ctx->start_time = (struct timespec *)malloc(sizeof(struct timespec));
@@ -105,15 +105,12 @@ sav1_destroy_context(Sav1Context *context)
     if (ctx->curr_video_frame != NULL) {
         sav1_video_frame_destroy(context, ctx->curr_video_frame);
     }
-
     if (ctx->next_video_frame != NULL) {
         sav1_video_frame_destroy(context, ctx->next_video_frame);
     }
-
     if (ctx->curr_audio_frame != NULL) {
         sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
     }
-
     if (ctx->next_audio_frame != NULL) {
         sav1_audio_frame_destroy(context, ctx->next_audio_frame);
     }
@@ -141,24 +138,24 @@ sav1_get_error(Sav1Context *context)
 }
 
 void
-sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms)
+pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
 {
-    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
-
-    // If we have no next frame, try to get one
-    if (ctx->next_video_frame == NULL) {
-        if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) != 0) {
-            ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
-                ctx->thread_manager->video_output_queue);
-        }
+    // if we have no next frame, try to get one
+    if (ctx->next_video_frame == NULL &&
+        sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) != 0) {
+        ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
+            ctx->thread_manager->video_output_queue);
     }
 
+    // if we are seeking, throw out frames until we get to a sentinel frame
     while (ctx->next_video_frame != NULL && ctx->do_seek & SAV1_CODEC_AV1) {
         if (ctx->next_video_frame->sentinel) {
+            // we no longer need to seek for AV1 frames
             ctx->do_seek ^= SAV1_CODEC_AV1;
         }
         else {
-            sav1_video_frame_destroy(context, ctx->next_video_frame);
+            // throw out this frame and try another one if we can
+            sav1_video_frame_destroy(ctx->context, ctx->next_video_frame);
             if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) ==
                 0) {
                 return;
@@ -168,18 +165,19 @@ sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms)
         }
     }
 
-    // While we have a next frame, and the next frame is ahead of current time
-    while (ctx->next_video_frame != NULL && ctx->next_video_frame->timecode < curr_ms) {
-        // Clean up current frame before replacing it
+    // while we have a next frame, and the next frame is ahead of current time
+    while (ctx->next_video_frame != NULL && ctx->next_video_frame->timecode <= curr_ms) {
+        // clean up current frame before replacing it
         if (ctx->curr_video_frame != NULL) {
-            int status = sav1_video_frame_destroy(context, ctx->curr_video_frame);
+            int status = sav1_video_frame_destroy(ctx->context, ctx->curr_video_frame);
         }
 
+        // mark ready, there is new content
         ctx->curr_video_frame = ctx->next_video_frame;
-        ctx->video_frame_ready = 1;  // mark ready, there is new content
+        ctx->video_frame_ready = 1;
         ctx->next_video_frame = NULL;
 
-        // Try to get new next frame from queue
+        // try to get new next frame from queue
         if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) != 0) {
             ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->video_output_queue);
@@ -188,24 +186,24 @@ sav1_pump_video_frames(Sav1Context *context, uint64_t curr_ms)
 }
 
 void
-sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms)
+pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
 {
-    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
-
-    // If we have no next frame, try to get one
-    if (ctx->next_audio_frame == NULL) {
-        if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) != 0) {
-            ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
-                ctx->thread_manager->audio_output_queue);
-        }
+    // if we have no next frame, try to get one
+    if (ctx->next_audio_frame == NULL &&
+        sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) != 0) {
+        ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
+            ctx->thread_manager->audio_output_queue);
     }
 
+    // if we are seeking, throw out frames until we get to a sentinel frame
     while (ctx->next_audio_frame != NULL && ctx->do_seek & SAV1_CODEC_OPUS) {
         if (ctx->next_audio_frame->sentinel) {
+            // we no longer need to seek for Opus frames
             ctx->do_seek ^= SAV1_CODEC_OPUS;
         }
         else {
-            sav1_audio_frame_destroy(context, ctx->next_audio_frame);
+            // throw out this frame and try another one if we can
+            sav1_audio_frame_destroy(ctx->context, ctx->next_audio_frame);
             if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) ==
                 0) {
                 return;
@@ -215,18 +213,19 @@ sav1_pump_audio_frames(Sav1Context *context, uint64_t curr_ms)
         }
     }
 
-    // While we have a next frame, and the next frame is ahead of current time
-    while (ctx->next_audio_frame != NULL && ctx->next_audio_frame->timecode < curr_ms) {
-        // Clean up current frame before replacing it
+    // while we have a next frame, and the next frame is ahead of current time
+    while (ctx->next_audio_frame != NULL && ctx->next_audio_frame->timecode <= curr_ms) {
+        // clean up current frame before replacing it
         if (ctx->curr_audio_frame != NULL) {
-            sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
+            sav1_audio_frame_destroy(ctx->context, ctx->curr_audio_frame);
         }
 
+        // mark ready, there is new content
         ctx->curr_audio_frame = ctx->next_audio_frame;
-        ctx->audio_frame_ready = 1;  // mark ready, there is new content
+        ctx->audio_frame_ready = 1;
         ctx->next_audio_frame = NULL;
 
-        // Try to get new next frame from queue
+        // try to get new next frame from queue
         if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) != 0) {
             ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->audio_output_queue);
@@ -249,7 +248,7 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
 
     uint64_t curr_ms;
     sav1_get_playback_time(context, &curr_ms);
-    sav1_pump_video_frames(context, curr_ms);
+    pump_video_frames(ctx, curr_ms);
 
     *frame = ctx->curr_video_frame;
     ctx->video_frame_ready = 0;
@@ -271,7 +270,7 @@ sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
 
     uint64_t curr_ms;
     sav1_get_playback_time(context, &curr_ms);
-    sav1_pump_audio_frames(context, curr_ms);
+    pump_audio_frames(ctx, curr_ms);
 
     *frame = ctx->curr_audio_frame;
     ctx->audio_frame_ready = 0;
@@ -293,7 +292,7 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
 
     uint64_t curr_ms;
     sav1_get_playback_time(context, &curr_ms);
-    sav1_pump_video_frames(context, curr_ms);
+    pump_video_frames(ctx, curr_ms);
 
     *is_ready = ctx->video_frame_ready;
 
@@ -315,7 +314,7 @@ sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
 
     uint64_t curr_ms;
     sav1_get_playback_time(context, &curr_ms);
-    sav1_pump_audio_frames(context, curr_ms);
+    pump_audio_frames(ctx, curr_ms);
 
     *is_ready = ctx->audio_frame_ready;
 
@@ -416,14 +415,15 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
     if (!ctx->is_playing) {
         // check if video is paused or just hasn't been started
         if (ctx->pause_time == NULL) {
-            RAISE(ctx,
-                  "sav1_get_playback_time() called without calling "
-                  "sav1_start_playback()")
+            *timecode_ms = 0;
+        }
+        else {
+            // calculate the offset from the pause time to the start time
+            *timecode_ms =
+                ((ctx->pause_time->tv_sec - ctx->start_time->tv_sec) * 1000) +
+                ((ctx->pause_time->tv_nsec - ctx->start_time->tv_nsec) / 1000000);
         }
 
-        // calculate the offset from the pause time to the start time
-        *timecode_ms = ((ctx->pause_time->tv_sec - ctx->start_time->tv_sec) * 1000) +
-                       ((ctx->pause_time->tv_nsec - ctx->start_time->tv_nsec) / 1000000);
         return 0;
     }
 
@@ -475,6 +475,7 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
 
     thread_manager_seek_to_time(ctx->thread_manager, timecode_ms);
 
+    // adjust the start time
     struct timespec curr_time;
     clock_gettime(CLOCK_MONOTONIC, &curr_time);
     ctx->start_time->tv_sec = curr_time.tv_sec - timecode_ms / 1000;
@@ -487,7 +488,7 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
         ctx->start_time->tv_nsec = curr_time.tv_nsec - timecode_ns;
     }
 
-    // remove all our currently queued frames
+    // remove all the currently queued frames
     if (ctx->curr_video_frame != NULL) {
         sav1_video_frame_destroy(context, ctx->curr_video_frame);
         ctx->curr_video_frame = NULL;

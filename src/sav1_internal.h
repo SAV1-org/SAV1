@@ -10,6 +10,7 @@
 
 typedef struct Sav1InternalContext {
     Sav1Settings *settings;
+    Sav1Context *context;
     ThreadManager *thread_manager;
     char error_message[SAV1_ERROR_MESSAGE_SIZE];
     uint8_t critical_error_flag;

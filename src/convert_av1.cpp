@@ -434,6 +434,7 @@ convert_av1_init(ConvertAv1Context **context, Sav1InternalContext *ctx,
     convert_context->input_queue = input_queue;
     convert_context->output_queue = output_queue;
     convert_context->desired_pixel_format = ctx->settings->desired_pixel_format;
+    convert_context->ctx = ctx;
 }
 
 void
@@ -507,8 +508,7 @@ convert_av1_drain_output_queue(ConvertAv1Context *context)
         if (frame == NULL) {
             break;
         }
-        // TODO: use destroy function here and for opus
-        free(frame->data);
-        free(frame);
+
+        sav1_video_frame_destroy(context->ctx->context, frame);
     }
 }

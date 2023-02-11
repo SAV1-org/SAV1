@@ -267,8 +267,9 @@ thread_manager_unlock_pipeline(ThreadManager *manager)
 void
 thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
 {
-    sav1_thread_queue_lock(manager->video_webm_frame_queue);
-    sav1_thread_queue_lock(manager->audio_webm_frame_queue);
+    thread_mutex_lock(manager->parse_context->wait_before_seek);
+
+    parse_seek_to_time(manager->parse_context, timecode);
 
     // drain video queues
     if (manager->ctx->settings->codec_target & SAV1_CODEC_AV1) {
@@ -291,10 +292,7 @@ thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
         }
     }
 
-    sav1_thread_queue_unlock(manager->video_webm_frame_queue);
-    sav1_thread_queue_unlock(manager->audio_webm_frame_queue);
-
-    parse_seek_to_time(manager->parse_context, timecode);
+    thread_mutex_unlock(manager->parse_context->wait_before_seek);
 }
 
 uint64_t
