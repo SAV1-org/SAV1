@@ -267,8 +267,10 @@ thread_manager_unlock_pipeline(ThreadManager *manager)
 void
 thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
 {
+    // make sure the parsing waits after finishing
     thread_mutex_lock(manager->parse_context->wait_before_seek);
 
+    // stop parsing for now
     parse_seek_to_time(manager->parse_context, timecode);
 
     // drain video queues
@@ -292,6 +294,7 @@ thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
         }
     }
 
+    // let parsing continue
     thread_mutex_unlock(manager->parse_context->wait_before_seek);
 }
 

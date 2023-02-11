@@ -72,6 +72,7 @@ main(int argc, char *argv[])
     sav1_start_playback(&context);
     int running = 1;
     int needs_initial_resize = 1;
+    uint64_t duration = 0;
     SDL_Event event;
 
     while (running) {
@@ -118,6 +119,32 @@ main(int argc, char *argv[])
             rect_fit(&frame_rect, screen_rect);
             SDL_BlitScaled(frame, NULL, screen, &frame_rect);
         }
+
+        // video progress bar
+        if (duration) {
+            int padding = screen_width * 0.04;
+            int mouse_y;
+            SDL_GetMouseState(NULL, &mouse_y);
+            if (mouse_y > screen_height - 3 * padding && mouse_y <= screen_height) {
+                uint64_t playback_time;
+                sav1_get_playback_time(&context, &playback_time);
+                double progress = playback_time * 1.0 / duration;
+
+                SDL_Rect duration_rect = {padding, screen_height - padding,
+                                          screen_width - 2 * padding, 5};
+                SDL_FillRect(screen, &duration_rect,
+                             SDL_MapRGB(screen->format, 220, 220, 220));
+                SDL_Rect progress_rect = {padding, screen_height - padding,
+                                          (int)((screen_width - 2 * padding) * progress),
+                                          5};
+                SDL_FillRect(screen, &progress_rect,
+                             SDL_MapRGB(screen->format, 103, 155, 203));
+            }
+        }
+        else {
+            sav1_get_playback_duration(&context, &duration);
+        }
+
         SDL_UpdateWindowSurface(window);
 
         while (SDL_PollEvent(&event)) {
@@ -173,5 +200,6 @@ main(int argc, char *argv[])
 
     sav1_destroy_context(&context);
 
+    SDL_DestroyWindow(window);
     SDL_Quit();
 }
