@@ -2,11 +2,11 @@
 #include "sav1_settings.h"
 #include "sav1_internal.h"
 #include "webm_frame.h"
+#include "sav1_file_reader.h"
 
 #include <cassert>
 #include <vector>
 #include <webm/callback.h>
-#include <webm/file_reader.h>
 #include <webm/status.h>
 #include <webm/webm_parser.h>
 
@@ -22,7 +22,7 @@ typedef struct Sav1CuePoint {
 class Sav1Callback : public Callback {
    public:
     void
-    init(ParseContext *context, FileReader *reader)
+    init(ParseContext *context, Sav1FileReader *reader)
     {
         this->context = context;
         this->reader = reader;
@@ -37,6 +37,8 @@ class Sav1Callback : public Callback {
         this->last_cluster_location = 0;
         Sav1CuePoint cue = {0};
         this->cue_points.push_back(cue);
+        this->all_cue_points = false;
+        this->skip_clusters = false;
     }
 
     bool
@@ -49,6 +51,24 @@ class Sav1Callback : public Callback {
     found_opus_track()
     {
         return this->opus_track_number != PARSE_TRACK_NUMBER_NOT_SPECIFIED;
+    }
+
+    bool
+    has_all_cue_points()
+    {
+        return this->all_cue_points;
+    }
+
+    void
+    mark_has_all_cue_points()
+    {
+        this->all_cue_points = true;
+    }
+
+    void
+    set_skip_clusters(bool do_skip_clusters)
+    {
+        this->skip_clusters = do_skip_clusters;
     }
 
     const std::vector<Sav1CuePoint> &
@@ -107,14 +127,23 @@ class Sav1Callback : public Callback {
         }
 
         uint64_t timecode_ms = (this->cluster_timecode * this->timecode_scale) / 1000000;
-        if (timecode_ms > this->cue_points.end()->timecode) {
+        if (!this->all_cue_points && timecode_ms > this->cue_points.back().timecode) {
             Sav1CuePoint cue;
             cue.timecode = timecode_ms;
             cue.cluster_location = this->last_cluster_location;
             this->cue_points.push_back(cue);
         }
 
-        *action = Action::kRead;
+        if (this->skip_clusters) {
+            if (timecode_ms > this->context->seek_timecode) {
+                this->skip_clusters = false;
+                return Status(Status::kWouldBlock);
+            }
+            *action = Action::kSkip;
+        }
+        else {
+            *action = Action::kRead;
+        }
         return Status(Status::kOkCompleted);
     }
 
@@ -264,7 +293,7 @@ class Sav1Callback : public Callback {
 
    private:
     ParseContext *context;
-    FileReader *reader;
+    Sav1FileReader *reader;
     std::uint64_t current_track_number;
     std::uint64_t av1_track_number;
     std::uint64_t opus_track_number;
@@ -275,10 +304,12 @@ class Sav1Callback : public Callback {
     std::uint64_t av1_codec_delay;
     std::vector<Sav1CuePoint> cue_points;
     std::uint64_t last_cluster_location;
+    bool all_cue_points;
+    bool skip_clusters;
 };
 
 typedef struct ParseInternalState {
-    FileReader *reader;
+    Sav1FileReader *reader;
     WebmParser *parser;
     Sav1Callback *callback;
     FILE *file;
@@ -296,7 +327,7 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
 
     // create the webmparser objects
     state->callback = new Sav1Callback();
-    state->reader = new FileReader(state->file);
+    state->reader = new Sav1FileReader(state->file);
     state->parser = new WebmParser();
 
     // allocate the ParseContext
@@ -355,15 +386,19 @@ parse_start(void *context)
         status = state->parser->Feed(state->callback, state->reader);
 
         // see if we should end the loop
-        if (status.code != Status::kWouldBlock ||
-            thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
+        if (thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
+            break;
+        }
+        else if (status.completed_ok()) {
+            state->callback->mark_has_all_cue_points();
+        }
+        else if (status.code != Status::kWouldBlock) {
             break;
         }
 
         // wait here until this mutex is unlocked
         thread_mutex_lock(parse_context->wait_before_seek);
         thread_mutex_unlock(parse_context->wait_before_seek);
-        ;
 
         // find the cue point to seek to
         std::vector<Sav1CuePoint> cue_points = state->callback->get_cue_points();
@@ -372,6 +407,10 @@ parse_start(void *context)
                 fseek(state->file, cue->cluster_location, SEEK_SET);
                 thread_atomic_int_store(&(parse_context->do_parse), 1);
                 state->parser->DidSeek();
+                state->reader->SetPosition(cue->cluster_location);
+                bool skip_clusters =
+                    !state->callback->has_all_cue_points() && cue == cue_points.rbegin();
+                state->callback->set_skip_clusters(skip_clusters);
                 break;
             }
         }

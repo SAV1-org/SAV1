@@ -156,6 +156,11 @@ seek_update_start_time(Sav1InternalContext *ctx)
     else {
         ctx->start_time->tv_nsec = curr_time.tv_nsec - timecode_ns;
     }
+
+    if (ctx->pause_time != NULL) {
+        ctx->pause_time->tv_sec = curr_time.tv_sec;
+        ctx->pause_time->tv_nsec = curr_time.tv_nsec;
+    }
 }
 
 void
@@ -360,6 +365,10 @@ sav1_start_playback(Sav1Context *context)
         RAISE(ctx, "sav1_start_playback() called when already playing")
     }
 
+    if (ctx->do_seek == ctx->settings->codec_target) {
+        RAISE(ctx, "sav1_stop_playback() called while in the middle of seeking")
+    }
+
     // update the start time value
     int status;
     if (ctx->pause_time == NULL) {
@@ -411,6 +420,10 @@ sav1_stop_playback(Sav1Context *context)
         RAISE(ctx, "sav1_stop_playback() called when already stopped")
     }
 
+    if (ctx->do_seek == ctx->settings->codec_target) {
+        RAISE(ctx, "sav1_stop_playback() called while in the middle of seeking")
+    }
+
     if ((ctx->pause_time = (struct timespec *)malloc(sizeof(struct timespec))) == NULL) {
         RAISE_CRITICAL(ctx, "malloc() failed in sav1_stop_playback()")
     }
@@ -435,6 +448,12 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    // handle when we're in the middle of seeking
+    if (ctx->do_seek == ctx->settings->codec_target) {
+        *timecode_ms = ctx->seek_timecode;
+        return 0;
+    }
 
     // handle cases when video isn't playing
     if (!ctx->is_playing) {
