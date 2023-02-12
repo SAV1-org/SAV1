@@ -121,22 +121,30 @@ main(int argc, char *argv[])
         }
 
         // video progress bar
+        int padding = screen_width * 0.04;
         if (duration) {
-            int padding = screen_width * 0.04;
             int mouse_y;
             SDL_GetMouseState(NULL, &mouse_y);
             if (mouse_y > screen_height - 3 * padding && mouse_y <= screen_height) {
                 uint64_t playback_time;
                 sav1_get_playback_time(&context, &playback_time);
                 double progress = playback_time * 1.0 / duration;
+                if (progress > 1) {
+                    progress = 1;
+                }
 
+                SDL_Rect duration_outline_rect = {padding - 1,
+                                                  screen_height - padding - 1,
+                                                  screen_width - 2 * padding + 2, 6};
+                SDL_FillRect(screen, &duration_outline_rect,
+                             SDL_MapRGB(screen->format, 30, 30, 30));
                 SDL_Rect duration_rect = {padding, screen_height - padding,
-                                          screen_width - 2 * padding, 5};
+                                          screen_width - 2 * padding, 4};
                 SDL_FillRect(screen, &duration_rect,
                              SDL_MapRGB(screen->format, 220, 220, 220));
                 SDL_Rect progress_rect = {padding, screen_height - padding,
                                           (int)((screen_width - 2 * padding) * progress),
-                                          5};
+                                          4};
                 SDL_FillRect(screen, &progress_rect,
                              SDL_MapRGB(screen->format, 103, 155, 203));
             }
@@ -175,9 +183,25 @@ main(int argc, char *argv[])
                         is_fullscreen = is_fullscreen ? 0 : 1;
                     }
                     else if (event.key.keysym.sym == SDLK_LEFT) {
-                        SDL_FreeSurface(frame);
-                        frame = NULL;
-                        sav1_seek_playback(&context, 5000);
+                        // jump back 5 seconds
+                        if (frame) {
+                            SDL_FreeSurface(frame);
+                            frame = NULL;
+                        }
+                        uint64_t timecode;
+                        sav1_get_playback_time(&context, &timecode);
+                        timecode = timecode >= 5000 ? timecode - 5000 : 0;
+                        sav1_seek_playback(&context, timecode);
+                    }
+                    else if (event.key.keysym.sym == SDLK_RIGHT) {
+                        // jump forward 5 seconds
+                        if (frame) {
+                            SDL_FreeSurface(frame);
+                            frame = NULL;
+                        }
+                        uint64_t timecode;
+                        sav1_get_playback_time(&context, &timecode);
+                        sav1_seek_playback(&context, timecode + 5000);
                     }
                     break;
 
@@ -190,6 +214,24 @@ main(int argc, char *argv[])
 
                         SDL_FreeSurface(screen);
                         screen = SDL_GetWindowSurface(window);
+                    }
+                    break;
+
+                case SDL_MOUSEBUTTONDOWN:
+                    // seek to mouse click
+                    int mouse_x, mouse_y;
+                    SDL_GetMouseState(&mouse_x, &mouse_y);
+                    if (duration && mouse_y >= screen_height - 2 * padding) {
+                        double seek_progress =
+                            (mouse_x - padding) * 1.0 / (screen_width - 2 * padding);
+                        seek_progress = seek_progress < 0   ? 0.0
+                                        : seek_progress > 1 ? 1.0
+                                                            : seek_progress;
+                        if (frame) {
+                            SDL_FreeSurface(frame);
+                            frame = NULL;
+                        }
+                        sav1_seek_playback(&context, duration * seek_progress);
                     }
 
                 default:

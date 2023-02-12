@@ -139,6 +139,26 @@ sav1_get_error(Sav1Context *context)
 }
 
 void
+seek_update_start_time(Sav1InternalContext *ctx)
+{
+    if (ctx->do_seek != ctx->settings->codec_target) {
+        return;
+    }
+
+    struct timespec curr_time;
+    clock_gettime(CLOCK_MONOTONIC, &curr_time);
+    ctx->start_time->tv_sec = curr_time.tv_sec - ctx->seek_timecode / 1000;
+    uint64_t timecode_ns = (ctx->seek_timecode % 1000) * 1000000;
+    if (timecode_ns > curr_time.tv_nsec) {
+        ctx->start_time->tv_sec--;
+        ctx->start_time->tv_nsec = curr_time.tv_nsec + 1000000000 - timecode_ns;
+    }
+    else {
+        ctx->start_time->tv_nsec = curr_time.tv_nsec - timecode_ns;
+    }
+}
+
+void
 pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
 {
     // if we have no next frame, try to get one
@@ -152,6 +172,7 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
     while (ctx->next_video_frame != NULL && ctx->do_seek & SAV1_CODEC_AV1) {
         if (ctx->next_video_frame->sentinel) {
             // we no longer need to seek for AV1 frames
+            seek_update_start_time(ctx);
             ctx->do_seek ^= SAV1_CODEC_AV1;
         }
         else {
@@ -201,10 +222,11 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
     while (ctx->next_audio_frame != NULL && ctx->do_seek & SAV1_CODEC_OPUS) {
         if (ctx->next_audio_frame->sentinel) {
             // we no longer need to seek for Opus frames
+            seek_update_start_time(ctx);
             ctx->do_seek ^= SAV1_CODEC_OPUS;
         }
         else {
-            // throw out this frame and try another one if we can;
+            // throw out this frame and try another one if we can
             sav1_audio_frame_destroy(ctx->context, ctx->next_audio_frame);
             if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) ==
                 0) {
@@ -480,18 +502,8 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
     // make the thread manager do all the hard work
     thread_manager_seek_to_time(ctx->thread_manager, timecode_ms);
 
-    // adjust the start time
-    struct timespec curr_time;
-    clock_gettime(CLOCK_MONOTONIC, &curr_time);
-    ctx->start_time->tv_sec = curr_time.tv_sec - timecode_ms / 1000;
-    uint64_t timecode_ns = (timecode_ms % 1000) * 1000000;
-    if (timecode_ns > curr_time.tv_nsec) {
-        ctx->start_time->tv_sec--;
-        ctx->start_time->tv_nsec = curr_time.tv_nsec + 1000000000 - timecode_ns;
-    }
-    else {
-        ctx->start_time->tv_nsec = curr_time.tv_nsec - timecode_ns;
-    }
+    // save the time that we want to seek to
+    ctx->seek_timecode = timecode_ms;
 
     // remove all the currently queued frames
     if (ctx->curr_video_frame != NULL) {
