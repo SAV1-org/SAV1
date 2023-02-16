@@ -515,7 +515,15 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
 
     // don't seek if we're already doing it
     if (ctx->do_seek) {
-        return -1;
+        if (thread_atomic_int_load(&(ctx->thread_manager->parse_context->status)) ==
+                PARSE_STATUS_END_OF_FILE &&
+            thread_atomic_int_load(&(ctx->thread_manager->parse_context->do_seek)) == 0) {
+            seek_update_start_time(ctx);
+            ctx->do_seek = 0;
+        }
+        else {
+            return -1;
+        }
     }
 
     // make the thread manager do all the hard work

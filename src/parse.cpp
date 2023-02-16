@@ -6,11 +6,13 @@
 
 #include <cassert>
 #include <vector>
+#include <unistd.h>
 #include <webm/callback.h>
 #include <webm/status.h>
 #include <webm/webm_parser.h>
 
 #define PARSE_TRACK_NUMBER_NOT_SPECIFIED 99999
+#define PARSE_SEEK_STATUS 5
 
 using namespace webm;
 
@@ -137,7 +139,7 @@ class Sav1Callback : public Callback {
         if (this->skip_clusters) {
             if (timecode_ms > this->context->seek_timecode) {
                 this->skip_clusters = false;
-                return Status(Status::kWouldBlock);
+                return Status(PARSE_SEEK_STATUS);
             }
             *action = Action::kSkip;
         }
@@ -223,7 +225,7 @@ class Sav1Callback : public Callback {
     {
         // check if we should stop parsing
         if (thread_atomic_int_load(&(this->context->do_parse)) == 0) {
-            return Status(Status::kWouldBlock);
+            return Status(PARSE_SEEK_STATUS);
         }
 
         // sanity checks
@@ -336,6 +338,7 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
 
     // populate the ParseContext
     parse_context->internal_state = (void *)state;
+    parse_context->ctx = ctx;
     parse_context->codec_target = ctx->settings->codec_target;
     parse_context->video_output_queue = video_output_queue;
     parse_context->audio_output_queue = audio_output_queue;
@@ -378,21 +381,32 @@ parse_start(void *context)
     ParseContext *parse_context = (ParseContext *)context;
     ParseInternalState *state = (ParseInternalState *)parse_context->internal_state;
 
-    thread_atomic_int_store(&(parse_context->do_parse), 1);
     thread_atomic_int_store(&(parse_context->do_seek), 0);
 
     Status status;
     while (1) {
+        thread_atomic_int_store(&(parse_context->do_parse), 1);
+        thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
         status = state->parser->Feed(state->callback, state->reader);
 
         // see if we should end the loop
-        if (thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
+        if (status.completed_ok()) {
+            thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_END_OF_FILE);
+            if (thread_atomic_int_load(&(parse_context->do_parse))) {
+                thread_atomic_int_store(&(parse_context->do_seek), 0);
+            }
+
+            state->callback->mark_has_all_cue_points();
+            while (thread_atomic_int_load(&(parse_context->do_parse))) {
+                usleep(10000);
+            }
+        }
+
+        if (status.code < 0) {
+            thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_ERROR);
             break;
         }
-        else if (status.completed_ok()) {
-            state->callback->mark_has_all_cue_points();
-        }
-        else if (status.code != Status::kWouldBlock) {
+        else if (thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
             break;
         }
 
@@ -405,7 +419,6 @@ parse_start(void *context)
         for (auto cue = cue_points.rbegin(); cue != cue_points.rend(); ++cue) {
             if (cue->timecode <= parse_context->seek_timecode) {
                 fseek(state->file, cue->cluster_location, SEEK_SET);
-                thread_atomic_int_store(&(parse_context->do_parse), 1);
                 state->parser->DidSeek();
                 state->reader->SetPosition(cue->cluster_location);
                 bool skip_clusters =
@@ -416,13 +429,8 @@ parse_start(void *context)
         }
     }
 
-    if (status.completed_ok()) {
-        thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_END_OF_FILE);
-        sav1_thread_queue_push(parse_context->video_output_queue, NULL);
-    }
-    else {
-        thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_ERROR);
-    }
+    sav1_thread_queue_push(parse_context->video_output_queue, NULL);
+
     return 0;
 }
 

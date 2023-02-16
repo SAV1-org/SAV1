@@ -1,4 +1,4 @@
-// Taken wholesale from webmparser's FileReader class with the addition of the
+// Taken wholesale from webm_parser's FileReader class with the addition of the
 // SetPosition() function
 
 #include "sav1_file_reader.h"

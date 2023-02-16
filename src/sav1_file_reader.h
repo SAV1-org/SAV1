@@ -11,7 +11,7 @@
 /**
  \file
  A `Reader` implementation that reads from a `FILE*`. This is exactly like the FileReader
- class from webmparser, except it has an additional method to set the private position_
+ class from webm_parser, except it has an additional method to set the private position_
  variable.
  */
 
