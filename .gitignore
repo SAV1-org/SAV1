@@ -11,6 +11,7 @@ test_files/grey.xml
 test_files/5minutes.webm
 test_files/stereo.webm
 dav3dplay
+dav4dplay
 dependencies/*
 !dependencies/libwebm
 !dependencies/thread
