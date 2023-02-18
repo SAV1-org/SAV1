@@ -4,12 +4,6 @@
 *.out
 *.pyc
 .vscode/*
-test_files/accounting.webm
-test_files/popeye.webm
-test_files/grey.webm
-test_files/grey.xml
-test_files/5minutes.webm
-test_files/stereo.webm
 dav3dplay
 dav4dplay
 dependencies/*
@@ -20,4 +14,4 @@ vcpkg/
 SDL2.dll
 dav1d.dll
 opus.dll
-test_files/aot.webm
+test_files/_*
