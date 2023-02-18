@@ -57,9 +57,9 @@ main(int argc, char *argv[])
     SDL_AudioSpec obtained = {0};
     SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 
-    SDL_Window *window = SDL_CreateWindow(
-        "Dav4teen video player", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        screen_width, screen_height, SDL_WINDOW_RESIZABLE);
+    SDL_Window *window = SDL_CreateWindow("Dav4d video player", SDL_WINDOWPOS_UNDEFINED,
+                                          SDL_WINDOWPOS_UNDEFINED, screen_width,
+                                          screen_height, SDL_WINDOW_RESIZABLE);
     SDL_Surface *screen = SDL_GetWindowSurface(window);
     SDL_Rect screen_rect = {0, 0, screen_width, screen_height};
 
@@ -125,7 +125,8 @@ main(int argc, char *argv[])
         if (duration) {
             int mouse_y;
             SDL_GetMouseState(NULL, &mouse_y);
-            if (mouse_y > screen_height - 3 * padding && mouse_y <= screen_height) {
+            if (is_paused ||
+                (mouse_y > screen_height - 3 * padding && mouse_y <= screen_height)) {
                 uint64_t playback_time;
                 sav1_get_playback_time(&context, &playback_time);
                 double progress = playback_time * 1.0 / duration;
