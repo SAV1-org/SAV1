@@ -344,12 +344,14 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
     parse_context->duration_lock = new thread_mutex_t;
     parse_context->wait_before_seek = new thread_mutex_t;
     parse_context->wait_after_parse = new thread_mutex_t;
+    parse_context->wait_to_acquire = new thread_mutex_t;
     parse_context->duration = 0;
     parse_context->seek_timecode = 0;
     thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
     thread_mutex_init(parse_context->duration_lock);
     thread_mutex_init(parse_context->wait_before_seek);
     thread_mutex_init(parse_context->wait_after_parse);
+    thread_mutex_init(parse_context->wait_to_acquire);
 
     // initialize the callback class
     state->callback->init(parse_context, state->reader);
@@ -370,9 +372,11 @@ parse_destroy(ParseContext *context)
     thread_mutex_term(context->duration_lock);
     thread_mutex_term(context->wait_before_seek);
     thread_mutex_term(context->wait_after_parse);
+    thread_mutex_term(context->wait_to_acquire);
     delete context->duration_lock;
     delete context->wait_before_seek;
     delete context->wait_after_parse;
+    delete context->wait_to_acquire;
 
     // clean up the context
     delete context;
@@ -402,9 +406,10 @@ parse_start(void *context)
             state->callback->mark_has_all_cue_points();
 
             // wait until ThreadManager tells us to resume
+            thread_mutex_lock(parse_context->wait_to_acquire);
             thread_mutex_lock(parse_context->wait_after_parse);
             thread_mutex_unlock(parse_context->wait_after_parse);
-            thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
+            thread_mutex_unlock(parse_context->wait_to_acquire);
         }
 
         if (status.code < 0) {
