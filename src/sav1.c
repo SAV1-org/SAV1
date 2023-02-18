@@ -455,6 +455,9 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
         return 0;
     }
 
+    // get the video duration if it's available
+    uint64_t duration = thread_manager_get_duration(ctx->thread_manager);
+
     // handle cases when video isn't playing
     if (!ctx->is_playing) {
         // check if video is paused or just hasn't been started
@@ -466,6 +469,9 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
             *timecode_ms =
                 ((ctx->pause_time->tv_sec - ctx->start_time->tv_sec) * 1000) +
                 ((ctx->pause_time->tv_nsec - ctx->start_time->tv_nsec) / 1000000);
+            if (duration && duration < *timecode_ms) {
+                *timecode_ms = duration;
+            }
         }
 
         return 0;
@@ -483,6 +489,10 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
     // calculate the offset from the current time to the start time
     *timecode_ms = ((curr_time.tv_sec - ctx->start_time->tv_sec) * 1000) +
                    ((curr_time.tv_nsec - ctx->start_time->tv_nsec) / 1000000);
+    if (duration && duration < *timecode_ms) {
+        *timecode_ms = duration;
+    }
+
     return 0;
 }
 

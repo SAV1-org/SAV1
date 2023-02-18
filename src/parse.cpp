@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <vector>
-#include <unistd.h>
 #include <webm/callback.h>
 #include <webm/status.h>
 #include <webm/webm_parser.h>
@@ -344,11 +343,13 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
     parse_context->audio_output_queue = audio_output_queue;
     parse_context->duration_lock = new thread_mutex_t;
     parse_context->wait_before_seek = new thread_mutex_t;
+    parse_context->wait_after_parse = new thread_mutex_t;
     parse_context->duration = 0;
     parse_context->seek_timecode = 0;
     thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
     thread_mutex_init(parse_context->duration_lock);
     thread_mutex_init(parse_context->wait_before_seek);
+    thread_mutex_init(parse_context->wait_after_parse);
 
     // initialize the callback class
     state->callback->init(parse_context, state->reader);
@@ -368,8 +369,10 @@ parse_destroy(ParseContext *context)
 
     thread_mutex_term(context->duration_lock);
     thread_mutex_term(context->wait_before_seek);
+    thread_mutex_term(context->wait_after_parse);
     delete context->duration_lock;
     delete context->wait_before_seek;
+    delete context->wait_after_parse;
 
     // clean up the context
     delete context;
@@ -392,14 +395,16 @@ parse_start(void *context)
         // see if we should end the loop
         if (status.completed_ok()) {
             thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_END_OF_FILE);
+            // it's possible that we didn't find what we were looking for when seeking
             if (thread_atomic_int_load(&(parse_context->do_parse))) {
                 thread_atomic_int_store(&(parse_context->do_seek), 0);
             }
-
             state->callback->mark_has_all_cue_points();
-            while (thread_atomic_int_load(&(parse_context->do_parse))) {
-                usleep(10000);
-            }
+
+            // wait until ThreadManager tells us to resume
+            thread_mutex_lock(parse_context->wait_after_parse);
+            thread_mutex_unlock(parse_context->wait_after_parse);
+            thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
         }
 
         if (status.code < 0) {

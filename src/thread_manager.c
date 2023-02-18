@@ -1,7 +1,8 @@
-#include <cstdlib>
-
 #include "thread_manager.h"
 #include "sav1_internal.h"
+
+#include <cstdlib>
+#include <cstdio>
 
 void
 thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)
@@ -89,6 +90,7 @@ thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)
     parse_init(&(thread_manager->parse_context), ctx,
                thread_manager->video_webm_frame_queue,
                thread_manager->audio_webm_frame_queue);
+    thread_mutex_lock(thread_manager->parse_context->wait_after_parse);
 
     // populate the thread manager struct
     thread_manager->ctx = ctx;
@@ -196,6 +198,7 @@ void
 thread_manager_kill_pipeline(ThreadManager *manager)
 {
     if (manager->parse_thread != NULL) {
+        thread_mutex_unlock(manager->parse_context->wait_after_parse);
         parse_stop(manager->parse_context);
         thread_join(manager->parse_thread);
         thread_destroy(manager->parse_thread);
@@ -267,8 +270,11 @@ thread_manager_unlock_pipeline(ThreadManager *manager)
 void
 thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
 {
-    // make sure the parsing waits after finishing
+    // make sure the parsing waits after stopping
     thread_mutex_lock(manager->parse_context->wait_before_seek);
+
+    // let parsing escape its wait if it finished the file
+    thread_mutex_unlock(manager->parse_context->wait_after_parse);
 
     // stop parsing for now
     parse_seek_to_time(manager->parse_context, timecode);
@@ -294,7 +300,16 @@ thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
         }
     }
 
+    /* this is dumb but we need to wait here to be sure that the parse thread is able to
+     * acquire its mutex-equivalent on Windows. If this isn't here then the main thread
+     * will just acquire it again and the parse thread never will */
+    while (thread_atomic_int_load(&(manager->parse_context->status)) ==
+           PARSE_STATUS_END_OF_FILE) {
+        // NOP
+    }
+
     // let parsing continue
+    thread_mutex_lock(manager->parse_context->wait_after_parse);
     thread_mutex_unlock(manager->parse_context->wait_before_seek);
 }
 
