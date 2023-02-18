@@ -24,6 +24,23 @@ rect_fit(SDL_Rect *arg, SDL_Rect target)
     arg->y = y;
 }
 
+char *
+get_file_name(char *file_path)
+{
+    int last_slash = 0;
+    int last_dot = strlen(file_path);
+    for (int i = 0; file_path[i] != '\0'; i++) {
+        if (file_path[i] == '\\' || file_path[i] == '/') {
+            last_slash = i;
+        }
+        else if (file_path[i] == '.') {
+            last_dot = i;
+        }
+    }
+    file_path[last_dot] = '\0';
+    return file_path + last_slash + 1;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -57,7 +74,7 @@ main(int argc, char *argv[])
     SDL_AudioSpec obtained = {0};
     SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
 
-    SDL_Window *window = SDL_CreateWindow("Dav4d video player", SDL_WINDOWPOS_UNDEFINED,
+    SDL_Window *window = SDL_CreateWindow(get_file_name(argv[1]), SDL_WINDOWPOS_UNDEFINED,
                                           SDL_WINDOWPOS_UNDEFINED, screen_width,
                                           screen_height, SDL_WINDOW_RESIZABLE);
     SDL_Surface *screen = SDL_GetWindowSurface(window);
