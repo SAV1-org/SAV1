@@ -53,7 +53,7 @@ thread_manager_lock_pipeline(ThreadManager *manager);
 void
 thread_manager_unlock_pipeline(ThreadManager *manager);
 
-void
+int
 thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode);
 
 uint64_t

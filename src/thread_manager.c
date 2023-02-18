@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <unistd.h>
 
 void
 thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)
@@ -198,6 +199,7 @@ void
 thread_manager_kill_pipeline(ThreadManager *manager)
 {
     if (manager->parse_thread != NULL) {
+        thread_atomic_int_store(&(manager->parse_context->do_seek), 0);
         thread_mutex_unlock(manager->parse_context->wait_after_parse);
         parse_stop(manager->parse_context);
         thread_join(manager->parse_thread);
@@ -267,7 +269,7 @@ thread_manager_unlock_pipeline(ThreadManager *manager)
     sav1_thread_queue_unlock(manager->audio_custom_processing_queue);
 }
 
-void
+int
 thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
 {
     // make sure the parsing waits after stopping
@@ -303,14 +305,26 @@ thread_manager_seek_to_time(ThreadManager *manager, uint64_t timecode)
     /* this is dumb but we need to wait here to be sure that the parse thread is able to
      * acquire its mutex-equivalent on Windows. If this isn't here then the main thread
      * will just acquire it again and the parse thread never will */
-    while (thread_atomic_int_load(&(manager->parse_context->status)) ==
-           PARSE_STATUS_END_OF_FILE) {
-        // NOP
+    int ret_val = 0;
+    for (uint32_t counter = 0;
+         thread_atomic_int_load(&(manager->parse_context->status)) ==
+         PARSE_STATUS_END_OF_FILE;
+         counter++) {
+        if (counter >= 1000000000) {
+            ret_val = -1;
+            sav1_set_error(manager->ctx,
+                           "Error in sav1_seek_playback(): parse thread failed to "
+                           "acquire mutex");
+            break;
+        }
+        sleep(0);
     }
 
     // let parsing continue
     thread_mutex_lock(manager->parse_context->wait_after_parse);
     thread_mutex_unlock(manager->parse_context->wait_before_seek);
+
+    return ret_val;
 }
 
 uint64_t

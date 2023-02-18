@@ -537,7 +537,10 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
     }
 
     // make the thread manager do all the hard work
-    thread_manager_seek_to_time(ctx->thread_manager, timecode_ms);
+    if (thread_manager_seek_to_time(ctx->thread_manager, timecode_ms)) {
+        // thread manager failed
+        return -1;
+    }
 
     // save the time that we want to seek to
     ctx->seek_timecode = timecode_ms;

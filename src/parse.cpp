@@ -434,7 +434,7 @@ parse_start(void *context)
         }
     }
 
-    sav1_thread_queue_push(parse_context->video_output_queue, NULL);
+    parse_stop(parse_context);
 
     return 0;
 }
