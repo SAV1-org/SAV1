@@ -167,12 +167,13 @@ main(int argc, char *argv[])
                     }
                     else if (event.key.keysym.sym == SDLK_SPACE) {
                         if (is_paused) {
-                            sav1_start_playback(&context);
+                            if (sav1_start_playback(&context) == 0) {
+                                is_paused = 0;
+                            }
                         }
-                        else {
-                            sav1_stop_playback(&context);
+                        else if (sav1_stop_playback(&context) == 0) {
+                            is_paused = 1;
                         }
-                        is_paused = is_paused ? 0 : 1;
                     }
                     else if (event.key.keysym.sym == SDLK_f) {
                         SDL_SetWindowFullscreen(
@@ -183,25 +184,25 @@ main(int argc, char *argv[])
                         is_fullscreen = is_fullscreen ? 0 : 1;
                     }
                     else if (event.key.keysym.sym == SDLK_LEFT) {
-                        // jump back 5 seconds
+                        // jump back 10 seconds
                         if (frame) {
                             SDL_FreeSurface(frame);
                             frame = NULL;
                         }
                         uint64_t timecode;
                         sav1_get_playback_time(&context, &timecode);
-                        timecode = timecode >= 5000 ? timecode - 5000 : 0;
+                        timecode = timecode >= 10000 ? timecode - 10000 : 0;
                         sav1_seek_playback(&context, timecode);
                     }
                     else if (event.key.keysym.sym == SDLK_RIGHT) {
-                        // jump forward 5 seconds
+                        // jump forward 10 seconds
                         if (frame) {
                             SDL_FreeSurface(frame);
                             frame = NULL;
                         }
                         uint64_t timecode;
                         sav1_get_playback_time(&context, &timecode);
-                        sav1_seek_playback(&context, timecode + 5000);
+                        sav1_seek_playback(&context, timecode + 10000);
                     }
                     break;
 
@@ -221,7 +222,17 @@ main(int argc, char *argv[])
                     // seek to mouse click
                     int mouse_x, mouse_y;
                     SDL_GetMouseState(&mouse_x, &mouse_y);
-                    if (duration && mouse_y >= screen_height - 2 * padding) {
+                    if (mouse_y < screen_height - 2 * padding) {
+                        if (is_paused) {
+                            if (sav1_start_playback(&context) == 0) {
+                                is_paused = 0;
+                            }
+                        }
+                        else if (sav1_stop_playback(&context) == 0) {
+                            is_paused = 1;
+                        }
+                    }
+                    else if (duration) {
                         double seek_progress =
                             (mouse_x - padding) * 1.0 / (screen_width - 2 * padding);
                         seek_progress = seek_progress < 0   ? 0.0
