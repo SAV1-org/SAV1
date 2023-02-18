@@ -27,7 +27,7 @@ rect_fit(SDL_Rect *arg, SDL_Rect target)
 char *
 get_file_name(char *file_path)
 {
-    int last_slash = 0;
+    int last_slash = -1;
     int last_dot = strlen(file_path);
     for (int i = 0; file_path[i] != '\0'; i++) {
         if (file_path[i] == '\\' || file_path[i] == '/') {
