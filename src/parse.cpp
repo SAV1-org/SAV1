@@ -1,7 +1,14 @@
-#include "parse.h"
-#include "sav1_settings.h"
-#include "sav1_internal.h"
-#include "webm_frame.h"
+/* If compiling the entire project in C++, the extern C should not be used */
+#ifndef CPPTHROUGHANDTHROUGH
+extern "C" {
+#endif
+    #include "parse.h"
+    #include "sav1_settings.h"
+    #include "sav1_internal.h"
+    #include "webm_frame.h"
+#ifndef CPPTHROUGHANDTHROUGH
+}
+#endif
 #include "sav1_file_reader.h"
 
 #include <cassert>

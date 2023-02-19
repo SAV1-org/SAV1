@@ -1,11 +1,19 @@
 #include <cassert>
 #include <cstdio>
-#include <dav1d/dav1d.h>
 
-#include "convert_av1.h"
-#include "sav1_video_frame.h"
-#include "sav1_settings.h"
-#include "sav1_internal.h"
+/* If compiling the entire project in C++, the extern C should not be used */
+#ifndef CPPTHROUGHANDTHROUGH
+extern "C" {
+#endif
+    #include <dav1d/dav1d.h>
+
+    #include "convert_av1.h"
+    #include "sav1_video_frame.h"
+    #include "sav1_settings.h"
+    #include "sav1_internal.h"
+#ifndef CPPTHROUGHANDTHROUGH
+}
+#endif
 
 using namespace libyuv;
 

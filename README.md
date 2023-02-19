@@ -9,6 +9,15 @@ Uses `dav1d` to efficiently decode video, `libopus` to efficiently decode audio-
 ## Build instructions
 Our current build generates a video player called dav4dplay. Once, built, invoke it with a path to a test file to play that video. `dav4dplay test_files/ferris.webm` (for example).
 
+### Experimental: Meson build
+* Install meson and ninja
+```
+meson build
+cd build
+ninja
+```
+Generates a sav1 lib in the build/ folder
+
 ### Windows
 ```
 install_windows_deps.bat
