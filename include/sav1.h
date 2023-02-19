@@ -1,8 +1,8 @@
 #ifndef SAV1_H
 #define SAV1_H
 
-#include <cstdint>
-#include <cstddef>
+#include "stdint.h"
+#include "stddef.h"
 
 typedef struct Sav1Context {
     void *internal_state;

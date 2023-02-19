@@ -1,6 +1,6 @@
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
+#include "stdlib.h"
+#include "stdio.h"
+#include "string.h"
 
 #include "webm_frame.h"
 #include "thread_queue.h"

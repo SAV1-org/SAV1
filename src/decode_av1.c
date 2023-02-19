@@ -1,13 +1,13 @@
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
+#include "stdlib.h"
+#include "stdio.h"
+#include "string.h"
 
 #include "webm_frame.h"
 #include "decode_av1.h"
 #include "sav1_internal.h"
 
 void
-fake_dealloc(const uint8_t *, void *)
+fake_dealloc(const uint8_t *data, void *user_data)
 {
     // NOP
 }

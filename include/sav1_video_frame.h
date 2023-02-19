@@ -3,7 +3,7 @@
 
 #include "sav1.h"
 
-#include <cstdint>
+#include "stdint.h"
 
 typedef struct Sav1VideoFrame {
     uint8_t *data;
