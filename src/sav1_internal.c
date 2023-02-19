@@ -2,8 +2,8 @@
 #include "sav1_internal.h"
 
 #include <string.h>
-#include "stdio.h"
-#include "assert.h"
+#include <stdio.h>
+#include <assert.h>
 
 void
 sav1_set_error(Sav1InternalContext *ctx, const char *message)

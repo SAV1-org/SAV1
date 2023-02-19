@@ -1,8 +1,8 @@
 #include "thread_manager.h"
 #include "sav1_internal.h"
 
-#include "stdlib.h"
-#include "stdio.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 void
 thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)

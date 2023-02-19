@@ -1,7 +1,7 @@
 #ifndef SAV1_INTERNAL_H
 #define SAV1_INTERNAL_H
 
-#include "stddef.h"
+#include <stddef.h>
 
 #include "sav1.h"
 #include "thread_manager.h"

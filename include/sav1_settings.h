@@ -1,8 +1,8 @@
 #ifndef SAV1_SETTINGS_H
 #define SAV1_SETTINGS_H
 
-#include "stdint.h"
-#include "stddef.h"
+#include <stdint.h>
+#include <stddef.h>
 
 typedef struct Sav1VideoFrame Sav1VideoFrame;
 typedef struct Sav1AudioFrame Sav1AudioFrame;

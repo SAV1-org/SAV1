@@ -1,7 +1,7 @@
 #ifndef THREAD_QUEUE_H
 #define THREAD_QUEUE_H
 
-#include "stddef.h"
+#include <stddef.h>
 
 #include "thread.h"
 

@@ -4,7 +4,7 @@
 #include "thread_queue.h"
 
 #include <stddef.h>
-#include <cstdint>
+#include <stdint.h>
 
 typedef struct Sav1InternalContext Sav1InternalContext;
 
