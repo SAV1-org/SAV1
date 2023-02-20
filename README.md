@@ -12,7 +12,7 @@ Our current build generates a video player called dav4dplay. Once, built, invoke
 ### Experimental: Meson build
 * Install meson and ninja
 ```
-meson build
+meson setup build
 cd build
 ninja
 ```

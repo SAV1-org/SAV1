@@ -120,7 +120,7 @@ convert_yuv_to_packed(uint8_t *Y_data, ptrdiff_t Y_stride, uint8_t *U_data,
             else {
                 // alternate using U and V data for each pixel
                 if ((y * output_frame->width + x) % 2 ^
-                    output_frame->pixel_format == SAV1_PIXEL_FORMAT_YVYU) {
+                    (output_frame->pixel_format == SAV1_PIXEL_FORMAT_YVYU)) {
                     output_frame->data[dest_index + UV_offset] = V_data[UV_index];
                 }
                 else {

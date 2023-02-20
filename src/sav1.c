@@ -149,7 +149,7 @@ seek_update_start_time(Sav1InternalContext *ctx)
     clock_gettime(CLOCK_MONOTONIC, &curr_time);
     ctx->start_time->tv_sec = curr_time.tv_sec - ctx->seek_timecode / 1000;
     uint64_t timecode_ns = (ctx->seek_timecode % 1000) * 1000000;
-    if (timecode_ns > curr_time.tv_nsec) {
+    if (timecode_ns > (uint64_t)curr_time.tv_nsec) {
         ctx->start_time->tv_sec--;
         ctx->start_time->tv_nsec = curr_time.tv_nsec + 1000000000 - timecode_ns;
     }
@@ -272,7 +272,7 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    if (ctx->settings->codec_target & SAV1_CODEC_AV1 == 0) {
+    if ((ctx->settings->codec_target & SAV1_CODEC_AV1) == 0) {
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
 
@@ -294,7 +294,7 @@ sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    if (ctx->settings->codec_target & SAV1_CODEC_OPUS == 0) {
+    if ((ctx->settings->codec_target & SAV1_CODEC_OPUS) == 0) {
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
 
@@ -316,7 +316,7 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    if (ctx->settings->codec_target & SAV1_CODEC_AV1 == 0) {
+    if ((ctx->settings->codec_target & SAV1_CODEC_AV1) == 0) {
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
 
@@ -338,7 +338,7 @@ sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    if (ctx->settings->codec_target & SAV1_CODEC_OPUS == 0) {
+    if ((ctx->settings->codec_target & SAV1_CODEC_OPUS) == 0) {
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
 
