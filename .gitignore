@@ -15,3 +15,4 @@ SDL2.dll
 dav1d.dll
 opus.dll
 test_files/_*
+*.DS_Store
