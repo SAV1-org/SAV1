@@ -54,6 +54,8 @@ main(int argc, char *argv[])
     int frame_width, frame_height;
     int is_paused = 0;
     int is_fullscreen = 0;
+    int is_mouse_active = 0;
+    uint64_t mouse_last_active = 0;
 
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
@@ -142,8 +144,7 @@ main(int argc, char *argv[])
         if (duration) {
             int mouse_y;
             SDL_GetMouseState(NULL, &mouse_y);
-            if (is_paused ||
-                (mouse_y > screen_height - 3 * padding && mouse_y <= screen_height)) {
+            if (is_paused || is_mouse_active) {
                 uint64_t playback_time;
                 sav1_get_playback_time(&context, &playback_time);
                 double progress = playback_time * 1.0 / duration;
@@ -172,6 +173,12 @@ main(int argc, char *argv[])
         }
 
         SDL_UpdateWindowSurface(window);
+
+        if (is_mouse_active && (SDL_GetTicks64() - mouse_last_active) > 4000) {
+            is_mouse_active = 0;
+            SDL_ShowCursor(SDL_DISABLE);
+            mouse_last_active = SDL_GetTicks64();
+        }
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -262,6 +269,13 @@ main(int argc, char *argv[])
                         }
                         sav1_seek_playback(&context, duration * seek_progress);
                     }
+                    break;
+
+                case SDL_MOUSEMOTION:
+                    mouse_last_active = SDL_GetTicks64();
+                    is_mouse_active = 1;
+                    SDL_ShowCursor(SDL_ENABLE);
+                    break;
 
                 default:
                     break;
