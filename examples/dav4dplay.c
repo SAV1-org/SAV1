@@ -60,7 +60,6 @@ main(int argc, char *argv[])
     Sav1Settings settings;
     sav1_default_settings(&settings, argv[1]);
     settings.desired_pixel_format = SAV1_PIXEL_FORMAT_BGRA;
-    settings.channels = SAV1_AUDIO_STEREO;
 
     Sav1Context context = {0};
     sav1_create_context(&context, &settings);

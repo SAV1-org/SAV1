@@ -2,10 +2,10 @@
 #ifndef CPPTHROUGHANDTHROUGH
 extern "C" {
 #endif
-    #include "parse.h"
-    #include "sav1_settings.h"
-    #include "sav1_internal.h"
-    #include "webm_frame.h"
+#include "parse.h"
+#include "sav1_settings.h"
+#include "sav1_internal.h"
+#include "webm_frame.h"
 #ifndef CPPTHROUGHANDTHROUGH
 }
 #endif
@@ -47,6 +47,7 @@ class Sav1Callback : public Callback {
         this->cue_points.push_back(cue);
         this->all_cue_points = false;
         this->skip_clusters = false;
+        this->is_key_frame = false;
     }
 
     bool
@@ -197,9 +198,19 @@ class Sav1Callback : public Callback {
              this->context->codec_target & SAV1_CODEC_AV1) ||
             (simple_block.track_number == this->opus_track_number &&
              this->context->codec_target & SAV1_CODEC_OPUS)) {
-            *action = Action::kRead;
             this->current_track_number = simple_block.track_number;
             this->calculate_timecode(simple_block.timecode);
+            this->is_key_frame = simple_block.is_key_frame;
+
+            // skip opus frames before seek point
+            if (this->current_track_number == this->opus_track_number &&
+                thread_atomic_int_load(&(this->context->do_seek)) & SAV1_CODEC_OPUS &&
+                this->timecode < this->context->seek_timecode) {
+                *action = Action::kSkip;
+            }
+            else {
+                *action = Action::kRead;
+            }
         }
         else {
             *action = Action::kSkip;
@@ -215,9 +226,19 @@ class Sav1Callback : public Callback {
              this->context->codec_target & SAV1_CODEC_AV1) ||
             (block.track_number == this->opus_track_number &&
              this->context->codec_target & SAV1_CODEC_OPUS)) {
-            *action = Action::kRead;
             this->current_track_number = block.track_number;
             this->calculate_timecode(block.timecode);
+            this->is_key_frame = false;
+
+            // skip opus frames before seek point
+            if (this->current_track_number == this->opus_track_number &&
+                thread_atomic_int_load(&(this->context->do_seek)) & SAV1_CODEC_OPUS &&
+                this->timecode < this->context->seek_timecode) {
+                *action = Action::kSkip;
+            }
+            else {
+                *action = Action::kRead;
+            }
         }
         else {
             *action = Action::kSkip;
@@ -258,34 +279,32 @@ class Sav1Callback : public Callback {
 
         // fill in type-specific information
         int do_seek = thread_atomic_int_load(&(this->context->do_seek));
-        if (this->current_track_number == this->av1_track_number &&
-            this->context->codec_target & SAV1_CODEC_AV1) {
-            // mark the WebMFrame to be discarded later when seeking
+        if (this->current_track_number == this->av1_track_number) {
             if (do_seek & SAV1_CODEC_AV1) {
+                // give dav1d a five second head start when seeking
+                if (this->timecode + 5000 >= this->context->seek_timecode) {
+                    frame->sentinel = 1;
+                }
+                // discard any frames before the seek point
                 if (this->timecode < this->context->seek_timecode) {
                     frame->do_discard = 1;
                 }
                 else {
+                    // we've found what we're looking for
                     thread_atomic_int_store(&(this->context->do_seek),
                                             do_seek ^ SAV1_CODEC_AV1);
-                    frame->sentinel = 1;
                 }
             }
+            frame->is_key_frame = this->is_key_frame;
             frame->codec = SAV1_CODEC_AV1;
             sav1_thread_queue_push(this->context->video_output_queue, frame);
         }
-        else if (this->current_track_number == this->opus_track_number &&
-                 this->context->codec_target & SAV1_CODEC_OPUS) {
-            // mark the WebMFrame to be discarded later when seeking
+        else if (this->current_track_number == this->opus_track_number) {
             if (do_seek & SAV1_CODEC_OPUS) {
-                if (this->timecode < this->context->seek_timecode) {
-                    frame->do_discard = 1;
-                }
-                else {
-                    thread_atomic_int_store(&(this->context->do_seek),
-                                            do_seek ^ SAV1_CODEC_OPUS);
-                    frame->sentinel = 1;
-                }
+                // we've found what we're looking for
+                thread_atomic_int_store(&(this->context->do_seek),
+                                        do_seek ^ SAV1_CODEC_OPUS);
+                frame->sentinel = 1;
             }
             frame->codec = SAV1_CODEC_OPUS;
             sav1_thread_queue_push(this->context->audio_output_queue, frame);
@@ -293,7 +312,6 @@ class Sav1Callback : public Callback {
         else {
             // this is actually not a frame we want
             webm_frame_destroy(frame);
-            return Status(Status::kOkCompleted);
         }
 
         return Status(Status::kOkCompleted);
@@ -314,6 +332,7 @@ class Sav1Callback : public Callback {
     std::uint64_t last_cluster_location;
     bool all_cue_points;
     bool skip_clusters;
+    bool is_key_frame;
 };
 
 typedef struct ParseInternalState {

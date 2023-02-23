@@ -11,6 +11,7 @@ typedef struct WebMFrame {
     int codec;
     int do_discard;
     int sentinel;
+    int is_key_frame;
 } WebMFrame;
 
 void
