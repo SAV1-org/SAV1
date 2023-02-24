@@ -43,7 +43,14 @@ decode_av1_start(void *context)
     thread_atomic_int_store(&(decode_context->do_decode), 1);
 
     int status;
+
+    /*
+    seeking finite state machine:
+    seek_state: 0=not seeking, 1=looking for sequence header, 2=found sequence header
+    seek_feed_state: 0=do not feed yet, 1=feed when we find a keyframe, 2=do feed
+    */
     int seek_state = 0;
+    int seek_feed_state = 0;
     Dav1dSequenceHeader seq_hdr;
     Dav1dData data;
     Dav1dPicture *picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture));
@@ -58,62 +65,36 @@ decode_av1_start(void *context)
             break;
         }
 
-        /*
-        seeking finite state machine
-            STATE 0: not seeking
-            STATE 1: looking for sequence header, don't feed
-            STATE 2: looking for sequence header, feed when keyframe
-            STATE 3: looking for sequence header, feed now
-            STATE 4: found sequence header, don't feed
-            STATE 5: found sequence header, feed when keyframe
-            STATE 6: found sequence header, feed now
-        */
-        if (input_frame->sentinel || input_frame->do_discard || seek_state) {
+        if (seek_state || input_frame->do_discard || input_frame->sentinel) {
             if (seek_state == 0) {
                 // seeking has begun
                 dav1d_flush(decode_context->dav1d_context);
                 seek_state = 1;
             }
-            if (seek_state == 1 && input_frame->sentinel) {
-                seek_state = 2;
+            if (seek_feed_state == 0 && input_frame->sentinel) {
+                // feed starting at next keyframe
+                seek_feed_state = 1;
             }
-            if (seek_state == 2 && input_frame->is_key_frame) {
-                seek_state = 3;
+            if (seek_feed_state == 1 && input_frame->is_key_frame) {
+                // feed starting now
+                seek_feed_state = 2;
             }
-            if (seek_state > 0 && seek_state <= 3) {
+            if (seek_state == 1) {
                 // look for sequence header OBU
                 if (dav1d_parse_sequence_header(&seq_hdr, input_frame->data,
                                                 input_frame->size)) {
                     webm_frame_destroy(input_frame);
                     continue;
                 }
-                else if (seek_state == 1) {
-                    seek_state = 4;
-                }
-                else if (seek_state == 2) {
-                    seek_state = 5;
-                }
                 else {
-                    seek_state = 6;
+                    // found one
+                    seek_state = 2;
                 }
             }
-            if (seek_state == 4 || seek_state == 5) {
-                if (seek_state == 4 && input_frame->sentinel &&
-                    input_frame->is_key_frame) {
-                    seek_state = 6;
-                }
-                else if (seek_state == 4 && input_frame->sentinel) {
-                    seek_state = 5;
-                    webm_frame_destroy(input_frame);
-                    continue;
-                }
-                else if (seek_state == 5 && input_frame->is_key_frame) {
-                    seek_state = 6;
-                }
-                else {
-                    webm_frame_destroy(input_frame);
-                    continue;
-                }
+            if (seek_state == 2 && seek_feed_state != 2) {
+                // throw this frame away since it's pre sentinel+keyframe
+                webm_frame_destroy(input_frame);
+                continue;
             }
         }
 
@@ -148,14 +129,15 @@ decode_av1_start(void *context)
                     picture->m.timestamp = input_frame->timecode;
 
                     if (input_frame->do_discard) {
-                        // throw this dav1dPicture away since it was marked for
-                        // discard
+                        // throw this dav1dPicture away
                         dav1d_picture_unref(picture);
                     }
                     else {
-                        if (seek_state == 6) {
+                        if (seek_feed_state == 2) {
                             picture->m.user_data.data = (const uint8_t *)1;
+                            // reset seeking finite state machine
                             seek_state = 0;
+                            seek_feed_state = 0;
                         }
                         else {
                             picture->m.user_data.data = NULL;
