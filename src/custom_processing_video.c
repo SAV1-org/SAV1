@@ -11,16 +11,17 @@ custom_processing_video_init(CustomProcessingVideoContext **context,
                              void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
-    CustomProcessingVideoContext *process_context =
-        (CustomProcessingVideoContext *)malloc(sizeof(CustomProcessingVideoContext));
-    *context = process_context;
+    if (((*context) = (CustomProcessingVideoContext *)malloc(sizeof(CustomProcessingVideoContext))) == NULL) {
+        sav1_set_error(ctx, "malloc() failed in custom_processing_video_init()");
+        sav1_set_critical_error_flag(ctx);
+    }
 
-    process_context->process_function = process_function;
-    process_context->destroy_function = destroy_function;
-    process_context->cookie = ctx->settings->custom_video_frame_processing_cookie;
-    process_context->input_queue = input_queue;
-    process_context->output_queue = output_queue;
-    process_context->ctx = ctx;
+    (*context)->process_function = process_function;
+    (*context)->destroy_function = destroy_function;
+    (*context)->cookie = ctx->settings->custom_video_frame_processing_cookie;
+    (*context)->input_queue = input_queue;
+    (*context)->output_queue = output_queue;
+    (*context)->ctx = ctx;
 }
 
 void

@@ -53,7 +53,9 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->context = context;
     ctx->critical_error_flag = 0;
     ctx->is_playing = 0;
-    ctx->start_time = (struct timespec *)malloc(sizeof(struct timespec));
+    if ((ctx->start_time = (struct timespec *)malloc(sizeof(struct timespec))) == NULL) {
+        RAISE_CRITICAL(ctx, "malloc() failed in sav1_create_context()");
+    }
     ctx->pause_time = NULL;
     ctx->curr_video_frame = NULL;
     ctx->next_video_frame = NULL;
@@ -62,11 +64,8 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->next_audio_frame = NULL;
     ctx->audio_frame_ready = 0;
     ctx->do_seek = 0;
-    ctx->settings = (Sav1Settings *)malloc(sizeof(Sav1Settings));
-
-    // error check malloc calls
-    if (ctx->start_time == NULL || ctx->settings == NULL) {
-        return -1;
+    if ((ctx->settings = (Sav1Settings *)malloc(sizeof(Sav1Settings))) == NULL) {
+        RAISE_CRITICAL(ctx, "malloc() failed in sav1_create_context()");
     }
 
     // copy over settings to prevent future modifications (except to file_name)

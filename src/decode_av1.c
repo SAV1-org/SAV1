@@ -16,17 +16,18 @@ void
 decode_av1_init(DecodeAv1Context **context, Sav1InternalContext *ctx,
                 Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
-    DecodeAv1Context *decode_context =
-        (DecodeAv1Context *)malloc(sizeof(DecodeAv1Context));
-    *context = decode_context;
+    if (((*context) = (DecodeAv1Context *)malloc(sizeof(DecodeAv1Context))) == NULL) {
+        sav1_set_error(ctx, "malloc() failed in decode_av1_init()");
+        sav1_set_critical_error_flag(ctx);
+    }
 
-    decode_context->ctx = ctx;
-    decode_context->input_queue = input_queue;
-    decode_context->output_queue = output_queue;
+    (*context)->ctx = ctx;
+    (*context)->input_queue = input_queue;
+    (*context)->output_queue = output_queue;
 
     Dav1dSettings settings;
     dav1d_default_settings(&settings);
-    dav1d_open(&decode_context->dav1d_context, &settings);
+    dav1d_open(&(*context)->dav1d_context, &settings);
 }
 
 void
@@ -53,7 +54,11 @@ decode_av1_start(void *context)
     int seek_feed_state = 0;
     Dav1dSequenceHeader seq_hdr;
     Dav1dData data;
-    Dav1dPicture *picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture));
+    Dav1dPicture *picture;
+    if ((picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture))) == NULL) {
+        sav1_set_error(decode_context->ctx, "malloc() failed in decode_av1_start()");
+        sav1_set_critical_error_flag(decode_context->ctx);
+    }
     memset(picture, 0, sizeof(Dav1dPicture));
 
     while (thread_atomic_int_load(&(decode_context->do_decode))) {
@@ -148,7 +153,10 @@ decode_av1_start(void *context)
                     }
 
                     // allocate a new dav1d picture
-                    picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture));
+                    if ((picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture))) == NULL) {
+                        sav1_set_error(decode_context->ctx, "malloc() failed in decode_av1_start()");
+                        sav1_set_critical_error_flag(decode_context->ctx);
+                    }
                     memset(picture, 0, sizeof(Dav1dPicture));
                 }
             } while (status == 0);

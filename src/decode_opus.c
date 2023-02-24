@@ -14,24 +14,29 @@ void
 decode_opus_init(DecodeOpusContext **context, Sav1InternalContext *ctx,
                  Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
-    DecodeOpusContext *decode_context =
-        (DecodeOpusContext *)malloc(sizeof(DecodeOpusContext));
-    *context = decode_context;
+    if ((*context = (DecodeOpusContext *)malloc(sizeof(DecodeOpusContext))) == NULL) {
+        sav1_set_error(ctx, "malloc() failed in decode_opus_init()");
+        sav1_set_critical_error_flag(ctx);
+    }
 
-    decode_context->decode_buffer = (opus_int16 *)malloc(MAX_DECODE_LEN * sizeof(opus_int16));
-    decode_context->input_queue = input_queue;
-    decode_context->output_queue = output_queue;
-    decode_context->frequency = ctx->settings->frequency;
-    decode_context->channels = ctx->settings->channels;
-    decode_context->ctx = ctx;
+    if (((*context)->decode_buffer = (opus_int16 *)malloc(MAX_DECODE_LEN * sizeof(opus_int16))) == NULL) {
+        free(*context);
+        sav1_set_error(ctx, "malloc() failed in decode_opus_init()");
+        sav1_set_critical_error_flag(ctx);      
+    }
+    (*context)->input_queue = input_queue;
+    (*context)->output_queue = output_queue;
+    (*context)->frequency = ctx->settings->frequency;
+    (*context)->channels = ctx->settings->channels;
+    (*context)->ctx = ctx;
 
     int error;
-    decode_context->decoder =
-        opus_decoder_create(decode_context->frequency, decode_context->channels, &error);
+    (*context)->decoder =
+        opus_decoder_create((*context)->frequency, (*context)->channels, &error);
 
     if (error != OPUS_OK) {
-        printf("decoder failed to create\n");
-        exit(0);
+        sav1_set_error(ctx, "opus decoder failed to create in decode_opus_init()");
+        sav1_set_critical_error_flag(ctx);
     }
 }
 
@@ -63,7 +68,11 @@ decode_opus_start(void *context)
                         decode_context->decode_buffer, MAX_DECODE_LEN, 0);
 
         // setup the output frame
-        Sav1AudioFrame *output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame));
+        Sav1AudioFrame *output_frame;
+        if ((output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame))) == NULL) {
+            sav1_set_error(decode_context->ctx, "malloc() failed in decode_opus_start()");
+            sav1_set_critical_error_flag(decode_context->ctx);
+        }
         output_frame->codec = SAV1_CODEC_OPUS;
         output_frame->timecode = input_frame->timecode;
         output_frame->sentinel = input_frame->sentinel;
@@ -75,7 +84,11 @@ decode_opus_start(void *context)
         // this is accomplished by using the values of SAV1_AUDIO_MONO and
         // SAV1_AUDIO_STEREO
         output_frame->size = num_samples * sizeof(uint16_t) * decode_context->channels;
-        output_frame->data = (uint8_t *)malloc(output_frame->size);
+        if ((output_frame->data = (uint8_t *)malloc(output_frame->size)) == NULL) {
+            free(output_frame);
+            sav1_set_error(decode_context->ctx, "malloc() failed in decode_opus_start()");
+            sav1_set_critical_error_flag(decode_context->ctx);
+        }
         memcpy(output_frame->data, decode_context->decode_buffer, output_frame->size);
 
         sav1_thread_queue_push(decode_context->output_queue, output_frame);

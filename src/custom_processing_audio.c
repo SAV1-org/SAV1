@@ -11,16 +11,17 @@ custom_processing_audio_init(CustomProcessingAudioContext **context,
                              void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
-    CustomProcessingAudioContext *process_context =
-        (CustomProcessingAudioContext *)malloc(sizeof(CustomProcessingAudioContext));
-    *context = process_context;
+    if (((*context) = (CustomProcessingAudioContext *)malloc(sizeof(CustomProcessingAudioContext))) == NULL) {
+        sav1_set_error(ctx, "malloc() failed in custom_processing_audio_init()");
+        sav1_set_critical_error_flag(ctx);
+    }
 
-    process_context->process_function = process_function;
-    process_context->destroy_function = destroy_function;
-    process_context->cookie = ctx->settings->custom_audio_frame_processing_cookie;
-    process_context->input_queue = input_queue;
-    process_context->output_queue = output_queue;
-    process_context->ctx = ctx;
+    (*context)->process_function = process_function;
+    (*context)->destroy_function = destroy_function;
+    (*context)->cookie = ctx->settings->custom_audio_frame_processing_cookie;
+    (*context)->input_queue = input_queue;
+    (*context)->output_queue = output_queue;
+    (*context)->ctx = ctx;
 }
 
 void

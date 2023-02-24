@@ -236,7 +236,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
 
             // allocate twice as much memory as we'll eventually need
             output_frame->stride = 4 * output_frame->width;
-            output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
+            output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));  // TODO: error check this malloc
 
             // first pack as BGRA
             convert_yuv_to_rgba_with_identity_matrix(
@@ -276,7 +276,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
             // allocate pixel buffer
             output_frame->stride = 2 * output_frame->width;
             output_frame->size = output_frame->stride * output_frame->height;
-            output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
+            output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));  // TODO: error check this malloc
 
             // check for cases where libYUV functions already exist (most common)
             if (desired_pixel_format == SAV1_PIXEL_FORMAT_YUY2 &&
@@ -315,7 +315,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
 
         // allocate pixel buffer
         output_frame->size = output_frame->stride * output_frame->height;
-        output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));
+        output_frame->data = (uint8_t *)malloc(output_frame->size * sizeof(uint8_t));  // TODO: error check this malloc
         if (seq_hdr->mtrx == DAV1D_MC_IDENTITY) {
             convert_yuv_to_rgba_with_identity_matrix(
                 Y_data, Y_stride, U_data, V_data, UV_stride, output_frame,
@@ -435,14 +435,15 @@ void
 convert_av1_init(ConvertAv1Context **context, Sav1InternalContext *ctx,
                  Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
-    ConvertAv1Context *convert_context =
-        (ConvertAv1Context *)malloc(sizeof(ConvertAv1Context));
-    *context = convert_context;
+    if (((*context) = (ConvertAv1Context *)malloc(sizeof(ConvertAv1Context))) == NULL) {
+        sav1_set_error(ctx, "malloc() failed in convert_av1_init()");
+        sav1_set_critical_error_flag(ctx);
+    }
 
-    convert_context->input_queue = input_queue;
-    convert_context->output_queue = output_queue;
-    convert_context->desired_pixel_format = ctx->settings->desired_pixel_format;
-    convert_context->ctx = ctx;
+    (*context)->input_queue = input_queue;
+    (*context)->output_queue = output_queue;
+    (*context)->desired_pixel_format = ctx->settings->desired_pixel_format;
+    (*context)->ctx = ctx;
 }
 
 void
@@ -475,7 +476,11 @@ convert_av1_start(void *context)
         }
 
         // setup the output frame
-        Sav1VideoFrame *output_frame = (Sav1VideoFrame *)malloc(sizeof(Sav1VideoFrame));
+        Sav1VideoFrame *output_frame;
+        if ((output_frame = (Sav1VideoFrame *)malloc(sizeof(Sav1VideoFrame))) == NULL) {
+            sav1_set_error(convert_context->ctx, "malloc() failed in convert_av1_start()");
+            sav1_set_critical_error_flag(convert_context->ctx);
+        }
         output_frame->codec = SAV1_CODEC_AV1;
         output_frame->pixel_format = convert_context->desired_pixel_format;
         output_frame->color_depth = 8;

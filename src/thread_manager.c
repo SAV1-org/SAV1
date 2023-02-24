@@ -7,103 +7,101 @@
 void
 thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)
 {
-    if ((ThreadManager *thread_manager = (ThreadManager *)malloc(sizeof(ThreadManager))) == NULL) {
-        sav1_set_error(ctx, "Critical Error: Malloc failed in thread_manager_init");
+    if (((*manager) = (ThreadManager *)malloc(sizeof(ThreadManager))) == NULL) {
+        sav1_set_error(ctx, "malloc() failed in thread_manager_init()");
         sav1_set_critical_error_flag(ctx);
     }
-    
-    *manager = thread_manager;
 
     // always create the output queues
-    sav1_thread_queue_init(&(thread_manager->video_output_queue), ctx,
+    sav1_thread_queue_init(&((*manager)->video_output_queue), ctx,
                            ctx->settings->queue_size);
-    sav1_thread_queue_init(&(thread_manager->audio_output_queue), ctx,
+    sav1_thread_queue_init(&((*manager)->audio_output_queue), ctx,
                            ctx->settings->queue_size);
 
     // setup video if requested
     if (ctx->settings->codec_target & SAV1_CODEC_AV1) {
         // initialize the thread queues
-        sav1_thread_queue_init(&(thread_manager->video_webm_frame_queue), ctx,
+        sav1_thread_queue_init(&((*manager)->video_webm_frame_queue), ctx,
                                ctx->settings->queue_size);
-        sav1_thread_queue_init(&(thread_manager->video_dav1d_picture_queue), ctx,
+        sav1_thread_queue_init(&((*manager)->video_dav1d_picture_queue), ctx,
                                ctx->settings->queue_size);
-        decode_av1_init(&(thread_manager->decode_av1_context), ctx,
-                        thread_manager->video_webm_frame_queue,
-                        thread_manager->video_dav1d_picture_queue);
+        decode_av1_init(&((*manager)->decode_av1_context), ctx,
+                        (*manager)->video_webm_frame_queue,
+                        (*manager)->video_dav1d_picture_queue);
 
         if (ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO) {
             // setup video processing with custom stage
-            sav1_thread_queue_init(&(thread_manager->video_custom_processing_queue), ctx,
+            sav1_thread_queue_init(&((*manager)->video_custom_processing_queue), ctx,
                                    ctx->settings->queue_size);
-            convert_av1_init(&(thread_manager->convert_av1_context), ctx,
-                             thread_manager->video_dav1d_picture_queue,
-                             thread_manager->video_custom_processing_queue);
+            convert_av1_init(&((*manager)->convert_av1_context), ctx,
+                             (*manager)->video_dav1d_picture_queue,
+                             (*manager)->video_custom_processing_queue);
             custom_processing_video_init(
-                &(thread_manager->custom_processing_video_context), ctx,
+                &((*manager)->custom_processing_video_context), ctx,
                 ctx->settings->custom_video_frame_processing,
                 ctx->settings->custom_video_frame_destroy,
-                thread_manager->video_custom_processing_queue,
-                thread_manager->video_output_queue);
+                (*manager)->video_custom_processing_queue,
+                (*manager)->video_output_queue);
         }
         else {
             // setup video processing without custom stage
-            thread_manager->custom_processing_video_context = NULL;
-            thread_manager->video_custom_processing_queue = NULL;
-            convert_av1_init(&(thread_manager->convert_av1_context), ctx,
-                             thread_manager->video_dav1d_picture_queue,
-                             thread_manager->video_output_queue);
+            (*manager)->custom_processing_video_context = NULL;
+            (*manager)->video_custom_processing_queue = NULL;
+            convert_av1_init(&((*manager)->convert_av1_context), ctx,
+                             (*manager)->video_dav1d_picture_queue,
+                             (*manager)->video_output_queue);
         }
     }
     else {
-        thread_manager->video_webm_frame_queue = NULL;
-        thread_manager->video_dav1d_picture_queue = NULL;
+        (*manager)->video_webm_frame_queue = NULL;
+        (*manager)->video_dav1d_picture_queue = NULL;
     }
 
     // setup audio if requested
     if (ctx->settings->codec_target & SAV1_CODEC_OPUS) {
         // initialize thread queue
-        sav1_thread_queue_init(&(thread_manager->audio_webm_frame_queue), ctx,
+        sav1_thread_queue_init(&((*manager)->audio_webm_frame_queue), ctx,
                                ctx->settings->queue_size);
 
         if (ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO) {
             // setup audio processing with custom stage
-            sav1_thread_queue_init(&(thread_manager->audio_custom_processing_queue), ctx,
+            sav1_thread_queue_init(&((*manager)->audio_custom_processing_queue), ctx,
                                    ctx->settings->queue_size);
-            decode_opus_init(&(thread_manager->decode_opus_context), ctx,
-                             thread_manager->audio_webm_frame_queue,
-                             thread_manager->audio_custom_processing_queue);
+            decode_opus_init(&((*manager)->decode_opus_context), ctx,
+                             (*manager)->audio_webm_frame_queue,
+                             (*manager)->audio_custom_processing_queue);
             custom_processing_audio_init(
-                &(thread_manager->custom_processing_audio_context), ctx,
+                &((*manager)->custom_processing_audio_context), ctx,
                 ctx->settings->custom_audio_frame_processing,
                 ctx->settings->custom_audio_frame_destroy,
-                thread_manager->audio_custom_processing_queue,
-                thread_manager->audio_output_queue);
+                (*manager)->audio_custom_processing_queue,
+                (*manager)->audio_output_queue);
         }
         else {
             // setup audio processing without custom stage
-            decode_opus_init(&(thread_manager->decode_opus_context), ctx,
-                             thread_manager->audio_webm_frame_queue,
-                             thread_manager->audio_output_queue);
+            decode_opus_init(&((*manager)->decode_opus_context), ctx,
+                             (*manager)->audio_webm_frame_queue,
+                             (*manager)->audio_output_queue);
         }
     }
     else {
-        thread_manager->audio_webm_frame_queue = NULL;
+        (*manager)->audio_webm_frame_queue = NULL;
     }
 
     // always create the webm parser
-    parse_init(&(thread_manager->parse_context), ctx,
-               thread_manager->video_webm_frame_queue,
-               thread_manager->audio_webm_frame_queue);
-    thread_mutex_lock(thread_manager->parse_context->wait_after_parse);
+    parse_init(&((*manager)->parse_context), ctx,
+               (*manager)->video_webm_frame_queue,
+               (*manager)->audio_webm_frame_queue);
+    thread_mutex_lock((*manager)->parse_context->wait_after_parse);
 
     // populate the thread manager struct
-    thread_manager->ctx = ctx;
-    thread_manager->parse_thread = NULL;
-    thread_manager->decode_av1_thread = NULL;
-    thread_manager->convert_av1_thread = NULL;
-    thread_manager->decode_opus_thread = NULL;
-    thread_manager->custom_processing_video_thread = NULL;
-    thread_manager->custom_processing_audio_thread = NULL;
+    (*manager)->ctx = ctx;
+    (*manager)->parse_thread = NULL;
+    (*manager)->decode_av1_thread = NULL;
+    (*manager)->convert_av1_thread = NULL;
+    (*manager)->decode_opus_thread = NULL;
+    (*manager)->custom_processing_video_thread = NULL;
+    (*manager)->custom_processing_audio_thread = NULL;
 }
 
 void
