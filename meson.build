@@ -8,7 +8,9 @@ inc_dirs += include_directories('dependencies/libwebm/webm_parser/include')
 inc_dirs += include_directories('dependencies/libwebm/webm_parser') # so it can see .h files in that directory
 inc_dirs += include_directories('dependencies/libyuv/include')
 inc_dirs += include_directories('dependencies/thread')
-inc_dirs += include_directories('dependencies/x64-windows/include')
+if build_machine.system() == 'windows'
+  inc_dirs += include_directories('dependencies/x64-windows/include')
+endif
 
 project_source_files = [
   'src/sav1.c',
@@ -108,12 +110,14 @@ project_source_files = [
   ]
 ]
 
-deps = []
-
 c = meson.get_compiler('c')
 dir_base = meson.current_source_dir()
-deps += c.find_library('opus', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
-deps += c.find_library('dav1d', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
-deps += c.find_library('winmm', required: true) # for thread.h on windows
+deps = []
+
+if build_machine.system() == 'windows'
+  deps += c.find_library('opus', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
+  deps += c.find_library('dav1d', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
+  deps += c.find_library('winmm', required: true) # for thread.h on windows
+endif
 
 library('sav1', project_source_files, include_directories: inc_dirs, dependencies: deps)
