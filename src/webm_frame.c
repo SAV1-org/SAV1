@@ -3,19 +3,26 @@
 #include <assert.h>
 #include <stdlib.h>
 
-void
+int
 webm_frame_init(WebMFrame **frame, size_t size)
 {
-    WebMFrame *webm_frame = (WebMFrame *)malloc(sizeof(WebMFrame));
-    *frame = webm_frame;
+    if ((*frame = (WebMFrame *)malloc(sizeof(WebMFrame))) == NULL) {
+        return -1;
+    }
 
-    webm_frame->data = (uint8_t *)malloc(size * sizeof(uint8_t));
-    webm_frame->size = size;
-    webm_frame->timecode = 0;
-    webm_frame->codec = 0;
-    webm_frame->do_discard = 0;
-    webm_frame->sentinel = 0;
-    webm_frame->is_key_frame = 0;
+    if (((*frame)->data = (uint8_t *)malloc(size * sizeof(uint8_t))) == NULL) {
+        free(*frame);
+        return -1;
+    }
+
+    (*frame)->size = size;
+    (*frame)->timecode = 0;
+    (*frame)->codec = 0;
+    (*frame)->do_discard = 0;
+    (*frame)->sentinel = 0;
+    (*frame)->is_key_frame = 0;
+
+    return 0;
 }
 
 void

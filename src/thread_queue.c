@@ -7,12 +7,38 @@ void
 sav1_thread_queue_init(Sav1ThreadQueue **sav1_queue, Sav1InternalContext *ctx,
                        size_t capacity)
 {
-    *sav1_queue = (Sav1ThreadQueue *)malloc(sizeof(Sav1ThreadQueue));
-    (*sav1_queue)->data = (void **)malloc(capacity * sizeof(void *));
+    if ((*sav1_queue = (Sav1ThreadQueue *)malloc(sizeof(Sav1ThreadQueue))) == NULL) {
+        sav1_set_error(ctx, "Critical Error: Malloc failed in sav1_thread_queue_init");
+        sav1_set_critical_error_flag(ctx);
+    }
+
+    if (((*sav1_queue)->data = (void **)malloc(capacity * sizeof(void *))) == NULL) {
+        free(*sav1_queue);
+        sav1_set_error(ctx, "Critical Error: Malloc failed in sav1_thread_queue_init");
+        sav1_set_critical_error_flag(ctx);
+    }
     (*sav1_queue)->capacity = capacity;
-    (*sav1_queue)->queue = (thread_queue_t *)malloc(sizeof(thread_queue_t));
-    (*sav1_queue)->push_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t));
-    (*sav1_queue)->pop_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t));
+    if (((*sav1_queue)->queue = (thread_queue_t *)malloc(sizeof(thread_queue_t))) == NULL) {
+        free(*sav1_queue->data);
+        free(*sav1_queue);
+        sav1_set_error(ctx, "Critical Error: Malloc failed in sav1_thread_queue_init");
+        sav1_set_critical_error_flag(ctx);
+    }
+    if (((*sav1_queue)->push_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) == NULL) {
+        free(*sav1_queue->queue);
+        free(*sav1_queue->data);
+        free(*sav1_queue);
+        sav1_set_error(ctx, "Critical Error: Malloc failed in sav1_thread_queue_init");
+        sav1_set_critical_error_flag(ctx);
+    }
+    if (((*sav1_queue)->pop_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) == NULL) {
+        free(*sav1_queue->push_lock);
+        free(*sav1_queue->queue);
+        free(*sav1_queue->data);
+        free(*sav1_queue);
+        sav1_set_error(ctx, "Critical Error: Malloc failed in sav1_thread_queue_init");
+        sav1_set_critical_error_flag(ctx);
+    }
     (*sav1_queue)->ctx = ctx;
     thread_queue_init((*sav1_queue)->queue, capacity, (*sav1_queue)->data, 0);
     thread_mutex_init((*sav1_queue)->push_lock);

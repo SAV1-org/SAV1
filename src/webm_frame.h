@@ -14,7 +14,7 @@ typedef struct WebMFrame {
     int is_key_frame;
 } WebMFrame;
 
-void
+int
 webm_frame_init(WebMFrame **frame, size_t size);
 
 void

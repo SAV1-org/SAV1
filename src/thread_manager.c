@@ -7,7 +7,11 @@
 void
 thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)
 {
-    ThreadManager *thread_manager = (ThreadManager *)malloc(sizeof(ThreadManager));
+    if ((ThreadManager *thread_manager = (ThreadManager *)malloc(sizeof(ThreadManager))) == NULL) {
+        sav1_set_error(ctx, "Critical Error: Malloc failed in thread_manager_init");
+        sav1_set_critical_error_flag(ctx);
+    }
+    
     *manager = thread_manager;
 
     // always create the output queues
