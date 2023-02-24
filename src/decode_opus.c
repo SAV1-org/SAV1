@@ -63,11 +63,6 @@ decode_opus_start(void *context)
             opus_decode(decode_context->decoder, input_frame->data, input_frame->size,
                         (opus_int16 *)decode_context->decode_buffer, MAX_DECODE_LEN, 0);
 
-        if (input_frame->do_discard) {
-            webm_frame_destroy(input_frame);
-            continue;
-        }
-
         // setup the output frame
         // TODO: calculate duration
         Sav1AudioFrame *output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame));
