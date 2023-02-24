@@ -8,8 +8,7 @@
 #include "sav1_audio_frame.h"
 #include "sav1_internal.h"
 
-// TODO: Should this max decode thing be in terms of bytes, uint16s, something else?
-#define MAX_DECODE_LEN 10000
+#define MAX_DECODE_LEN 11520 // ((48000Hz * 120ms) / 1000) * 2
 
 void
 decode_opus_init(DecodeOpusContext **context, Sav1InternalContext *ctx,
@@ -19,7 +18,7 @@ decode_opus_init(DecodeOpusContext **context, Sav1InternalContext *ctx,
         (DecodeOpusContext *)malloc(sizeof(DecodeOpusContext));
     *context = decode_context;
 
-    decode_context->decode_buffer = (uint8_t *)malloc(MAX_DECODE_LEN * sizeof(uint8_t));
+    decode_context->decode_buffer = (opus_int16 *)malloc(MAX_DECODE_LEN * sizeof(opus_int16));
     decode_context->input_queue = input_queue;
     decode_context->output_queue = output_queue;
     decode_context->frequency = ctx->settings->frequency;
@@ -61,7 +60,7 @@ decode_opus_start(void *context)
 
         int num_samples =
             opus_decode(decode_context->decoder, input_frame->data, input_frame->size,
-                        (opus_int16 *)decode_context->decode_buffer, MAX_DECODE_LEN, 0);
+                        decode_context->decode_buffer, MAX_DECODE_LEN, 0);
 
         if (input_frame->do_discard) {
             webm_frame_destroy(input_frame);
@@ -69,11 +68,11 @@ decode_opus_start(void *context)
         }
 
         // setup the output frame
-        // TODO: calculate duration
         Sav1AudioFrame *output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame));
         output_frame->codec = SAV1_CODEC_OPUS;
         output_frame->timecode = input_frame->timecode;
         output_frame->sentinel = input_frame->sentinel;
+        output_frame->duration = (num_samples * 1000) / (decode_context->frequency);
         webm_frame_destroy(input_frame);
 
         // copy the decoded audio data

@@ -14,7 +14,7 @@ typedef struct DecodeOpusContext {
     Sav1ThreadQueue *output_queue;
     thread_atomic_int_t do_decode;
     OpusDecoder *decoder;
-    uint8_t *decode_buffer;
+    opus_int16 *decode_buffer;
     Sav1AudioFrequency frequency;
     Sav1AudioChannel channels;
     Sav1InternalContext *ctx;
