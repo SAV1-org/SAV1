@@ -120,4 +120,33 @@ if build_machine.system() == 'windows'
   deps += c.find_library('winmm', required: true) # for thread.h on windows
 endif
 
-library('sav1', project_source_files, include_directories: inc_dirs, dependencies: deps)
+if build_machine.system() == 'windows'
+  sav1_name_prefix = ''
+else
+  sav1_name_prefix = 'lib'
+endif
+
+sav1_lib = library('sav1',
+                   project_source_files,
+                   include_directories: inc_dirs,
+                   dependencies: deps,
+                   name_prefix: sav1_name_prefix,
+                   install: true,
+                   install_dir: dir_base)
+
+dav4dplay_includes = [include_directories('include')]
+if build_machine.system() == 'windows'
+  dav4dplay_includes += include_directories('dependencies/x64-windows/include')
+endif
+
+dav4dplay_deps = []
+if build_machine.system() == 'windows'
+  dav4dplay_deps += c.find_library('SDL2', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
+endif
+
+message(dir_base)
+executable('dav4dplay', 'examples/dav4dplay.c', 
+            include_directories: dav4dplay_includes,
+            dependencies: dav4dplay_deps, 
+            link_with: sav1_lib,
+            install: true, install_dir: dir_base)

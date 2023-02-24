@@ -92,6 +92,7 @@ main(int argc, char *argv[])
     int needs_initial_resize = 1;
     uint64_t duration = 0;
     SDL_Event event;
+    int mouse_x, mouse_y;
 
     while (running) {
         SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 103, 155, 203));
@@ -244,7 +245,6 @@ main(int argc, char *argv[])
 
                 case SDL_MOUSEBUTTONDOWN:
                     // seek to mouse click
-                    int mouse_x, mouse_y;
                     SDL_GetMouseState(&mouse_x, &mouse_y);
                     if (mouse_y < screen_height - 2 * padding) {
                         if (is_paused) {
