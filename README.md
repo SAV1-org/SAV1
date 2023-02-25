@@ -13,10 +13,9 @@ Our current build generates a video player called dav4dplay. Once, built, invoke
 * Install meson and ninja
 ```
 meson setup build
-cd build
-ninja
+meson install -C build
 ```
-Generates a sav1 lib in the build/ folder
+Compiles sav1 and dav4dplay, installing them in the project root
 
 ### Windows
 ```
