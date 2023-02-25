@@ -1,6 +1,6 @@
 project('sav1', ['c', 'cpp'],
   version : '0.0.1',
-  default_options : ['warning_level=3'])
+  default_options : ['warning_level=3', 'buildtype=release', 'debug=false'])
 
 inc_dirs = []
 inc_dirs += include_directories('include')

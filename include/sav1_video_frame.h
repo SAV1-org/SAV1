@@ -18,10 +18,10 @@ typedef struct Sav1VideoFrame {
     int sentinel;
 } Sav1VideoFrame;
 
-int
+SAV1_API int
 sav1_video_frame_destroy(Sav1Context *context, Sav1VideoFrame *frame);
 
-int
+SAV1_API int
 sav1_video_frame_clone(Sav1Context *context, Sav1VideoFrame *src_frame,
                        Sav1VideoFrame **dst_frame);
 
