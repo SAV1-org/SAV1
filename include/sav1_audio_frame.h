@@ -16,10 +16,10 @@ typedef struct Sav1AudioFrame {
     int sentinel;
 } Sav1AudioFrame;
 
-int
+SAV1_API int
 sav1_audio_frame_destroy(Sav1Context *context, Sav1AudioFrame *frame);
 
-int
+SAV1_API int
 sav1_audio_frame_clone(Sav1Context *context, Sav1AudioFrame *src_frame,
                        Sav1AudioFrame **dst_frame);
 

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "common.h"
 
 typedef struct Sav1VideoFrame Sav1VideoFrame;
 typedef struct Sav1AudioFrame Sav1AudioFrame;
@@ -56,16 +57,16 @@ typedef struct Sav1Settings {
     Sav1PlaybackMode playback_mode;
 } Sav1Settings;
 
-void
+SAV1_API void
 sav1_default_settings(Sav1Settings *settings, char *file_name);
 
-void
+SAV1_API void
 sav1_settings_use_custom_video_processing(
     Sav1Settings *settings,
     void *(*processing_function)(Sav1VideoFrame *frame, void *cookie),
     void (*destroy_function)(void *, void *), void *cookie);
 
-void
+SAV1_API void
 sav1_settings_use_custom_audio_processing(
     Sav1Settings *settings,
     void *(*processing_function)(Sav1AudioFrame *frame, void *cookie),
