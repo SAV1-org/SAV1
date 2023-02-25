@@ -178,6 +178,7 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             // we no longer need to seek for AV1 frames
             seek_update_start_time(ctx);
             ctx->do_seek ^= SAV1_CODEC_AV1;
+            ctx->next_video_frame->timecode = ctx->seek_timecode;
         }
         else {
             // throw out this frame and try another one if we can
