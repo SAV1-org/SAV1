@@ -11,9 +11,11 @@ custom_processing_video_init(CustomProcessingVideoContext **context,
                              void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
-    if (((*context) = (CustomProcessingVideoContext *)malloc(sizeof(CustomProcessingVideoContext))) == NULL) {
+    if (((*context) = (CustomProcessingVideoContext *)malloc(
+             sizeof(CustomProcessingVideoContext))) == NULL) {
         sav1_set_error(ctx, "malloc() failed in custom_processing_video_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
 
     (*context)->process_function = process_function;

@@ -264,9 +264,10 @@ class Sav1Callback : public Callback {
 
         // create the WebMFrame
         WebMFrame *frame;
-        if (webm_frame_init(&frame, *bytes_remaining) < 0) {
-            sav1_set_error(this->context->ctx, "malloc() failed in webm_init()");
+        if (webm_frame_init(&frame, *bytes_remaining)) {
+            sav1_set_error(this->context->ctx, "malloc() failed in webm_frame_init()");
             sav1_set_critical_error_flag(this->context->ctx);
+            return Status(Status::kNotEnoughMemory);
         }
         frame->timecode = this->timecode;
 

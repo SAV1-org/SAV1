@@ -11,9 +11,11 @@ custom_processing_audio_init(CustomProcessingAudioContext **context,
                              void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
-    if (((*context) = (CustomProcessingAudioContext *)malloc(sizeof(CustomProcessingAudioContext))) == NULL) {
+    if (((*context) = (CustomProcessingAudioContext *)malloc(
+             sizeof(CustomProcessingAudioContext))) == NULL) {
         sav1_set_error(ctx, "malloc() failed in custom_processing_audio_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
 
     (*context)->process_function = process_function;

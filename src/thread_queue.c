@@ -10,34 +10,42 @@ sav1_thread_queue_init(Sav1ThreadQueue **sav1_queue, Sav1InternalContext *ctx,
     if (((*sav1_queue) = (Sav1ThreadQueue *)malloc(sizeof(Sav1ThreadQueue))) == NULL) {
         sav1_set_error(ctx, "malloc() failed in sav1_thread_queue_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
 
     if (((*sav1_queue)->data = (void **)malloc(capacity * sizeof(void *))) == NULL) {
         free(*sav1_queue);
         sav1_set_error(ctx, "malloc() failed in sav1_thread_queue_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
     (*sav1_queue)->capacity = capacity;
-    if (((*sav1_queue)->queue = (thread_queue_t *)malloc(sizeof(thread_queue_t))) == NULL) {
+    if (((*sav1_queue)->queue = (thread_queue_t *)malloc(sizeof(thread_queue_t))) ==
+        NULL) {
         free((*sav1_queue)->data);
         free(*sav1_queue);
         sav1_set_error(ctx, "malloc() failed in sav1_thread_queue_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
-    if (((*sav1_queue)->push_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) == NULL) {
+    if (((*sav1_queue)->push_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) ==
+        NULL) {
         free((*sav1_queue)->queue);
         free((*sav1_queue)->data);
         free((*sav1_queue));
         sav1_set_error(ctx, "malloc() failed in sav1_thread_queue_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
-    if (((*sav1_queue)->pop_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) == NULL) {
+    if (((*sav1_queue)->pop_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) ==
+        NULL) {
         free((*sav1_queue)->push_lock);
         free((*sav1_queue)->queue);
         free((*sav1_queue)->data);
         free((*sav1_queue));
         sav1_set_error(ctx, "malloc() failed in sav1_thread_queue_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
     (*sav1_queue)->ctx = ctx;
     thread_queue_init((*sav1_queue)->queue, capacity, (*sav1_queue)->data, 0);

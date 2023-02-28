@@ -8,7 +8,7 @@
 #include "sav1_audio_frame.h"
 #include "sav1_internal.h"
 
-#define MAX_DECODE_LEN 11520 // ((48000Hz * 120ms) / 1000) * 2
+#define MAX_DECODE_LEN 11520  // ((48000Hz * 120ms) / 1000) * 2
 
 void
 decode_opus_init(DecodeOpusContext **context, Sav1InternalContext *ctx,
@@ -17,12 +17,15 @@ decode_opus_init(DecodeOpusContext **context, Sav1InternalContext *ctx,
     if ((*context = (DecodeOpusContext *)malloc(sizeof(DecodeOpusContext))) == NULL) {
         sav1_set_error(ctx, "malloc() failed in decode_opus_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
 
-    if (((*context)->decode_buffer = (opus_int16 *)malloc(MAX_DECODE_LEN * sizeof(opus_int16))) == NULL) {
+    if (((*context)->decode_buffer =
+             (opus_int16 *)malloc(MAX_DECODE_LEN * sizeof(opus_int16))) == NULL) {
         free(*context);
         sav1_set_error(ctx, "malloc() failed in decode_opus_init()");
-        sav1_set_critical_error_flag(ctx);      
+        sav1_set_critical_error_flag(ctx);
+        return;
     }
     (*context)->input_queue = input_queue;
     (*context)->output_queue = output_queue;
@@ -37,6 +40,7 @@ decode_opus_init(DecodeOpusContext **context, Sav1InternalContext *ctx,
     if (error != OPUS_OK) {
         sav1_set_error(ctx, "opus decoder failed to create in decode_opus_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
 }
 
@@ -72,6 +76,7 @@ decode_opus_start(void *context)
         if ((output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame))) == NULL) {
             sav1_set_error(decode_context->ctx, "malloc() failed in decode_opus_start()");
             sav1_set_critical_error_flag(decode_context->ctx);
+            return -1;
         }
         output_frame->codec = SAV1_CODEC_OPUS;
         output_frame->timecode = input_frame->timecode;
@@ -88,6 +93,7 @@ decode_opus_start(void *context)
             free(output_frame);
             sav1_set_error(decode_context->ctx, "malloc() failed in decode_opus_start()");
             sav1_set_critical_error_flag(decode_context->ctx);
+            return -1;
         }
         memcpy(output_frame->data, decode_context->decode_buffer, output_frame->size);
 

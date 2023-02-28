@@ -19,6 +19,7 @@ decode_av1_init(DecodeAv1Context **context, Sav1InternalContext *ctx,
     if (((*context) = (DecodeAv1Context *)malloc(sizeof(DecodeAv1Context))) == NULL) {
         sav1_set_error(ctx, "malloc() failed in decode_av1_init()");
         sav1_set_critical_error_flag(ctx);
+        return;
     }
 
     (*context)->ctx = ctx;
@@ -58,6 +59,7 @@ decode_av1_start(void *context)
     if ((picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture))) == NULL) {
         sav1_set_error(decode_context->ctx, "malloc() failed in decode_av1_start()");
         sav1_set_critical_error_flag(decode_context->ctx);
+        return -1;
     }
     memset(picture, 0, sizeof(Dav1dPicture));
 
@@ -153,9 +155,12 @@ decode_av1_start(void *context)
                     }
 
                     // allocate a new dav1d picture
-                    if ((picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture))) == NULL) {
-                        sav1_set_error(decode_context->ctx, "malloc() failed in decode_av1_start()");
+                    if ((picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture))) ==
+                        NULL) {
+                        sav1_set_error(decode_context->ctx,
+                                       "malloc() failed in decode_av1_start()");
                         sav1_set_critical_error_flag(decode_context->ctx);
+                        return -1;
                     }
                     memset(picture, 0, sizeof(Dav1dPicture));
                 }
