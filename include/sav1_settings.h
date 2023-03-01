@@ -57,6 +57,31 @@ typedef struct Sav1Settings {
     Sav1PlaybackMode playback_mode;
 } Sav1Settings;
 
+/**
+ * @brief Populate settings struct with defaults
+ * 
+ * This is the easiest way to get your settings up and running to create a
+ * @ref Sav1Context with. If you don't call @ref sav1_default_settings, you
+ * have to set every setting youself. It's recommended to use
+ * @ref sav1_default_settings to populate your settings struct, and then
+ * changing any settings you desire from the defaults after.
+ * 
+ * - @ref Sav1Settings.codec_target defaults to `SAV1_CODEC_AV1 | SAV1_CODEC_OPUS`
+ * - @ref Sav1Settings.desired_pixel_format defaults to `SAV1_PIXEL_FORMAT_RGBA`
+ * - @ref Sav1Settings.queue_size defaults to `20`
+ * - @ref Sav1Settings.frequency defaults to `SAV1_AUDIO_FREQ_48KHZ`
+ * - @ref Sav1Settings.channels defaults to `SAV1_AUDIO_STEREO`
+ * - @ref Sav1Settings.playback_mode defaults to `SAV1_PLAYBACK_TIMED`
+ * 
+ * @param[in] settings pointer to a SAV1 settings struct
+ * @param[in] file_name path to file to play
+ * @return char*
+ * 
+ * @sa Sav1PixelFormat
+ * @sa Sav1AudioFrequency
+ * @sa Sav1AudioChannel
+ * @sa Sav1PlaybackMode
+ */
 SAV1_API void
 sav1_default_settings(Sav1Settings *settings, char *file_name);
 
