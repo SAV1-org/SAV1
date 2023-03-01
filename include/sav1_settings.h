@@ -45,10 +45,10 @@ typedef struct Sav1Settings {
     int use_custom_processing;
     double playback_speed;
     int on_video_end;
-    void *(*custom_video_frame_processing)(Sav1VideoFrame *, void *);
+    int (*custom_video_frame_processing)(Sav1VideoFrame *, void *);
     void (*custom_video_frame_destroy)(void *, void *);
     void *custom_video_frame_processing_cookie;
-    void *(*custom_audio_frame_processing)(Sav1AudioFrame *, void *);
+    int (*custom_audio_frame_processing)(Sav1AudioFrame *, void *);
     void (*custom_audio_frame_destroy)(void *, void *);
     void *custom_audio_frame_processing_cookie;
     Sav1PixelFormat desired_pixel_format;
@@ -63,13 +63,13 @@ sav1_default_settings(Sav1Settings *settings, char *file_name);
 SAV1_API void
 sav1_settings_use_custom_video_processing(
     Sav1Settings *settings,
-    void *(*processing_function)(Sav1VideoFrame *frame, void *cookie),
+    int (*processing_function)(Sav1VideoFrame *frame, void *cookie),
     void (*destroy_function)(void *, void *), void *cookie);
 
 SAV1_API void
 sav1_settings_use_custom_audio_processing(
     Sav1Settings *settings,
-    void *(*processing_function)(Sav1AudioFrame *frame, void *cookie),
+    int (*processing_function)(Sav1AudioFrame *frame, void *cookie),
     void (*destroy_function)(void *, void *), void *cookie);
 
 #endif

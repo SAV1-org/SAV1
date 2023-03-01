@@ -7,7 +7,7 @@
 void
 custom_processing_audio_init(CustomProcessingAudioContext **context,
                              Sav1InternalContext *ctx,
-                             void *(*process_function)(Sav1AudioFrame *, void *),
+                             int (*process_function)(Sav1AudioFrame *, void *),
                              void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
@@ -40,19 +40,29 @@ custom_processing_audio_start(void *context)
     thread_atomic_int_store(&(process_context->do_process), 1);
 
     while (thread_atomic_int_load(&(process_context->do_process))) {
-        Sav1AudioFrame *input_frame =
+        Sav1AudioFrame *frame =
             (Sav1AudioFrame *)sav1_thread_queue_pop(process_context->input_queue);
 
-        if (input_frame == NULL) {
+        if (frame == NULL) {
             sav1_thread_queue_push(process_context->output_queue, NULL);
             break;
         }
 
-        void *output_frame =
-            process_context->process_function(input_frame, process_context->cookie);
+        // apply the custom processing function
+        int status = process_context->process_function(frame, process_context->cookie);
 
-        sav1_thread_queue_push(process_context->output_queue, output_frame);
+        // check for error
+        if (status) {
+            sav1_set_error_with_code(process_context->ctx,
+                                     "custom_processing_audio function returned %d",
+                                     status);
+            sav1_thread_queue_push(process_context->output_queue, NULL);
+            return status;
+        }
+
+        sav1_thread_queue_push(process_context->output_queue, frame);
     }
+
     return 0;
 }
 
@@ -80,6 +90,9 @@ custom_processing_audio_drain_output_queue(CustomProcessingAudioContext *context
             break;
         }
 
-        context->destroy_function(frame, context->cookie);
+        if (context->destroy_function != NULL) {
+            context->destroy_function(frame->custom_data, context->cookie);
+        }
+        sav1_audio_frame_destroy(context->ctx->context, frame);
     }
 }
