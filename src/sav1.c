@@ -567,3 +567,9 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
 
     return 0;
 }
+
+void sav1_get_version(int *major, int *minor, int *patch) {
+    *major = SAV1_MAJOR_VERSION;
+    *minor = SAV1_MINOR_VERSION;
+    *patch = SAV1_PATCH_VERSION;
+}

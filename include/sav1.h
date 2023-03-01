@@ -66,4 +66,18 @@ sav1_get_playback_duration(Sav1Context *context, uint64_t *duration_ms);
 SAV1_API int
 sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms);
 
+#define SAV1_MAJOR_VERSION 0
+#define SAV1_MINOR_VERSION 1
+#define SAV1_PATCH_VERSION 0
+
+/**
+ * @brief Populate out variables with linked SAV1 version
+ * 
+ * @param[out] major populated with SAV1 major version
+ * @param[out] minor populated with SAV1 minor version
+ * @param[out] patch populated with SAV1 patch version
+ */
+SAV1_API void
+sav1_get_version(int *major, int *minor, int *patch);
+
 #endif
