@@ -6,33 +6,38 @@ Currently SAV1 is in an alpha state.
 
 Uses `dav1d` to efficiently decode video, `libopus` to efficiently decode audio-- vendors `libwebm` and `libyuv` for file parsing and color conversion respectively.
 
-## Build instructions
-Our current build generates a video player called dav4dplay. Once, built, invoke it with a path to a test file to play that video. `dav4dplay test_files/ferris.webm` (for example).
+## Install dependencies for build
+### Windows
+```
+pip install meson
+install_windows_deps.bat
+mingw32-make all_dependencies (<- run that one in bash)
+```
++ Download and install ninja from its website
 
-### Experimental: Meson build
-* Install meson and ninja
+### MacOS
+```
+pip3 install meson
+brew install sdl2 dav1d opus ninja
+make all_dependencies
+```
+
+## Build with Meson
 ```
 meson setup build
 meson install -C build
 ```
-Compiles sav1 and dav4dplay, installing them in the project root
+Compiles sav1 and dav4dplay, installing them in the project root.
 
-### Windows
-```
-install_windows_deps.bat
-mingw32-make all_dependencies (<- run that one in bash)
-mingw32-make dav4dplay_win
-```
+Our current build generates a video player called dav4dplay. Once, built, invoke it with a path to a test file to play that video. `dav4dplay test_files/ferris.webm` (for example).
 
-### MacOS
-```
-brew install sdl2 dav1d opus
-make all_dependencies
-make dav4dplay_mac
-```
+## Build docs
++ Install doxygen
 
-### Linux
-Haven't yet tested on Linux, but it should be similar to Mac-- use a package manager to install sdl2, dav1d, and opus, then use the dav4dplay_mac command.
+```
+cd build
+doxygen doxyfile
+```
 
 ## Conversion to AV1/opus webm
 

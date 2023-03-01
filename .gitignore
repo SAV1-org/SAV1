@@ -16,3 +16,5 @@ vcpkg/
 test_files/_*
 *.DS_Store
 *.dylib
+docs/latex
+docs/html
