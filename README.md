@@ -35,7 +35,7 @@ Our current build generates a video player called dav4dplay. Once, built, invoke
 + Install doxygen
 
 ```
-cd build
+cd docs
 doxygen doxyfile
 ```
 
