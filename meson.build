@@ -1,6 +1,6 @@
 project('sav1', ['c', 'cpp'],
   version : '0.0.1',
-  default_options : ['warning_level=3', 'buildtype=release', 'debug=false'])
+  default_options : ['warning_level=3', 'buildtype=release', 'debug=false', 'cpp_std=c++11'])
 
 inc_dirs = []
 inc_dirs += include_directories('include')
@@ -118,6 +118,9 @@ if build_machine.system() == 'windows'
   deps += c.find_library('opus', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
   deps += c.find_library('dav1d', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
   deps += c.find_library('winmm', required: true) # for thread.h on windows
+else
+  deps += c.find_library('opus', required: true)
+  deps += c.find_library('dav1d', required: true)
 endif
 
 if build_machine.system() == 'windows'
@@ -142,6 +145,8 @@ endif
 dav4dplay_deps = []
 if build_machine.system() == 'windows'
   dav4dplay_deps += c.find_library('SDL2', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
+else
+  dav4dplay_deps += c.find_library('SDL2', required: true)
 endif
 
 message(dir_base)
