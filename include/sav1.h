@@ -19,12 +19,17 @@ typedef struct Sav1Context {
  * 
  * @param context pointer to an empty SAV1 context struct
  * @param settings pointer to an initialized SAV1 settings struct
- * @return 0 on success, or -1 on critical error
+ * @return 0 on success, or <0 on error
  */
 SAV1_API int
 sav1_create_context(Sav1Context *context, Sav1Settings *settings);
 
-
+/**
+ * @brief Destroy SAV1 Context
+ * 
+ * @param context pointer to a SAV1 context struct
+ * @return 0 on success, or <0 on error
+ */
 SAV1_API int
 sav1_destroy_context(Sav1Context *context);
 
