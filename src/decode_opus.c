@@ -82,6 +82,7 @@ decode_opus_start(void *context)
         output_frame->timecode = input_frame->timecode;
         output_frame->sentinel = input_frame->sentinel;
         output_frame->duration = (num_samples * 1000) / (decode_context->frequency);
+        output_frame->custom_data = NULL;
         webm_frame_destroy(input_frame);
 
         // copy the decoded audio data
