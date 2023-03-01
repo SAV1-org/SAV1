@@ -37,6 +37,17 @@
 int
 sav1_create_context(Sav1Context *context, Sav1Settings *settings)
 {
+    /**
+     * \brief Initialize SAV1 context
+     * 
+     * \param context: pointer to an empty SAV1 context struct
+     * 
+     * \param settings: pointer to an initialized SAV1 settings struct
+     * 
+     * \returns 0 on success, or -1 on critical error
+     * 
+     */
+
     CHECK_CONTEXT_VALID(context)
 
     if (context->is_initialized == 1) {
