@@ -14,8 +14,16 @@ typedef struct Sav1Context {
 #include "sav1_video_frame.h"
 #include "sav1_audio_frame.h"
 
+/**
+ * @brief Initialize SAV1 context
+ * 
+ * @param context pointer to an empty SAV1 context struct
+ * @param settings pointer to an initialized SAV1 settings struct
+ * @return 0 on success, or -1 on critical error
+ */
 SAV1_API int
 sav1_create_context(Sav1Context *context, Sav1Settings *settings);
+
 
 SAV1_API int
 sav1_destroy_context(Sav1Context *context);
