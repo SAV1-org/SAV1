@@ -38,6 +38,8 @@ typedef enum { SAV1_AUDIO_MONO = 1, SAV1_AUDIO_STEREO = 2 } Sav1AudioChannel;
 
 typedef enum { SAV1_PLAYBACK_TIMED, SAV1_PLAYBACK_FAST } Sav1PlaybackMode;
 
+typedef enum { SAV1_FILE_END_WAIT, SAV1_FILE_END_LOOP } Sav1OnFileEnd;
+
 typedef struct Sav1Settings {
     char *file_name;
     int codec_target;
@@ -55,6 +57,7 @@ typedef struct Sav1Settings {
     Sav1AudioFrequency frequency;
     Sav1AudioChannel channels;
     Sav1PlaybackMode playback_mode;
+    Sav1OnFileEnd on_file_end;
 } Sav1Settings;
 
 /**

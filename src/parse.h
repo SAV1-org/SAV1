@@ -2,6 +2,7 @@
 #define PARSE_H
 
 #include "thread_queue.h"
+#include "sav1_settings.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -16,6 +17,7 @@ typedef struct ParseContext {
     Sav1ThreadQueue *video_output_queue;
     Sav1ThreadQueue *audio_output_queue;
     int codec_target;
+    Sav1OnFileEnd on_file_end;
     thread_atomic_int_t status;
     thread_atomic_int_t do_parse;
     thread_atomic_int_t do_seek;

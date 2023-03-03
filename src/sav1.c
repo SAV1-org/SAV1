@@ -64,6 +64,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->next_audio_frame = NULL;
     ctx->audio_frame_ready = 0;
     ctx->do_seek = 0;
+    ctx->end_of_file = 0;
     if ((ctx->settings = (Sav1Settings *)malloc(sizeof(Sav1Settings))) == NULL) {
         RAISE_CRITICAL(ctx, "malloc() failed in sav1_create_context()");
     }
@@ -163,6 +164,48 @@ seek_update_start_time(Sav1InternalContext *ctx)
 }
 
 void
+file_end_update_start_time(Sav1InternalContext *ctx)
+{
+    // only update if all the frames have reached the end of the file
+    if (ctx->end_of_file != ctx->settings->codec_target) {
+        return;
+    }
+
+    // only update if they are on loop mode
+    if (ctx->settings->on_file_end != SAV1_FILE_END_LOOP) {
+        return;
+    }
+
+    // update the start time
+    int status = clock_gettime(CLOCK_MONOTONIC, ctx->start_time);
+    if (status) {
+        sav1_set_error_with_code(ctx, "clock_gettime() in file end handler returned %d",
+                                 status);
+        return;
+    }
+
+    // update the pause time
+    if (ctx->pause_time != NULL) {
+        status = clock_gettime(CLOCK_MONOTONIC, ctx->pause_time);
+        if (status) {
+            sav1_set_error_with_code(
+                ctx, "clock_gettime() in file end handler returned %d", status);
+            return;
+        }
+    }
+
+    // ensure that the old frames get deleted
+    if (ctx->curr_video_frame != NULL) {
+        ctx->curr_video_frame->timecode = 0;
+    }
+    if (ctx->curr_audio_frame != NULL) {
+        ctx->curr_audio_frame->timecode = 0;
+    }
+
+    ctx->end_of_file = 0;
+}
+
+void
 pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
 {
     // if we have no next frame, try to get one
@@ -170,6 +213,11 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
         sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) != 0) {
         ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
             ctx->thread_manager->video_output_queue);
+    }
+
+    if (ctx->end_of_file & SAV1_CODEC_AV1) {
+        file_end_update_start_time(ctx);
+        return;
     }
 
     // if we are seeking, throw out frames until we get to a sentinel frame
@@ -195,8 +243,17 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
 
     // while we have a next frame, and the next frame is ahead of current time
     while (ctx->next_video_frame != NULL && ctx->next_video_frame->timecode <= curr_ms) {
-        // clean up current frame before replacing it
         if (ctx->curr_video_frame != NULL) {
+            // if the new video frame is from before the current frame, then we've
+            // looped back to the start of the file
+            if (!ctx->do_seek &&
+                ctx->curr_video_frame->timecode > ctx->next_video_frame->timecode) {
+                ctx->end_of_file |= SAV1_CODEC_AV1;
+                file_end_update_start_time(ctx);
+                return;
+            }
+
+            // clean up current frame before replacing it
             sav1_video_frame_destroy(ctx->context, ctx->curr_video_frame);
         }
 
@@ -223,6 +280,11 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             ctx->thread_manager->audio_output_queue);
     }
 
+    if (ctx->end_of_file & SAV1_CODEC_OPUS) {
+        file_end_update_start_time(ctx);
+        return;
+    }
+
     // if we are seeking, throw out frames until we get to a sentinel frame
     while (ctx->next_audio_frame != NULL && ctx->do_seek & SAV1_CODEC_OPUS) {
         if (ctx->next_audio_frame->sentinel) {
@@ -245,8 +307,17 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
 
     // while we have a next frame, and the next frame is ahead of current time
     while (ctx->next_audio_frame != NULL && ctx->next_audio_frame->timecode <= curr_ms) {
-        // clean up current frame before replacing it
         if (ctx->curr_audio_frame != NULL) {
+            // if the new audio frame is from before the current frame, then we've
+            // looped back to the start of the file
+            if (!ctx->do_seek &&
+                ctx->curr_audio_frame->timecode > ctx->next_audio_frame->timecode) {
+                ctx->end_of_file |= SAV1_CODEC_OPUS;
+                file_end_update_start_time(ctx);
+                return;
+            }
+
+            // clean up current frame before replacing it
             sav1_audio_frame_destroy(ctx->context, ctx->curr_audio_frame);
         }
 
@@ -541,7 +612,6 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
 
     // save the time that we want to seek to
     ctx->seek_timecode = timecode_ms;
-
     // remove all the currently queued frames
     if (ctx->curr_video_frame != NULL) {
         sav1_video_frame_destroy(context, ctx->curr_video_frame);
@@ -564,11 +634,14 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
     ctx->audio_frame_ready = 0;
 
     ctx->do_seek = ctx->settings->codec_target;
+    ctx->end_of_file = 0;
 
     return 0;
 }
 
-void sav1_get_version(int *major, int *minor, int *patch) {
+void
+sav1_get_version(int *major, int *minor, int *patch)
+{
     *major = SAV1_MAJOR_VERSION;
     *minor = SAV1_MINOR_VERSION;
     *patch = SAV1_PATCH_VERSION;

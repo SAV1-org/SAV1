@@ -43,7 +43,7 @@ class Sav1Callback : public Callback {
         this->av1_codec_delay = 0;
         this->opus_codec_delay = 0;
         this->last_cluster_location = 0;
-        Sav1CuePoint cue = {0};
+        Sav1CuePoint cue = {0, 0};
         this->cue_points.push_back(cue);
         this->all_cue_points = false;
         this->skip_clusters = false;
@@ -369,6 +369,7 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
     parse_context->internal_state = (void *)state;
     parse_context->ctx = ctx;
     parse_context->codec_target = ctx->settings->codec_target;
+    parse_context->on_file_end = ctx->settings->on_file_end;
     parse_context->video_output_queue = video_output_queue;
     parse_context->audio_output_queue = audio_output_queue;
     parse_context->duration_lock = new thread_mutex_t;
@@ -421,6 +422,8 @@ parse_start(void *context)
     thread_atomic_int_store(&(parse_context->do_seek), 0);
 
     Status status;
+    bool looping = false;
+
     while (1) {
         thread_atomic_int_store(&(parse_context->do_parse), 1);
         thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
@@ -435,18 +438,31 @@ parse_start(void *context)
             }
             state->callback->mark_has_all_cue_points();
 
-            // wait until ThreadManager tells us to resume
-            thread_mutex_lock(parse_context->wait_to_acquire);
-            thread_mutex_lock(parse_context->wait_after_parse);
-            thread_mutex_unlock(parse_context->wait_after_parse);
-            thread_mutex_unlock(parse_context->wait_to_acquire);
+            if (parse_context->on_file_end == SAV1_FILE_END_WAIT) {
+                // wait until ThreadManager tells us to resume
+                thread_mutex_lock(parse_context->wait_to_acquire);
+                thread_mutex_lock(parse_context->wait_after_parse);
+                thread_mutex_unlock(parse_context->wait_after_parse);
+                thread_mutex_unlock(parse_context->wait_to_acquire);
+            }
+            else {
+                // jump back to the start
+                fseek(state->file, 0, SEEK_SET);
+                state->parser->DidSeek();
+                state->reader->SetPosition(0);
+                looping = true;
+            }
         }
 
         if (status.code < 0) {
             thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_ERROR);
             break;
         }
-        else if (thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
+        else if (looping) {
+            looping = false;
+            continue;
+        }
+        else if (!looping && thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
             break;
         }
 
