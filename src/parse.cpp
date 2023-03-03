@@ -9,13 +9,13 @@ extern "C" {
 #ifndef CPPTHROUGHANDTHROUGH
 }
 #endif
-#include "sav1_file_reader.h"
 
 #include <cassert>
 #include <vector>
 #include <webm/callback.h>
 #include <webm/status.h>
 #include <webm/webm_parser.h>
+#include <webm/file_reader.h>
 
 #define PARSE_TRACK_NUMBER_NOT_SPECIFIED 99999
 #define PARSE_SEEK_STATUS 5
@@ -30,7 +30,7 @@ typedef struct Sav1CuePoint {
 class Sav1Callback : public Callback {
    public:
     void
-    init(ParseContext *context, Sav1FileReader *reader)
+    init(ParseContext *context, FileReader *reader)
     {
         this->context = context;
         this->reader = reader;
@@ -323,7 +323,7 @@ class Sav1Callback : public Callback {
 
    private:
     ParseContext *context;
-    Sav1FileReader *reader;
+    FileReader *reader;
     std::uint64_t current_track_number;
     std::uint64_t av1_track_number;
     std::uint64_t opus_track_number;
@@ -340,7 +340,7 @@ class Sav1Callback : public Callback {
 };
 
 typedef struct ParseInternalState {
-    Sav1FileReader *reader;
+    FileReader *reader;
     WebmParser *parser;
     Sav1Callback *callback;
     FILE *file;
@@ -358,7 +358,7 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
 
     // create the webmparser objects
     state->callback = new Sav1Callback();
-    state->reader = new Sav1FileReader(state->file);
+    state->reader = new FileReader(state->file);
     state->parser = new WebmParser();
 
     // allocate the ParseContext
@@ -447,9 +447,8 @@ parse_start(void *context)
             }
             else {
                 // jump back to the start
-                fseek(state->file, 0, SEEK_SET);
                 state->parser->DidSeek();
-                state->reader->SetPosition(0);
+                state->reader->Seek(0);
                 looping = true;
             }
         }
@@ -474,9 +473,8 @@ parse_start(void *context)
         std::vector<Sav1CuePoint> cue_points = state->callback->get_cue_points();
         for (auto cue = cue_points.rbegin(); cue != cue_points.rend(); ++cue) {
             if (cue->timecode <= parse_context->seek_timecode) {
-                fseek(state->file, cue->cluster_location, SEEK_SET);
                 state->parser->DidSeek();
-                state->reader->SetPosition(cue->cluster_location);
+                state->reader->Seek(cue->cluster_location);
                 bool skip_clusters =
                     !state->callback->has_all_cue_points() && cue == cue_points.rbegin();
                 state->callback->set_skip_clusters(skip_clusters);

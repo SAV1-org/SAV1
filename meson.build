@@ -27,7 +27,6 @@ project_source_files = [
   'src/webm_frame.c',
   'src/convert_av1.cpp',
   'src/parse.cpp',
-  'src/sav1_file_reader.cpp',
   [
     'dependencies/libyuv/source/compare.cc',
     'dependencies/libyuv/source/compare_common.cc',

@@ -1,6 +1,6 @@
 libwebm:
 	rm -f dependencies/libwebm/webm_parser/object_files/*.o
-	g++ -c -std=c++11 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Idependencies/libwebm/webm_parser/include -Idependencies/libwebm/webm_parser dependencies/libwebm/webm_parser/src/*.cc
+	g++ -c -std=c++11 -Idependencies/libwebm/webm_parser/include -Idependencies/libwebm/webm_parser dependencies/libwebm/webm_parser/src/*.cc
 	mv *.o dependencies/libwebm/webm_parser/object_files/
 
 libyuv:
