@@ -63,9 +63,15 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     ctx->curr_audio_frame = NULL;
     ctx->next_audio_frame = NULL;
     ctx->audio_frame_ready = 0;
-    ctx->do_seek = 0;
     ctx->end_of_file = 0;
+    ctx->do_seek = 0;
+    if ((ctx->seek_lock = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) == NULL) {
+        RAISE_CRITICAL(ctx, "malloc() failed in sav1_create_context()");
+    }
+    thread_mutex_init(ctx->seek_lock);
+
     if ((ctx->settings = (Sav1Settings *)malloc(sizeof(Sav1Settings))) == NULL) {
+        thread_mutex_term(ctx->seek_lock);
         RAISE_CRITICAL(ctx, "malloc() failed in sav1_create_context()");
     }
 
@@ -97,10 +103,19 @@ sav1_destroy_context(Sav1Context *context)
     thread_manager_kill_pipeline(ctx->thread_manager);
     thread_manager_destroy(ctx->thread_manager);
 
-    free(ctx->settings);
-    free(ctx->start_time);
+    if (ctx->settings != NULL) {
+        free(ctx->settings);
+    }
+    if (ctx->start_time != NULL) {
+        free(ctx->start_time);
+    }
     if (ctx->pause_time != NULL) {
         free(ctx->pause_time);
+    }
+
+    if (ctx->seek_lock != NULL) {
+        thread_mutex_term(ctx->seek_lock);
+        free(ctx->seek_lock);
     }
 
     if (ctx->curr_video_frame != NULL) {
@@ -141,9 +156,12 @@ sav1_get_error(Sav1Context *context)
 void
 seek_update_start_time(Sav1InternalContext *ctx)
 {
+    thread_mutex_lock(ctx->seek_lock);
     if (ctx->do_seek != ctx->settings->codec_target) {
+        thread_mutex_unlock(ctx->seek_lock);
         return;
     }
+    thread_mutex_unlock(ctx->seek_lock);
 
     struct timespec curr_time;
     clock_gettime(CLOCK_MONOTONIC, &curr_time);
@@ -215,8 +233,10 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             ctx->thread_manager->video_output_queue);
     }
 
+    thread_mutex_lock(ctx->seek_lock);
     if (ctx->end_of_file & SAV1_CODEC_AV1) {
         file_end_update_start_time(ctx);
+        thread_mutex_unlock(ctx->seek_lock);
         return;
     }
 
@@ -234,6 +254,7 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) ==
                 0) {
                 ctx->next_video_frame = NULL;
+                thread_mutex_unlock(ctx->seek_lock);
                 return;
             }
             ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
@@ -250,6 +271,7 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
                 ctx->curr_video_frame->timecode > ctx->next_video_frame->timecode) {
                 ctx->end_of_file |= SAV1_CODEC_AV1;
                 file_end_update_start_time(ctx);
+                thread_mutex_unlock(ctx->seek_lock);
                 return;
             }
 
@@ -268,6 +290,7 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
                 ctx->thread_manager->video_output_queue);
         }
     }
+    thread_mutex_unlock(ctx->seek_lock);
 }
 
 void
@@ -280,8 +303,10 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             ctx->thread_manager->audio_output_queue);
     }
 
+    thread_mutex_lock(ctx->seek_lock);
     if (ctx->end_of_file & SAV1_CODEC_OPUS) {
         file_end_update_start_time(ctx);
+        thread_mutex_unlock(ctx->seek_lock);
         return;
     }
 
@@ -298,6 +323,7 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) ==
                 0) {
                 ctx->next_audio_frame = NULL;
+                thread_mutex_unlock(ctx->seek_lock);
                 return;
             }
             ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
@@ -314,6 +340,7 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
                 ctx->curr_audio_frame->timecode > ctx->next_audio_frame->timecode) {
                 ctx->end_of_file |= SAV1_CODEC_OPUS;
                 file_end_update_start_time(ctx);
+                thread_mutex_unlock(ctx->seek_lock);
                 return;
             }
 
@@ -332,6 +359,7 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
                 ctx->thread_manager->audio_output_queue);
         }
     }
+    thread_mutex_unlock(ctx->seek_lock);
 }
 
 int
@@ -436,9 +464,12 @@ sav1_start_playback(Sav1Context *context)
         RAISE(ctx, "sav1_start_playback() called when already playing")
     }
 
+    thread_mutex_lock(ctx->seek_lock);
     if (ctx->do_seek == ctx->settings->codec_target) {
+        thread_mutex_unlock(ctx->seek_lock);
         RAISE(ctx, "sav1_stop_playback() called while in the middle of seeking")
     }
+    thread_mutex_unlock(ctx->seek_lock);
 
     // update the start time value
     int status;
@@ -491,9 +522,12 @@ sav1_stop_playback(Sav1Context *context)
         RAISE(ctx, "sav1_stop_playback() called when already stopped")
     }
 
+    thread_mutex_lock(ctx->seek_lock);
     if (ctx->do_seek == ctx->settings->codec_target) {
+        thread_mutex_unlock(ctx->seek_lock);
         RAISE(ctx, "sav1_stop_playback() called while in the middle of seeking")
     }
+    thread_mutex_unlock(ctx->seek_lock);
 
     if ((ctx->pause_time = (struct timespec *)malloc(sizeof(struct timespec))) == NULL) {
         RAISE_CRITICAL(ctx, "malloc() failed in sav1_stop_playback()")
@@ -521,10 +555,13 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
     // handle when we're in the middle of seeking
+    thread_mutex_lock(ctx->seek_lock);
     if (ctx->do_seek == ctx->settings->codec_target) {
         *timecode_ms = ctx->seek_timecode;
+        thread_mutex_unlock(ctx->seek_lock);
         return 0;
     }
+    thread_mutex_unlock(ctx->seek_lock);
 
     // get the video duration if it's available
     uint64_t duration = thread_manager_get_duration(ctx->thread_manager);
@@ -595,23 +632,27 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
     // don't seek if we're already doing it
+    thread_mutex_lock(ctx->seek_lock);
     if (ctx->do_seek) {
         if (thread_atomic_int_load(&(ctx->thread_manager->parse_context->status)) ==
                 PARSE_STATUS_END_OF_FILE &&
             thread_atomic_int_load(&(ctx->thread_manager->parse_context->do_seek)) == 0) {
             seek_update_start_time(ctx);
             ctx->do_seek = 0;
+            thread_mutex_unlock(ctx->seek_lock);
         }
         else {
             return -1;
         }
     }
+    thread_mutex_unlock(ctx->seek_lock);
 
     // make the thread manager do all the hard work
     thread_manager_seek_to_time(ctx->thread_manager, timecode_ms);
 
     // save the time that we want to seek to
     ctx->seek_timecode = timecode_ms;
+
     // remove all the currently queued frames
     if (ctx->curr_video_frame != NULL) {
         sav1_video_frame_destroy(context, ctx->curr_video_frame);
@@ -633,8 +674,10 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
     ctx->video_frame_ready = 0;
     ctx->audio_frame_ready = 0;
 
+    thread_mutex_lock(ctx->seek_lock);
     ctx->do_seek = ctx->settings->codec_target;
     ctx->end_of_file = 0;
+    thread_mutex_unlock(ctx->seek_lock);
 
     return 0;
 }

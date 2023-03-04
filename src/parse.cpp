@@ -422,8 +422,6 @@ parse_start(void *context)
     thread_atomic_int_store(&(parse_context->do_seek), 0);
 
     Status status;
-    bool looping = false;
-
     while (1) {
         thread_atomic_int_store(&(parse_context->do_parse), 1);
         thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
@@ -432,10 +430,22 @@ parse_start(void *context)
         // see if we should end the loop
         if (status.completed_ok()) {
             thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_END_OF_FILE);
+
             // it's possible that we didn't find what we were looking for when seeking
-            if (thread_atomic_int_load(&(parse_context->do_parse))) {
+            if (thread_atomic_int_load(&(parse_context->do_parse)) &&
+                thread_atomic_int_load(&(parse_context->do_seek))) {
+                // give up on seeking
                 thread_atomic_int_store(&(parse_context->do_seek), 0);
+
+                // loop the front end back to the beginning
+                if (parse_context->on_file_end == SAV1_FILE_END_LOOP) {
+                    thread_mutex_lock(parse_context->ctx->seek_lock);
+                    parse_context->ctx->do_seek = 0;
+                    parse_context->ctx->end_of_file = parse_context->codec_target;
+                    thread_mutex_unlock(parse_context->ctx->seek_lock);
+                }
             }
+
             state->callback->mark_has_all_cue_points();
 
             if (parse_context->on_file_end == SAV1_FILE_END_WAIT) {
@@ -446,10 +456,11 @@ parse_start(void *context)
                 thread_mutex_unlock(parse_context->wait_to_acquire);
             }
             else {
-                // jump back to the start
-                state->parser->DidSeek();
+                // seek back to the start
                 state->reader->Seek(0);
-                looping = true;
+                state->parser->DidSeek();
+                state->callback->set_skip_clusters(false);
+                continue;
             }
         }
 
@@ -457,11 +468,7 @@ parse_start(void *context)
             thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_ERROR);
             break;
         }
-        else if (looping) {
-            looping = false;
-            continue;
-        }
-        else if (!looping && thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
+        else if (thread_atomic_int_load(&(parse_context->do_seek)) == 0) {
             break;
         }
 
@@ -473,8 +480,8 @@ parse_start(void *context)
         std::vector<Sav1CuePoint> cue_points = state->callback->get_cue_points();
         for (auto cue = cue_points.rbegin(); cue != cue_points.rend(); ++cue) {
             if (cue->timecode <= parse_context->seek_timecode) {
-                state->parser->DidSeek();
                 state->reader->Seek(cue->cluster_location);
+                state->parser->DidSeek();
                 bool skip_clusters =
                     !state->callback->has_all_cue_points() && cue == cue_points.rbegin();
                 state->callback->set_skip_clusters(skip_clusters);
