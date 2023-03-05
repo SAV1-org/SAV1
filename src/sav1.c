@@ -689,3 +689,15 @@ sav1_get_version(int *major, int *minor, int *patch)
     *minor = SAV1_MINOR_VERSION;
     *patch = SAV1_PATCH_VERSION;
 }
+
+char *
+sav1_get_dav1d_version()
+{
+    return dav1d_version();
+}
+
+char *
+sav1_get_opus_version()
+{
+    return opus_get_version_string();
+}
