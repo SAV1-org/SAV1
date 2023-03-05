@@ -21,6 +21,13 @@ sav1_audio_frame_destroy(Sav1Context *context, Sav1AudioFrame *frame)
         return -1;
     }
 
+    // free the custom audio frame data if applicable
+    if (ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_AUDIO &&
+        ctx->settings->custom_audio_frame_destroy != NULL && frame->custom_data != NULL) {
+        ctx->settings->custom_audio_frame_destroy(
+            frame->custom_data, ctx->settings->custom_audio_frame_processing_cookie);
+    }
+
     // free the data
     free(frame->data);
     free(frame);

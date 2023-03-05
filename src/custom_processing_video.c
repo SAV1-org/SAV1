@@ -8,7 +8,6 @@ void
 custom_processing_video_init(CustomProcessingVideoContext **context,
                              Sav1InternalContext *ctx,
                              int (*process_function)(Sav1VideoFrame *, void *),
-                             void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     if (((*context) = (CustomProcessingVideoContext *)malloc(
@@ -19,7 +18,6 @@ custom_processing_video_init(CustomProcessingVideoContext **context,
     }
 
     (*context)->process_function = process_function;
-    (*context)->destroy_function = destroy_function;
     (*context)->cookie = ctx->settings->custom_video_frame_processing_cookie;
     (*context)->input_queue = input_queue;
     (*context)->output_queue = output_queue;
@@ -89,9 +87,6 @@ custom_processing_video_drain_output_queue(CustomProcessingVideoContext *context
             break;
         }
 
-        if (context->destroy_function != NULL) {
-            context->destroy_function(frame->custom_data, context->cookie);
-        }
         sav1_video_frame_destroy(context->ctx->context, frame);
     }
 }

@@ -8,7 +8,6 @@ void
 custom_processing_audio_init(CustomProcessingAudioContext **context,
                              Sav1InternalContext *ctx,
                              int (*process_function)(Sav1AudioFrame *, void *),
-                             void (*destroy_function)(void *, void *),
                              Sav1ThreadQueue *input_queue, Sav1ThreadQueue *output_queue)
 {
     if (((*context) = (CustomProcessingAudioContext *)malloc(
@@ -19,7 +18,6 @@ custom_processing_audio_init(CustomProcessingAudioContext **context,
     }
 
     (*context)->process_function = process_function;
-    (*context)->destroy_function = destroy_function;
     (*context)->cookie = ctx->settings->custom_audio_frame_processing_cookie;
     (*context)->input_queue = input_queue;
     (*context)->output_queue = output_queue;
@@ -90,9 +88,6 @@ custom_processing_audio_drain_output_queue(CustomProcessingAudioContext *context
             break;
         }
 
-        if (context->destroy_function != NULL) {
-            context->destroy_function(frame->custom_data, context->cookie);
-        }
         sav1_audio_frame_destroy(context->ctx->context, frame);
     }
 }

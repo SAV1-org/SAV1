@@ -21,6 +21,13 @@ sav1_video_frame_destroy(Sav1Context *context, Sav1VideoFrame *frame)
         return -1;
     }
 
+    // free the custom video frame data if applicable
+    if (ctx->settings->use_custom_processing & SAV1_USE_CUSTOM_PROCESSING_VIDEO &&
+        ctx->settings->custom_video_frame_destroy != NULL && frame->custom_data != NULL) {
+        ctx->settings->custom_video_frame_destroy(
+            frame->custom_data, ctx->settings->custom_video_frame_processing_cookie);
+    }
+
     // free the data
     free(frame->data);
     free(frame);
