@@ -40,24 +40,29 @@ typedef enum { SAV1_PLAYBACK_TIMED, SAV1_PLAYBACK_FAST } Sav1PlaybackMode;
 
 typedef enum { SAV1_FILE_END_WAIT, SAV1_FILE_END_LOOP } Sav1OnFileEnd;
 
+/**
+ * @brief Settings for SAV1.
+ *
+ * This struct contains the settings for SAV1. It is used to configure the decoded data's
+ * format and customize the processing behavior.
+ */
 typedef struct Sav1Settings {
-    char *file_path;
-    int codec_target;
-    size_t queue_size;
-    int use_custom_processing;
+    char *file_path; /**< The path of the .webm file to be decoded. */
+    int codec_target; /**< The name of the file to play. */
+    size_t queue_size; /**< The size of each threading queue. */
+    int use_custom_processing; /**< Whether to use custom processing. */
     double playback_speed;
-    int on_video_end;
-    int (*custom_video_frame_processing)(Sav1VideoFrame *, void *);
-    void (*custom_video_frame_destroy)(void *, void *);
-    void *custom_video_frame_processing_cookie;
-    int (*custom_audio_frame_processing)(Sav1AudioFrame *, void *);
-    void (*custom_audio_frame_destroy)(void *, void *);
-    void *custom_audio_frame_processing_cookie;
-    Sav1PixelFormat desired_pixel_format;
-    Sav1AudioFrequency frequency;
-    Sav1AudioChannel channels;
-    Sav1PlaybackMode playback_mode;
-    Sav1OnFileEnd on_file_end;
+    int (*custom_video_frame_processing)(Sav1VideoFrame *, void *); /**< A pointer to a custom video frame processing function. */
+    void (*custom_video_frame_destroy)(void *, void *); /**< A pointer to a custom video frame destroy function. */
+    void *custom_video_frame_processing_cookie; /**<  */
+    int (*custom_audio_frame_processing)(Sav1AudioFrame *, void *); /**< A pointer to a custom audio frame processing function. */
+    void (*custom_audio_frame_destroy)(void *, void *); /**< A pointer to a custom audio frame destroy function. */
+    void *custom_audio_frame_processing_cookie; /**<  */
+    Sav1PixelFormat desired_pixel_format; /**< The desired output pixel format. */
+    Sav1AudioFrequency frequency; /**< The source audio frequency */
+    Sav1AudioChannel channels; /**< The source number of channels */
+    Sav1PlaybackMode playback_mode; /**< The playback mode (SAV1_PLAYBACK_TIMED, SAV1_PLAYBACK_FAST). */
+    Sav1OnFileEnd on_file_end; /**< The action to take when the file ends (SAV1_FILE_END_WAIT or SAV1_FILE_END_LOOP). */
 } Sav1Settings;
 
 /**
@@ -88,12 +93,42 @@ typedef struct Sav1Settings {
 SAV1_API void
 sav1_default_settings(Sav1Settings *settings, char *file_path);
 
+/**
+ * @brief Set up custom video processing for every @ref Sav1VideoFrame.
+ * 
+ * Set up a custom video processing function to be applied to every @ref Sav1VideoFrame. 
+ * Include an optional cookie to store necessary information.
+ * 
+ * - @ref Sav1Settings.cookie defaults to `NULL` if no cookie is passed
+ * 
+ * @param[in] settings pointer to a SAV1 settings struct
+ * @param[in] processing_function pointer to a custom video frame processing function
+ * @param[in] destroy_function pointer to a custom video frame processing function
+ * @param[in] cookie TODO : eli write this
+ * 
+ * @sa Sav1VideoFrame
+ */
 SAV1_API void
 sav1_settings_use_custom_video_processing(
     Sav1Settings *settings,
     int (*processing_function)(Sav1VideoFrame *frame, void *cookie),
     void (*destroy_function)(void *, void *), void *cookie);
 
+/**
+ * @brief Set up custom audio processing for every @ref Sav1AudioFrame.
+ * 
+ * Set up a custom audio processing function to be applied to every @ref Sav1AudioFrame. 
+ * Include an optional cookie to store necessary information.
+ * 
+ * - @ref Sav1Settings.cookie defaults to `NULL` if no cookie is passed
+ * 
+ * @param[in] settings pointer to a SAV1 settings struct
+ * @param[in] processing_function pointer to a custom video frame processing function
+ * @param[in] destroy_function pointer to a custom video frame processing function
+ * @param[in] cookie TODO : eli write this
+ * 
+ * @sa Sav1AudioFrame
+ */
 SAV1_API void
 sav1_settings_use_custom_audio_processing(
     Sav1Settings *settings,
