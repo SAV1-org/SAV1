@@ -554,12 +554,7 @@ sav1_get_playback_status(Sav1Context *context, int *status)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    if (ctx->is_playing) {
-        *status = 1;
-    }
-    else {
-        *status = 0;
-    }
+    *status = ctx->is_playing;
     return 0;
 }
 
