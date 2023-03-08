@@ -47,22 +47,40 @@ typedef enum { SAV1_FILE_END_WAIT, SAV1_FILE_END_LOOP } Sav1OnFileEnd;
  * format and customize the processing behavior.
  */
 typedef struct Sav1Settings {
-    char *file_path; /**< The path of the .webm file to be decoded. */
-    int codec_target; /**< The name of the file to play. */
-    size_t queue_size; /**< The size of each threading queue. */
-    int use_custom_processing; /**< Whether to use custom processing. */
+    char *file_path;           /**< The path of the .webm file to be decoded. */
+    int codec_target;          /**< The bitwise indication what codecs to decode. */
+    size_t queue_size;         /**< The size of the internal SAV1 queues. */
+    int use_custom_processing; /**< The bitwise indication for whether custom
+                                  processing should be applied to audio and/or video.
+                                */
     double playback_speed;
-    int (*custom_video_frame_processing)(Sav1VideoFrame *, void *); /**< A pointer to a custom video frame processing function. */
-    void (*custom_video_frame_destroy)(void *, void *); /**< A pointer to a custom video frame destroy function. */
-    void *custom_video_frame_processing_cookie; /**<  */
-    int (*custom_audio_frame_processing)(Sav1AudioFrame *, void *); /**< A pointer to a custom audio frame processing function. */
-    void (*custom_audio_frame_destroy)(void *, void *); /**< A pointer to a custom audio frame destroy function. */
-    void *custom_audio_frame_processing_cookie; /**<  */
-    Sav1PixelFormat desired_pixel_format; /**< The desired output pixel format. */
-    Sav1AudioFrequency frequency; /**< The source audio frequency */
-    Sav1AudioChannel channels; /**< The source number of channels */
-    Sav1PlaybackMode playback_mode; /**< The playback mode (SAV1_PLAYBACK_TIMED, SAV1_PLAYBACK_FAST). */
-    Sav1OnFileEnd on_file_end; /**< The action to take when the file ends (SAV1_FILE_END_WAIT or SAV1_FILE_END_LOOP). */
+    int (*custom_video_frame_processing)(
+        Sav1VideoFrame *, void *); /**< A function for postprocessing the video output
+                                      frames in a separate thread,
+                                      returning 0 on success, < 0 on error. */
+    void (*custom_video_frame_destroy)(
+        void *, void *); /**< A function to clean up any custom data added during the
+                            video custom postprocessing. */
+    void *custom_video_frame_processing_cookie; /**< Optional custom data that is
+                                                   passed to video custom
+                                                   postprocessing and destroying */
+    int (*custom_audio_frame_processing)(
+        Sav1AudioFrame *, void *); /**< A function for postprocessing the audio output
+                                                        frames in a separate thread,
+                                      returning 0 on success, < 0 on error.
+                                       */
+    void (*custom_audio_frame_destroy)(
+        void *, void *); /**< A function to clean up any custom data added during the
+                           audio custom postprocessing. */
+    void *custom_audio_frame_processing_cookie; /**< Optional custom data that is
+                                                   passed to audio custom
+                                                   postprocessing and destroying */
+    Sav1PixelFormat desired_pixel_format;       /**< The desired output pixel format. */
+    Sav1AudioFrequency frequency;               /**< The desired audio output frequency */
+    Sav1AudioChannel channels;      /**< The desired audio output number of channels */
+    Sav1PlaybackMode playback_mode; /**< Whether the file should be played
+                                       synchronously or as fast as possible. */
+    Sav1OnFileEnd on_file_end; /**< Whether the file should loop or wait after it ends. */
 } Sav1Settings;
 
 /**
@@ -81,9 +99,8 @@ typedef struct Sav1Settings {
  * - @ref Sav1Settings.channels defaults to `SAV1_AUDIO_STEREO`
  * - @ref Sav1Settings.playback_mode defaults to `SAV1_PLAYBACK_TIMED`
  *
- * @param[in] settings pointer to a SAV1 settings struct
- * @param[in] file_path path to file to play
- * @return char*
+ * @param[in] settings pointer to a SAV1 settings struct that will be modified
+ * @param[in] file_path path to the file that will be played
  *
  * @sa Sav1PixelFormat
  * @sa Sav1AudioFrequency
@@ -95,18 +112,31 @@ sav1_default_settings(Sav1Settings *settings, char *file_path);
 
 /**
  * @brief Set up custom video processing for every @ref Sav1VideoFrame.
- * 
- * Set up a custom video processing function to be applied to every @ref Sav1VideoFrame. 
- * Include an optional cookie to store necessary information.
- * 
- * - @ref Sav1Settings.cookie defaults to `NULL` if no cookie is passed
- * 
+ *
+ * Set up a custom video processing function to be applied to every @ref Sav1VideoFrame in
+ * an additional thread before it reaches the user. This can be done manually by
+ * modifying the @ref Sav1Settings struct directly, but this function provides a
+ * convenient way to do so. New frames are not created, but the existing frame passed in
+ * can be modifed and the @ref Sav1VideoFrame.custom_data property can be used to store
+ * additional output data. Include an optional cookie to store necessary information.
+ *
+ * If `destroy_function` is `NULL`, then no additional steps will be taken when frames are
+ * destroyed. If memory is allocated for the @ref Sav1VideoFrame.custom_data property,
+ * then a function should be passed for this argument that will free that memory.
+ *
+ * If `cookie` is `NULL`, then `NULL` will be passed in for the `cookie` argument of the
+ * `processing_function` and the `destroy_function`. The cookie can be used to store
+ * additional context that is necessary for applying whatever postprocessing is desired.
+ *
  * @param[in] settings pointer to a SAV1 settings struct
- * @param[in] processing_function pointer to a custom video frame processing function
- * @param[in] destroy_function pointer to a custom video frame processing function
- * @param[in] cookie TODO : eli write this
- * 
+ * @param[in] processing_function function to modify `Sav1VideoFrame`s and add custom data
+ * @param[in] destroy_function function for destroying custom `Sav1VideoFrame` data or
+ * `NULL`
+ * @param[in] cookie data to be passed in during custom frame processing and destruction
+ * or `NULL`
+ *
  * @sa Sav1VideoFrame
+ * @sa Sav1Settings
  */
 SAV1_API void
 sav1_settings_use_custom_video_processing(
@@ -116,18 +146,31 @@ sav1_settings_use_custom_video_processing(
 
 /**
  * @brief Set up custom audio processing for every @ref Sav1AudioFrame.
- * 
- * Set up a custom audio processing function to be applied to every @ref Sav1AudioFrame. 
- * Include an optional cookie to store necessary information.
- * 
- * - @ref Sav1Settings.cookie defaults to `NULL` if no cookie is passed
- * 
+ *
+ * Set up a custom audio processing function to be applied to every @ref Sav1AudioFrame in
+ * an additional thread before it reaches the user. This can be done manually by
+ * modifying the @ref Sav1Settings struct directly, but this function provides a
+ * convenient way to do so. New frames are not created, but the existing frame passed in
+ * can be modifed and the @ref Sav1AudioFrame.custom_data property can be used to store
+ * additional output data. Include an optional cookie to store necessary information.
+ *
+ * If `destroy_function` is `NULL`, then no additional steps will be taken when frames are
+ * destroyed. If memory is allocated for the @ref Sav1AudioFrame.custom_data property,
+ * then a function should be passed for this argument that will free that memory.
+ *
+ * If `cookie` is `NULL`, then `NULL` will be passed in for the `cookie` argument of the
+ * `processing_function` and the `destroy_function`. The cookie can be used to store
+ * additional context that is necessary for applying whatever postprocessing is desired.
+ *
  * @param[in] settings pointer to a SAV1 settings struct
- * @param[in] processing_function pointer to a custom video frame processing function
- * @param[in] destroy_function pointer to a custom video frame processing function
- * @param[in] cookie TODO : eli write this
- * 
+ * @param[in] processing_function function to modify `Sav1AudioFrame`s and add custom data
+ * @param[in] destroy_function function for destroying custom `Sav1AudioFrame` data or
+ * `NULL`
+ * @param[in] cookie data to be passed in during custom frame processing and destruction
+ * or `NULL`
+ *
  * @sa Sav1AudioFrame
+ * @sa Sav1Settings
  */
 SAV1_API void
 sav1_settings_use_custom_audio_processing(
