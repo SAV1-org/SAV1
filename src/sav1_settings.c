@@ -3,9 +3,9 @@
 #include "sav1_settings.h"
 
 void
-sav1_default_settings(Sav1Settings *settings, char *file_name)
+sav1_default_settings(Sav1Settings *settings, char *file_path)
 {
-    settings->file_name = file_name;
+    settings->file_path = file_path;
     settings->codec_target = SAV1_CODEC_AV1 | SAV1_CODEC_OPUS;
     settings->desired_pixel_format = SAV1_PIXEL_FORMAT_RGBA;
     settings->queue_size = 20;

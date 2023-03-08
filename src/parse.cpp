@@ -354,7 +354,7 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
     ParseInternalState *state = new ParseInternalState;
 
     // open the input file
-    state->file = std::fopen(ctx->settings->file_name, "rb");
+    state->file = std::fopen(ctx->settings->file_path, "rb");
 
     // create the webmparser objects
     state->callback = new Sav1Callback();

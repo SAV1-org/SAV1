@@ -75,7 +75,7 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
         RAISE_CRITICAL(ctx, "malloc() failed in sav1_create_context()");
     }
 
-    // copy over settings to prevent future modifications (except to file_name)
+    // copy over settings to prevent future modifications (except to file_path)
     memcpy(ctx->settings, settings, sizeof(Sav1Settings));
 
     // clear error string
