@@ -47,9 +47,11 @@ typedef enum { SAV1_FILE_END_WAIT, SAV1_FILE_END_LOOP } Sav1OnFileEnd;
  * format and customize the processing behavior.
  */
 typedef struct Sav1Settings {
-    char *file_path;           /**< The path of the .webm file to be decoded. */
-    int codec_target;          /**< The bitwise indication what codecs to decode. */
-    size_t queue_size;         /**< The size of the internal SAV1 queues. */
+    char *file_path;   /**< The path of the .webm file to be decoded. */
+    int codec_target;  /**< The bitwise indication for which codecs to decode. */
+    size_t queue_size; /**< The size of the internal queues used by SAV1. Larger queues
+                          require more memory, but allow SAV1 to have more frames ready to
+                          go in the event of a slowdown. */
     int use_custom_processing; /**< The bitwise indication for whether custom
                                   processing should be applied to audio and/or video.
                                 */
@@ -63,7 +65,7 @@ typedef struct Sav1Settings {
                             video custom postprocessing. */
     void *custom_video_frame_processing_cookie; /**< Optional custom data that is
                                                    passed to video custom
-                                                   postprocessing and destroying */
+                                                   postprocessing and destroying. */
     int (*custom_audio_frame_processing)(
         Sav1AudioFrame *, void *); /**< A function for postprocessing the audio output
                                                         frames in a separate thread,
@@ -74,13 +76,14 @@ typedef struct Sav1Settings {
                            audio custom postprocessing. */
     void *custom_audio_frame_processing_cookie; /**< Optional custom data that is
                                                    passed to audio custom
-                                                   postprocessing and destroying */
+                                                   postprocessing and destroying. */
     Sav1PixelFormat desired_pixel_format;       /**< The desired output pixel format. */
-    Sav1AudioFrequency frequency;               /**< The desired audio output frequency */
-    Sav1AudioChannel channels;      /**< The desired audio output number of channels */
-    Sav1PlaybackMode playback_mode; /**< Whether the file should be played
+    Sav1AudioFrequency frequency;   /**< The desired audio output frequency. */
+    Sav1AudioChannel channels;      /**< The desired audio output number of channels. */
+    Sav1PlaybackMode playback_mode; /**< Whether the file should be played back
                                        synchronously or as fast as possible. */
-    Sav1OnFileEnd on_file_end; /**< Whether the file should loop or wait after it ends. */
+    Sav1OnFileEnd
+        on_file_end; /**< Whether playback should loop or wait after the file ends. */
 } Sav1Settings;
 
 /**
