@@ -27,9 +27,9 @@ make all_dependencies
 meson setup build
 meson install -C build
 ```
-Compiles sav1 and dav4dplay, installing them in the project root.
+Compiles sav1 and sav1play, installing them in the project root.
 
-Our current build generates a video player called dav4dplay. Once, built, invoke it with a path to a test file to play that video. `dav4dplay test_files/ferris.webm` (for example).
+Our current build generates a video player called sav1play. Once, built, invoke it with a path to a test file to play that video. `sav1play test_files/ferris.webm` (for example).
 
 ## Build docs
 + Install doxygen

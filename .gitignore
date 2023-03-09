@@ -4,8 +4,7 @@
 *.out
 *.pyc
 .vscode/*
-dav3dplay
-dav4dplay
+sav1play
 dependencies/*
 !dependencies/libwebm
 !dependencies/thread
