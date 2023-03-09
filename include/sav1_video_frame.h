@@ -16,7 +16,9 @@ typedef struct Sav1VideoFrame {
     int codec;
     Sav1PixelFormat pixel_format;
     void *custom_data;
-    int sentinel;
+    
+    /** (internal use) */
+    int sentinel; 
 } Sav1VideoFrame;
 
 SAV1_API int

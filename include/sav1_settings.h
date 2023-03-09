@@ -34,7 +34,13 @@ typedef enum {
     SAV1_AUDIO_FREQ_48KHZ = 48000,
 } Sav1AudioFrequency;
 
-typedef enum { SAV1_AUDIO_MONO = 1, SAV1_AUDIO_STEREO = 2 } Sav1AudioChannel;
+typedef enum {
+    /** Mono audio output (1 channel). */
+    SAV1_AUDIO_MONO = 1,
+
+    /** Stereo audio output (2 channel). Samples are interleaved. */
+    SAV1_AUDIO_STEREO = 2
+} Sav1AudioChannel;
 
 typedef enum { SAV1_PLAYBACK_TIMED, SAV1_PLAYBACK_FAST } Sav1PlaybackMode;
 

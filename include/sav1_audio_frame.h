@@ -14,6 +14,8 @@ typedef struct Sav1AudioFrame {
     size_t num_channels;
     int codec;
     void *custom_data;
+    
+    /** (internal use) */
     int sentinel;
 } Sav1AudioFrame;
 

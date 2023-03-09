@@ -5,21 +5,38 @@
 #include <stddef.h>
 #include "common.h"
 
+/**
+ * @mainpage SAV1
+ *
+ * Library to simply and efficiently decode a webm file containing AV1 video and opus
+ * audio tracks into frames and audio chunks to be displayed however the user chooses.
+ *
+ * Currently SAV1 is in an alpha state.
+ *
+ * Uses dav1d to efficiently decode video, libopus to efficiently decode audio-- vendors
+ * libwebm and libyuv for file parsing and color conversion respectively.
+ *
+ */
+
+/**
+ * @brief Struct to represent one instance of the library.
+ *
+ * Each instance of the library can only play one video at a time. Multiple instances can
+ * be active at the same time.
+ *
+ * @sa sav1_create_context
+ */
 typedef struct Sav1Context {
+    /** (internal use) Pointer to SAV1's internal state, hidden from the user. */
     void *internal_state;
+
+    /** (interal use) */
     uint8_t is_initialized;
 } Sav1Context;
 
 #include "sav1_settings.h"
 #include "sav1_video_frame.h"
 #include "sav1_audio_frame.h"
-
-/**
- * @mainpage SAV1
- *
- * content content context
- * 
- */
 
 /**
  * @brief Initialize SAV1 context
@@ -62,26 +79,27 @@ sav1_get_error(Sav1Context *context);
 
 /**
  * @brief Returns a frame to be displayed at the current time, or `NULL`
- * 
- * Populates the frame double pointer with a pointer to the @ref Sav1VideoFrame that should be
- * displayed at the current time (timing is controlled by @ref Sav1PlaybackMode and 
- * @ref Sav1Settings.playback_speed). If not enough video has been decoded, or SAV1 is actively
- * seeking through the file, the frame pointer may instead be `NULL`.
- * 
- * Repeated calls to `sav1_get_video_frame` will return the same video frame, until a new frame
- * has been decoded internally and is ready (time wise) to be played. Ownership of the
- * @ref Sav1VideoFrame is maintained by SAV1, and it will be automatically freed when the next
- * frame is ready. To create a copy of the frame owned by you, use @ref sav1_video_frame_clone.
- * 
- * Applications are recommended to use @ref sav1_get_video_frame_ready to determine whether the 
- * ready-to-play frame has changed. If the calling application needs to do expensive conversion 
- * steps to be able to display the frame, @ref sav1_get_video_frame_ready can be used to run them
- * only when needed.
- * 
+ *
+ * Populates the frame double pointer with a pointer to the @ref Sav1VideoFrame that
+ * should be displayed at the current time (timing is controlled by @ref Sav1PlaybackMode
+ * and @ref Sav1Settings.playback_speed). If not enough video has been decoded, or SAV1 is
+ * actively seeking through the file, the frame pointer may instead be `NULL`.
+ *
+ * Repeated calls to `sav1_get_video_frame` will return the same video frame, until a new
+ * frame has been decoded internally and is ready (time wise) to be played. Ownership of
+ * the @ref Sav1VideoFrame is maintained by SAV1, and it will be automatically freed when
+ * the next frame is ready. To create a copy of the frame owned by you, use @ref
+ * sav1_video_frame_clone.
+ *
+ * Applications are recommended to use @ref sav1_get_video_frame_ready to determine
+ * whether the ready-to-play frame has changed. If the calling application needs to do
+ * expensive conversion steps to be able to display the frame, @ref
+ * sav1_get_video_frame_ready can be used to run them only when needed.
+ *
  * @param[in] context pointer to a created SAV1 context
  * @param[out] frame pointer to a video frame, or `NULL`
  * @return 0 on success, or < 0 on error
- * 
+ *
  * @sa sav1_get_video_frame_ready
  * @sa sav1_video_frame_clone
  * @sa Sav1VideoFrame
@@ -92,26 +110,27 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame);
 
 /**
  * @brief Returns a frame to be played at the current time, or `NULL`
- * 
- * Populates the frame double pointer with a pointer to the @ref Sav1AudioFrame that should be
- * played at the current time (timing is controlled by @ref Sav1PlaybackMode and 
- * @ref Sav1Settings.playback_speed). If not enough audio has been decoded, or SAV1 is actively
- * seeking through the file, the frame pointer may instead be `NULL`.
- * 
- * Repeated calls to `sav1_get_audio_frame` will return the same audio frame, until a new frame
- * has been decoded internally and is ready (time wise) to be played. Ownership of the
- * @ref Sav1AudioFrame is maintained by SAV1, and it will be automatically freed when the next
- * frame is ready. To create a copy of the frame owned by you, use @ref sav1_audio_frame_clone.
- * 
- * Applications are recommended to use @ref sav1_get_audio_frame_ready to determine whether the 
- * ready-to-play frame has changed. If the calling application needs to do expensive conversion 
- * steps to be able to play the frame, @ref sav1_get_audio_frame_ready can be used to run them
- * only when needed.
- * 
+ *
+ * Populates the frame double pointer with a pointer to the @ref Sav1AudioFrame that
+ * should be played at the current time (timing is controlled by @ref Sav1PlaybackMode and
+ * @ref Sav1Settings.playback_speed). If not enough audio has been decoded, or SAV1 is
+ * actively seeking through the file, the frame pointer may instead be `NULL`.
+ *
+ * Repeated calls to `sav1_get_audio_frame` will return the same audio frame, until a new
+ * frame has been decoded internally and is ready (time wise) to be played. Ownership of
+ * the @ref Sav1AudioFrame is maintained by SAV1, and it will be automatically freed when
+ * the next frame is ready. To create a copy of the frame owned by you, use @ref
+ * sav1_audio_frame_clone.
+ *
+ * Applications are recommended to use @ref sav1_get_audio_frame_ready to determine
+ * whether the ready-to-play frame has changed. If the calling application needs to do
+ * expensive conversion steps to be able to play the frame, @ref
+ * sav1_get_audio_frame_ready can be used to run them only when needed.
+ *
  * @param[in] context pointer to a created SAV1 context
  * @param[out] frame pointer to a audio frame, or `NULL`
  * @return 0 on success, or < 0 on error
- * 
+ *
  * @sa sav1_get_audio_frame_ready
  * @sa sav1_audio_frame_clone
  * @sa Sav1AudioFrame
@@ -124,15 +143,15 @@ sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame);
  * @brief Queries whether the calling application has a new video frame to display
  *
  * When SAV1 has a new video frame that the calling application should display, it will
- * populate `is_ready` as true. When true, the calling application should call
- * @ref sav1_get_video_frame and display the frame. When false, there are either no frames yet 
- * decoded, or it is not yet time to play them (timing is controlled by @ref Sav1PlaybackMode 
- * and @ref Sav1Settings.playback_speed).
- * 
+ * populate `is_ready` as true. When true, the calling application should call @ref
+ * sav1_get_video_frame and display the frame. When false, there are either no frames yet
+ * decoded, or it is not yet time to play them (timing is controlled by @ref
+ * Sav1PlaybackMode and @ref Sav1Settings.playback_speed).
+ *
  * @param[in] context pointer to a created SAV1 context
  * @param[out] is_ready if nonzero, indicates now is the time to pull a new video frame
  * @return 0 on success, or < 0 on error
- * 
+ *
  * @sa sav1_get_video_frame
  * @sa sav1_get_audio_frame_ready
  */
@@ -144,14 +163,14 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready);
  *
  * When SAV1 has a new audio frame that the calling application should play, it will
  * populate `is_ready` as true. When true, the calling application should call
- * @ref sav1_get_audio_frame and play the frame. When false, there are either no frames yet 
- * decoded, or it is not yet time to play them (timing is controlled by @ref Sav1PlaybackMode 
- * and @ref Sav1Settings.playback_speed).
- * 
+ * @ref sav1_get_audio_frame and play the frame. When false, there are either no frames
+ * yet decoded, or it is not yet time to play them (timing is controlled by @ref
+ * Sav1PlaybackMode and @ref Sav1Settings.playback_speed).
+ *
  * @param[in] context pointer to a created SAV1 context
  * @param[out] is_ready if nonzero, indicates now is the time to pull a new audio frame
  * @return 0 on success, or < 0 on error
- * 
+ *
  * @sa sav1_get_audio_frame
  * @sa sav1_get_video_frame_ready
  */
@@ -163,14 +182,14 @@ sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready);
  *
  * `sav1_start_playback` signals to SAV1 that the file should begin playing.
  *
- * When a SAV1Context is created, the file begins parsing and decoding,
- * but frames are not output until SAV1 gets a time associated with the start
- * of the video by `sav1_start_playback`.
+ * When a SAV1Context is created, the file begins parsing and decoding, but frames are not
+ * output until SAV1 gets a time associated with the start of the video by
+ * `sav1_start_playback`.
  *
  * `sav1_stop_playback` / `sav1_start_playback` can be used to pause and resume.
  *
- * If this function is called while SAV1 is seeking or while the file is
- * already playing, an error is returned.
+ * If this function is called while SAV1 is seeking or while the file is already playing,
+ * an error is returned.
  *
  * @param[in] context pointer to a created SAV1 context
  * @return 0 on success, or < 0 on error
@@ -289,7 +308,7 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms);
 /**
  * @brief Macro (compile time) for SAV1 minor version
  */
-#define SAV1_MINOR_VERSION 1
+#define SAV1_MINOR_VERSION 2
 /**
  * @brief Macro (compile time) for SAV1 patch version
  */
