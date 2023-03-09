@@ -136,21 +136,20 @@ sav1_lib = library('sav1',
                    install: true,
                    install_dir: dir_base)
 
-dav4dplay_includes = [include_directories('include')]
+sav1play_includes = [include_directories('include')]
 if build_machine.system() == 'windows'
-  dav4dplay_includes += include_directories('dependencies/x64-windows/include')
+  sav1play_includes += include_directories('dependencies/x64-windows/include')
 endif
 
-dav4dplay_deps = []
+sav1play_deps = []
 if build_machine.system() == 'windows'
-  dav4dplay_deps += c.find_library('SDL2', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
+  sav1play_deps += c.find_library('SDL2', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
 else
-  dav4dplay_deps += c.find_library('SDL2', required: true)
+  sav1play_deps += c.find_library('SDL2', required: true)
 endif
 
-message(dir_base)
-executable('dav4dplay', 'examples/dav4dplay.c', 
-            include_directories: dav4dplay_includes,
-            dependencies: dav4dplay_deps, 
+executable('sav1play', 'examples/sav1play.c', 
+            include_directories: sav1play_includes,
+            dependencies: sav1play_deps,
             link_with: sav1_lib,
             install: true, install_dir: dir_base)
