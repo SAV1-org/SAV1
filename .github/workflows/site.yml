@@ -32,22 +32,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         
-      - name: Generate Docs
+      - name: Install doxygen
         run: |
           sudo apt-get update --fix-missing
           sudo apt-get upgrade
           sudo apt-get install doxygen
+
+      - name: Generate Docs
+        run: |
           cd docs
           doxygen Doxyfile
           cd ..
         
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        # If you're changing the branch from main,
-        # also change the `main` in `refs/heads/main`
-        # below accordingly.
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/html
-        
+          folder: docs/html # The folder the action should deploy.
