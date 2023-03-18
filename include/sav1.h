@@ -8,13 +8,18 @@
 /**
  * @mainpage SAV1
  *
- * Library to simply and efficiently decode a webm file containing AV1 video and opus
- * audio tracks into frames and audio chunks to be displayed however the user chooses.
+ * Library to enable simple and efficient playback of a WEBM file containing AV1 video and Opus audio tracks.
  *
- * Currently SAV1 is in an alpha state.
+ * SAV1 provides a simple interface on top of file parsing, low level AV1 and Opus decoding, and tracking time for playback.
+ * SAV1 allows the user to choose their preferred audio frequency / channels, and their preferred video pixelformat, and receive
+ * data in those formats.
  *
- * Uses dav1d to efficiently decode video, libopus to efficiently decode audio-- vendors
- * libwebm and libyuv for file parsing and color conversion respectively.
+ * Currently SAV1 is in beta.
+ *
+ * The library uses `dav1d` to efficiently decode video, `libopus` to efficiently decode audio-- vendors `libwebm` and `libyuv` for file parsing and color conversion respectively. The decoder and parsing modules are threaded internally so the top level API is non blocking
+ * and efficient.
+ *
+ * [Check us out on Github](https://github.com/SAV1-org/SAV1)
  *
  */
 
