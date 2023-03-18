@@ -7,7 +7,7 @@
 		<meta name="generator" content="Doxygen $doxygenversion" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<!--BEGIN PROJECT_NAME-->
-		<title>$projectname: $title</title>
+		<title>$projectname</title>
 		<!--END PROJECT_NAME-->
 		<!--BEGIN !PROJECT_NAME-->
 		<title>$title</title>
@@ -29,7 +29,7 @@
 		<link rel="apple-touch-icon" sizes="180x180" href="$relpath^apple-touch-icon.png" />
 		<link rel="icon" type="image/png" sizes="32x32" href="$relpath^favicon-32x32.png" />
 		<link rel="icon" type="image/png" sizes="16x16" href="$relpath^favicon-16x16.png" />
-		<link rel="icon" href="$relpath^favicon.ico" />
+		<link rel="shortcut icon" type="image/x-icon" href="$relpath^favicon.ico" />
 		<link rel="manifest" href="$relpath^site.webmanifest" />
 	</head>
 	<body>
