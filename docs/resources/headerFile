@@ -18,8 +18,6 @@
 <script type="text/javascript" src="$relpath^dynsections.js"></script>
 $treeview
 $search
-$mathjax
-$darkmode
 <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css" />
 $extrastylesheet
 
