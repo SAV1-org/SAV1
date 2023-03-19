@@ -8,19 +8,43 @@
 /**
  * @mainpage SAV1
  *
- * Library to enable simple and efficient playback of a WEBM file containing AV1 video and Opus audio tracks.
+ * (S)imple (AV1) and Opus playback
  *
- * SAV1 provides a simple interface on top of file parsing, low level AV1 and Opus decoding, and tracking time for playback.
- * SAV1 allows the user to choose their preferred audio frequency / channels, and their preferred video pixelformat, and receive
- * data in those formats.
+ * Library to enable simple and efficient playback of a WEBM file containing AV1 video and
+ * Opus audio tracks. Written by Elijah Cirioli, Daniel Wolnick, and Charles Hayden.
+ *
+ * SAV1 provides a simple interface on top of file parsing, low level AV1 and Opus
+ * decoding, and tracking time for playback. SAV1 allows the user to choose their
+ * preferred audio frequency / channels, and their preferred video pixelformat, and
+ * receive data in those formats. This allows desktop app developers to easily add video
+ * playback to their app. For example, a game developer could easily add cutscenes.
  *
  * Currently SAV1 is in beta.
  *
- * The library uses `dav1d` to efficiently decode video, `libopus` to efficiently decode audio-- vendors `libwebm` and `libyuv` for file parsing and color conversion respectively. The decoder and parsing modules are threaded internally so the top level API is non blocking
- * and efficient.
+ * The library uses `dav1d` to efficiently decode video, `libopus` to efficiently decode
+ * audio-- vendors `libwebm` and `libyuv` for file parsing and color conversion
+ * respectively. The decoder and parsing modules are threaded internally so the top level
+ * API is non blocking and efficient.
  *
- * [Check us out on Github](https://github.com/SAV1-org/SAV1)
+ * Why should I use this instead of another playback library?
+ * - FFmpeg: Has great support for all sorts of formats, which makes the full library
+ * large (in filesize). Also is primarily a CLI-- code component libavcodec is not easy to
+ * use. Since we just support one format, we take up much less filesize, and we have an
+ * easy to use API.
+ * - OpenCV: Does video decoding well, but not audio. Also has lots of ML related
+ * functionality bloating filesize.
+ * - pl_mpeg: Just like us, they support only one format (MPEG1 video and MP2 video) and
+ * are very lightweight (header only library). However, the codecs we support are cutting
+ * edge, so you'll be able to get better looking videos with the same filesize using SAV1.
  *
+ * [Check us out our Github repository](https://github.com/SAV1-org/SAV1)
+ *
+ * [Get in touch with us or report issues on the issue
+ * tracker](https://github.com/SAV1-org/SAV1/issues)
+ *
+ * To get started, you can check out the documentation on this website, and see the Github
+ * repo's README for library build instructions. Eventually, we hope to offer prebuilts
+ * for download, but for now you need to build from source.
  */
 
 /**
