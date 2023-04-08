@@ -365,6 +365,8 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
 int
 sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
 {
+    *frame = NULL; // on error, frame should default to 0
+
     CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
@@ -387,6 +389,8 @@ sav1_get_video_frame(Sav1Context *context, Sav1VideoFrame **frame)
 int
 sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
 {
+    *frame = NULL; // on error, frame should default to 0
+
     CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
@@ -409,6 +413,8 @@ sav1_get_audio_frame(Sav1Context *context, Sav1AudioFrame **frame)
 int
 sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
 {
+    *is_ready = 0; // on error, is_ready should default to 0
+
     CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
@@ -416,8 +422,6 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
     if ((ctx->settings->codec_target & SAV1_CODEC_AV1) == 0) {
-        // if video is not targeted, the frame is definitely not ready
-        *is_ready = 0;
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
 
@@ -433,15 +437,15 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
 int
 sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
 {
+    *is_ready = 0; // on error, is_ready should default to 0
+
     CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    if ((ctx->settings->codec_target & SAV1_CODEC_OPUS) == 0) {
-        // if audio is not targeted, the frame is definitely not ready
-        *is_ready = 0;
+    if ((ctx->settings->codec_target & SAV1_CODEC_OPUS) == 0) {        
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
 
