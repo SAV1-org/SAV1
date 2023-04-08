@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "webm_frame.h"
 #include "decode_av1.h"
@@ -56,12 +55,11 @@ decode_av1_start(void *context)
     Dav1dSequenceHeader seq_hdr;
     Dav1dData data;
     Dav1dPicture *picture;
-    if ((picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture))) == NULL) {
+    if ((picture = (Dav1dPicture *)calloc(1, sizeof(Dav1dPicture))) == NULL) {
         sav1_set_error(decode_context->ctx, "malloc() failed in decode_av1_start()");
         sav1_set_critical_error_flag(decode_context->ctx);
         return -1;
     }
-    memset(picture, 0, sizeof(Dav1dPicture));
 
     while (thread_atomic_int_load(&(decode_context->do_decode))) {
         // pull a webm frame from the input queue
@@ -155,14 +153,13 @@ decode_av1_start(void *context)
                     }
 
                     // allocate a new dav1d picture
-                    if ((picture = (Dav1dPicture *)malloc(sizeof(Dav1dPicture))) ==
+                    if ((picture = (Dav1dPicture *)calloc(1, sizeof(Dav1dPicture))) ==
                         NULL) {
                         sav1_set_error(decode_context->ctx,
                                        "malloc() failed in decode_av1_start()");
                         sav1_set_critical_error_flag(decode_context->ctx);
                         return -1;
                     }
-                    memset(picture, 0, sizeof(Dav1dPicture));
                 }
             } while (status == 0);
         } while (data.sz > 0);
@@ -170,6 +167,7 @@ decode_av1_start(void *context)
         webm_frame_destroy(input_frame);
     }
 
+    dav1d_picture_unref(picture);
     free(picture);
     return 0;
 }
