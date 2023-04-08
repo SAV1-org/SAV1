@@ -136,6 +136,7 @@ decode_av1_start(void *context)
                     if (input_frame->do_discard) {
                         // throw this dav1dPicture away
                         dav1d_picture_unref(picture);
+                        free(picture);
                     }
                     else {
                         if (seek_feed_state == 2) {
@@ -196,5 +197,6 @@ decode_av1_drain_output_queue(DecodeAv1Context *context)
             break;
         }
         dav1d_picture_unref(picture);
+        free(picture);
     }
 }
