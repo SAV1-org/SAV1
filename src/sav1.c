@@ -103,9 +103,7 @@ sav1_destroy_context(Sav1Context *context)
     thread_manager_kill_pipeline(ctx->thread_manager);
     thread_manager_destroy(ctx->thread_manager);
 
-    if (ctx->settings != NULL) {
-        free(ctx->settings);
-    }
+    // free time structs
     if (ctx->start_time != NULL) {
         free(ctx->start_time);
     }
@@ -113,11 +111,13 @@ sav1_destroy_context(Sav1Context *context)
         free(ctx->pause_time);
     }
 
+    // free seek lock mutex
     if (ctx->seek_lock != NULL) {
         thread_mutex_term(ctx->seek_lock);
         free(ctx->seek_lock);
     }
 
+    // free any remaining frames
     if (ctx->curr_video_frame != NULL) {
         sav1_video_frame_destroy(context, ctx->curr_video_frame);
     }
@@ -131,8 +131,14 @@ sav1_destroy_context(Sav1Context *context)
         sav1_audio_frame_destroy(context, ctx->next_audio_frame);
     }
 
+    // free the settings
+    if (ctx->settings != NULL) {
+        free(ctx->settings);
+    }
+
     free(ctx);
     context->is_initialized = 0;
+    context->internal_state = NULL;
 
     return 0;
 }
