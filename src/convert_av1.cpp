@@ -500,6 +500,7 @@ convert_av1_start(void *context)
         sav1_thread_queue_push(convert_context->output_queue, output_frame);
 
         dav1d_picture_unref(dav1d_pic);
+        free(dav1d_pic);
     }
 
     return 0;
