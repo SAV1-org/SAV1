@@ -122,6 +122,10 @@ else
   deps += c.find_library('dav1d', required: true)
 endif
 
+if build_machine.system() == 'linux'
+  deps += c.find_library('pthread', required: true)
+endif
+
 if build_machine.system() == 'windows'
   sav1_name_prefix = ''
 else

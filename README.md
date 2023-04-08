@@ -28,6 +28,16 @@ brew install sdl2 dav1d opus
 make all_dependencies
 ```
 
+### Linux
+If Python is not already installed:
+```
+sudo apt-get install python3 python3-pip python3-setuptools python3-wheel
+```
+Install the actual dependencies:
+```
+sudo apt-get install ninja-build libopus-dev libdav1d-dev libsdl2-dev
+```
+
 ## Build with Meson
 ```
 meson setup build

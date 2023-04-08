@@ -173,7 +173,7 @@ main(int argc, char *argv[])
 
         SDL_UpdateWindowSurface(window);
 
-        if (mouse_active_timeout && SDL_GetTicks64() >= mouse_active_timeout) {
+        if (mouse_active_timeout && SDL_GetTicks() >= mouse_active_timeout) {
             mouse_active_timeout = 0;
             SDL_ShowCursor(SDL_DISABLE);
         }
@@ -269,7 +269,7 @@ main(int argc, char *argv[])
                     break;
 
                 case SDL_MOUSEMOTION:
-                    mouse_active_timeout = SDL_GetTicks64() + 4000;
+                    mouse_active_timeout = SDL_GetTicks() + 4000;
                     SDL_ShowCursor(SDL_ENABLE);
                     break;
 
