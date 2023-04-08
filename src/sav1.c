@@ -416,6 +416,8 @@ sav1_get_video_frame_ready(Sav1Context *context, int *is_ready)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
     if ((ctx->settings->codec_target & SAV1_CODEC_AV1) == 0) {
+        // if video is not targeted, the frame is definitely not ready
+        *is_ready = 0;
         RAISE(ctx, "Can't get video when not targeting video in settings")
     }
 
@@ -438,6 +440,8 @@ sav1_get_audio_frame_ready(Sav1Context *context, int *is_ready)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
     if ((ctx->settings->codec_target & SAV1_CODEC_OPUS) == 0) {
+        // if audio is not targeted, the frame is definitely not ready
+        *is_ready = 0;
         RAISE(ctx, "Can't get audio when not targeting audio in settings")
     }
 
