@@ -279,8 +279,18 @@ main(int argc, char *argv[])
         }
     }
 
+    // clean up SAV1
     sav1_destroy_context(&context);
 
+    // clean up SDL
+    if (frame) {
+        SDL_FreeSurface(frame);
+    }
+    if (screen) {
+        SDL_FreeSurface(screen);
+    }
+    SDL_PauseAudioDevice(audio_device, 1);
+    SDL_CloseAudioDevice(audio_device);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
