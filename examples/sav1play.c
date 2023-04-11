@@ -4,24 +4,16 @@
 #include <SDL2/SDL.h>
 
 void
-rect_fit(SDL_Rect *arg, SDL_Rect target)
+rect_fit(SDL_Rect *rect, SDL_Rect target)
 {
-    int w, h, x, y;
-    float xratio, yratio, maxratio;
+    float x_ratio = (float)rect->w / (float)target.w;
+    float y_ratio = (float)rect->h / (float)target.h;
+    float max_ratio = (x_ratio > y_ratio) ? x_ratio : y_ratio;
 
-    xratio = (float)arg->w / (float)target.w;
-    yratio = (float)arg->h / (float)target.h;
-    maxratio = (xratio > yratio) ? xratio : yratio;
-
-    w = (int)ceil(arg->w / maxratio);
-    h = (int)ceil(arg->h / maxratio);
-    x = target.x + (target.w - w) / 2;
-    y = target.y + (target.h - h) / 2;
-
-    arg->w = w;
-    arg->h = h;
-    arg->x = x;
-    arg->y = y;
+    rect->w = (int)ceil(rect->w / max_ratio);
+    rect->h = (int)ceil(rect->h / max_ratio);
+    rect->x = target.x + (target.w - rect->w) / 2;
+    rect->y = target.y + (target.h - rect->h) / 2;
 }
 
 char *
