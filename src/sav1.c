@@ -269,7 +269,9 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
     }
 
     // while we have a next frame, and the next frame is ahead of current time
-    while (ctx->next_video_frame != NULL && ctx->next_video_frame->timecode <= curr_ms) {
+    while (ctx->next_video_frame != NULL &&
+           (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST ||
+            ctx->next_video_frame->timecode <= curr_ms)) {
         if (ctx->curr_video_frame != NULL) {
             // if the new video frame is from before the current frame, then we've
             // looped back to the start of the file
@@ -294,6 +296,12 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
         if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) != 0) {
             ctx->next_video_frame = (Sav1VideoFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->video_output_queue);
+        }
+
+        /* In fast mode, you only want to go through this loop once, since you're
+         * not going to skip any frames */
+        if (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST) {
+            break;
         }
     }
     thread_mutex_unlock(ctx->seek_lock);
@@ -338,7 +346,9 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
     }
 
     // while we have a next frame, and the next frame is ahead of current time
-    while (ctx->next_audio_frame != NULL && ctx->next_audio_frame->timecode <= curr_ms) {
+    while (ctx->next_audio_frame != NULL &&
+           (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST ||
+            ctx->next_audio_frame->timecode <= curr_ms)) {
         if (ctx->curr_audio_frame != NULL) {
             // if the new audio frame is from before the current frame, then we've
             // looped back to the start of the file
@@ -363,6 +373,12 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
         if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) != 0) {
             ctx->next_audio_frame = (Sav1AudioFrame *)sav1_thread_queue_pop(
                 ctx->thread_manager->audio_output_queue);
+        }
+
+        /* In fast mode, you only want to go through this loop once, since you're
+         * not going to skip any frames */
+        if (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST) {
+            break;
         }
     }
     thread_mutex_unlock(ctx->seek_lock);

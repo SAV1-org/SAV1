@@ -42,7 +42,15 @@ typedef enum {
     SAV1_AUDIO_STEREO = 2
 } Sav1AudioChannel;
 
-typedef enum { SAV1_PLAYBACK_TIMED, SAV1_PLAYBACK_FAST } Sav1PlaybackMode;
+typedef enum {
+    /** Frames are synchronized to real time. Frames may be skipped if the video is
+       behind. */
+    SAV1_PLAYBACK_TIMED,
+
+    /** For frame iteration: frames are not synchronized to real time, and no frames are
+       skipped. */
+    SAV1_PLAYBACK_FAST
+} Sav1PlaybackMode;
 
 typedef enum { SAV1_FILE_END_WAIT, SAV1_FILE_END_LOOP } Sav1OnFileEnd;
 

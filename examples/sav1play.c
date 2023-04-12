@@ -55,7 +55,7 @@ main(int argc, char *argv[])
     Sav1Context context = {0};
     sav1_create_context(&context, &settings);
 
-    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
     SDL_AudioSpec desired = {0};
     desired.freq = settings.frequency;
