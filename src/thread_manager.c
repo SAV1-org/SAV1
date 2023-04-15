@@ -116,19 +116,19 @@ thread_manager_destroy(ThreadManager *manager)
     parse_destroy(manager->parse_context);
 
     // empty and destroy the thread queues
-    int queue_size = sav1_thread_queue_get_size(manager->video_output_queue);
-    for (int i = 0; i < queue_size; i++) {
-        if (manager->video_output_queue->data[i] != NULL) {
-            sav1_video_frame_destroy(manager->ctx->context,
-                                     manager->video_output_queue->data[i]);
+    while (sav1_thread_queue_get_size(manager->video_output_queue) > 0) {
+        Sav1VideoFrame *frame =
+            (Sav1VideoFrame *)sav1_thread_queue_pop(manager->video_output_queue);
+        if (frame != NULL) {
+            sav1_video_frame_destroy(manager->ctx->context, frame);
         }
     }
     sav1_thread_queue_destroy(manager->video_output_queue);
-    queue_size = sav1_thread_queue_get_size(manager->audio_output_queue);
-    for (int i = 0; i < queue_size; i++) {
-        if (manager->audio_output_queue->data[i] != NULL) {
-            sav1_audio_frame_destroy(manager->ctx->context,
-                                     manager->audio_output_queue->data[i]);
+    while (sav1_thread_queue_get_size(manager->audio_output_queue) > 0) {
+        Sav1AudioFrame *frame =
+            (Sav1AudioFrame *)sav1_thread_queue_pop(manager->audio_output_queue);
+        if (frame != NULL) {
+            sav1_audio_frame_destroy(manager->ctx->context, frame);
         }
     }
     sav1_thread_queue_destroy(manager->audio_output_queue);
@@ -139,19 +139,21 @@ thread_manager_destroy(ThreadManager *manager)
         decode_av1_destroy(manager->decode_av1_context);
         convert_av1_destroy(manager->convert_av1_context);
 
-        // empty destroy the thread queues
-        queue_size = sav1_thread_queue_get_size(manager->video_dav1d_picture_queue);
-        for (int i = 0; i < queue_size; i++) {
-            if (manager->video_dav1d_picture_queue->data[i] != NULL) {
-                dav1d_picture_unref(manager->video_dav1d_picture_queue->data[i]);
-                free(manager->video_dav1d_picture_queue->data[i]);
+        // empty and destroy the thread queues
+        while (sav1_thread_queue_get_size(manager->video_dav1d_picture_queue) > 0) {
+            Dav1dPicture *picture =
+                (Dav1dPicture *)sav1_thread_queue_pop(manager->video_dav1d_picture_queue);
+            if (picture != NULL) {
+                dav1d_picture_unref(picture);
+                free(picture);
             }
         }
         sav1_thread_queue_destroy(manager->video_dav1d_picture_queue);
-        queue_size = sav1_thread_queue_get_size(manager->video_webm_frame_queue);
-        for (int i = 0; i < queue_size; i++) {
-            if (manager->video_webm_frame_queue->data[i] != NULL) {
-                webm_frame_destroy(manager->video_webm_frame_queue->data[i]);
+        while (sav1_thread_queue_get_size(manager->video_webm_frame_queue) > 0) {
+            WebMFrame *frame =
+                (WebMFrame *)sav1_thread_queue_pop(manager->video_webm_frame_queue);
+            if (frame != NULL) {
+                webm_frame_destroy(frame);
             }
         }
         sav1_thread_queue_destroy(manager->video_webm_frame_queue);
@@ -169,11 +171,12 @@ thread_manager_destroy(ThreadManager *manager)
         // destroy the contexts
         decode_opus_destroy(manager->decode_opus_context);
 
-        // destroy the thread queue
-        queue_size = sav1_thread_queue_get_size(manager->audio_webm_frame_queue);
-        for (int i = 0; i < queue_size; i++) {
-            if (manager->audio_webm_frame_queue->data[i] != NULL) {
-                webm_frame_destroy(manager->audio_webm_frame_queue->data[i]);
+        // empty and destroy the thread queue
+        while (sav1_thread_queue_get_size(manager->audio_webm_frame_queue) > 0) {
+            WebMFrame *frame =
+                (WebMFrame *)sav1_thread_queue_pop(manager->audio_webm_frame_queue);
+            if (frame != NULL) {
+                webm_frame_destroy(frame);
             }
         }
         sav1_thread_queue_destroy(manager->audio_webm_frame_queue);
