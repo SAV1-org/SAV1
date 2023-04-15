@@ -50,7 +50,7 @@ convert_yuv_to_rgba_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
 
     // iterate over all pixels
     for (size_t y = 0; y < output_frame->height; y++) {
-        for (int x = 0; x < output_frame->width; x++) {
+        for (size_t x = 0; x < output_frame->width; x++) {
             // get the indices for the YUV data
             size_t Y_index = y * Y_stride + x;
             size_t UV_index =
@@ -100,7 +100,7 @@ convert_yuv_to_packed(uint8_t *Y_data, ptrdiff_t Y_stride, uint8_t *U_data,
 
     // iterate over all pixels
     for (size_t y = 0; y < output_frame->height; y++) {
-        for (int x = 0; x < output_frame->width; x++) {
+        for (size_t x = 0; x < output_frame->width; x++) {
             // get the indices for the YUV data
             size_t Y_index = y * Y_stride + x;
             size_t UV_index =
@@ -137,7 +137,7 @@ RGB24ToBGR24(const uint8_t *src_rgb24, int src_stride_rgb24, uint8_t *dst_bgr24,
 {
     // iterate over all pixels
     for (size_t y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+        for (size_t x = 0; x < width; x++) {
             // swap the R and B bytes
             size_t i = y * src_stride_rgb24 + x * 3;
             uint8_t temp = src_rgb24[i];
@@ -257,7 +257,7 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
                     // no conversion function exists for this so U and V must be switched
                     size_t start_x = 0;
                     for (size_t y = 0; y < output_frame->height; y++) {
-                        for (int x = start_x; x < output_frame->width; x += 2) {
+                        for (size_t x = start_x; x < output_frame->width; x += 2) {
                             size_t i = y * output_frame->stride + x * 2;
                             uint8_t temp = output_frame->data[i];
                             size_t next_i = i + 2;

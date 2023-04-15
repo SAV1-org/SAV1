@@ -1,5 +1,6 @@
 #include "thread_manager.h"
 #include "sav1_internal.h"
+#include "webm_frame.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -114,8 +115,22 @@ thread_manager_destroy(ThreadManager *manager)
     // destroy the parse context
     parse_destroy(manager->parse_context);
 
-    // destroy the thread queues
+    // empty and destroy the thread queues
+    int queue_size = sav1_thread_queue_get_size(manager->video_output_queue);
+    for (int i = 0; i < queue_size; i++) {
+        if (manager->video_output_queue->data[i] != NULL) {
+            sav1_video_frame_destroy(manager->ctx->context,
+                                     manager->video_output_queue->data[i]);
+        }
+    }
     sav1_thread_queue_destroy(manager->video_output_queue);
+    queue_size = sav1_thread_queue_get_size(manager->audio_output_queue);
+    for (int i = 0; i < queue_size; i++) {
+        if (manager->audio_output_queue->data[i] != NULL) {
+            sav1_video_frame_destroy(manager->ctx->context,
+                                     manager->audio_output_queue->data[i]);
+        }
+    }
     sav1_thread_queue_destroy(manager->audio_output_queue);
 
     // destroy video-specific resources
@@ -124,8 +139,21 @@ thread_manager_destroy(ThreadManager *manager)
         decode_av1_destroy(manager->decode_av1_context);
         convert_av1_destroy(manager->convert_av1_context);
 
-        // destroy the thread queues
+        // empty destroy the thread queues
+        queue_size = sav1_thread_queue_get_size(manager->video_dav1d_picture_queue);
+        for (int i = 0; i < queue_size; i++) {
+            if (manager->video_dav1d_picture_queue->data[i] != NULL) {
+                dav1d_picture_unref(manager->video_dav1d_picture_queue->data[i]);
+                free(manager->video_dav1d_picture_queue->data[i]);
+            }
+        }
         sav1_thread_queue_destroy(manager->video_dav1d_picture_queue);
+        queue_size = sav1_thread_queue_get_size(manager->video_webm_frame_queue);
+        for (int i = 0; i < queue_size; i++) {
+            if (manager->video_webm_frame_queue->data[i] != NULL) {
+                webm_frame_destroy(manager->video_webm_frame_queue->data[i]);
+            }
+        }
         sav1_thread_queue_destroy(manager->video_webm_frame_queue);
 
         // optionally destroy custom processing
@@ -142,6 +170,12 @@ thread_manager_destroy(ThreadManager *manager)
         decode_opus_destroy(manager->decode_opus_context);
 
         // destroy the thread queue
+        queue_size = sav1_thread_queue_get_size(manager->audio_webm_frame_queue);
+        for (int i = 0; i < queue_size; i++) {
+            if (manager->audio_webm_frame_queue->data[i] != NULL) {
+                webm_frame_destroy(manager->audio_webm_frame_queue->data[i]);
+            }
+        }
         sav1_thread_queue_destroy(manager->audio_webm_frame_queue);
 
         // optionally destroy custom processing
