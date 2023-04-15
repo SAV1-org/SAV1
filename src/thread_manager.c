@@ -127,7 +127,7 @@ thread_manager_destroy(ThreadManager *manager)
     queue_size = sav1_thread_queue_get_size(manager->audio_output_queue);
     for (int i = 0; i < queue_size; i++) {
         if (manager->audio_output_queue->data[i] != NULL) {
-            sav1_video_frame_destroy(manager->ctx->context,
+            sav1_audio_frame_destroy(manager->ctx->context,
                                      manager->audio_output_queue->data[i]);
         }
     }
