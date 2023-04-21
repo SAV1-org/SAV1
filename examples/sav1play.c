@@ -285,4 +285,6 @@ main(int argc, char *argv[])
     SDL_CloseAudioDevice(audio_device);
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+    return 0;
 }

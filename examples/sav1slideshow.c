@@ -16,29 +16,30 @@ rect_fit(SDL_Rect *rect, SDL_Rect target)
     rect->y = target.y + (target.h - rect->h) / 2;
 }
 
+void
 move_towards_targeted_slide(int targeted_slide, int *curr_slide, Sav1Context *context,
                             Sav1VideoFrame **sav1_frame)
 {
     *sav1_frame = NULL;
 
     if (targeted_slide < *curr_slide) {
-        //printf("seeking 0\n");
+        // printf("seeking 0\n");
         sav1_seek_playback(context, 0);
         *curr_slide = -1;
     }
-    //printf("seek_err=%s\n", sav1_get_error(context));
+    // printf("seek_err=%s\n", sav1_get_error(context));
 
     int is_ready;
 
     if (targeted_slide > *curr_slide) {
         sav1_get_video_frame_ready(context, &is_ready);
         if (is_ready) {
-            //printf("getting frame\n");
+            // printf("getting frame\n");
             sav1_get_video_frame(context, sav1_frame);
             (*curr_slide)++;
         }
     }
-    //printf("targeted_err=%s\n", sav1_get_error(context));
+    // printf("targeted_err=%s\n", sav1_get_error(context));
 }
 
 int
@@ -52,9 +53,7 @@ main(int argc, char *argv[])
     int screen_width = 1200;
     int screen_height = 760;
     int frame_width, frame_height;
-    int is_paused = 0;
     int is_fullscreen = 0;
-    uint64_t mouse_active_timeout = 0;
 
     int targeted_slide = 0;
     int current_slide = -1;
@@ -70,9 +69,9 @@ main(int argc, char *argv[])
 
     SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
-    SDL_Window *window = SDL_CreateWindow(argv[1], SDL_WINDOWPOS_UNDEFINED,
-                                          SDL_WINDOWPOS_UNDEFINED, screen_width,
-                                          screen_height, SDL_WINDOW_RESIZABLE);
+    SDL_Window *window =
+        SDL_CreateWindow(argv[1], SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                         screen_width, screen_height, SDL_WINDOW_RESIZABLE);
     SDL_Surface *screen = SDL_GetWindowSurface(window);
     SDL_Rect screen_rect = {0, 0, screen_width, screen_height};
 
@@ -90,10 +89,12 @@ main(int argc, char *argv[])
         SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 20, 20, 20));
 
         // video frame
-        //printf("current=%i, targeted=%i, error=%s\n", current_slide, targeted_slide, sav1_get_error(&context));
-        move_towards_targeted_slide(targeted_slide, &current_slide, &context, &sav1_frame);
-        //printf("sav1_frame=%p\n", sav1_frame);
-        //printf("current=%i\n", current_slide);
+        // printf("current=%i, targeted=%i, error=%s\n", current_slide, targeted_slide,
+        // sav1_get_error(&context));
+        move_towards_targeted_slide(targeted_slide, &current_slide, &context,
+                                    &sav1_frame);
+        // printf("sav1_frame=%p\n", sav1_frame);
+        // printf("current=%i\n", current_slide);
         if (sav1_frame && current_slide == targeted_slide) {
             frame_width = sav1_frame->width;
             frame_height = sav1_frame->height;
@@ -105,13 +106,12 @@ main(int argc, char *argv[])
             if (frame_pixels) {
                 free(frame_pixels);
             }
-            frame_pixels = malloc(sav1_frame->size);
+            frame_pixels = (uint8_t *)malloc(sav1_frame->size);
             memcpy(frame_pixels, sav1_frame->data, sav1_frame->size);
 
             frame = SDL_CreateRGBSurfaceWithFormatFrom(
-                (void *)frame_pixels, frame_width, frame_height, 32,
-                sav1_frame->stride, SDL_PIXELFORMAT_BGRA32);
-             
+                (void *)frame_pixels, frame_width, frame_height, 32, sav1_frame->stride,
+                SDL_PIXELFORMAT_BGRA32);
         }
 
         // SDL stuff
@@ -188,4 +188,6 @@ main(int argc, char *argv[])
     }
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+    return 0;
 }
