@@ -682,9 +682,9 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
             thread_atomic_int_load(&(ctx->thread_manager->parse_context->do_seek)) == 0) {
             seek_update_start_time(ctx);
             ctx->do_seek = 0;
-            thread_mutex_unlock(ctx->seek_lock);
         }
         else {
+            thread_mutex_unlock(ctx->seek_lock);
             return -1;
         }
     }

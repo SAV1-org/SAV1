@@ -795,10 +795,12 @@ void thread_mutex_init( thread_mutex_t* mutex )
         struct x { char thread_mutex_type_too_small : ( sizeof( thread_mutex_t ) < sizeof( pthread_mutex_t ) ? 0 : 1 ); };
 
         pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
         pthread_mutexattr_settype( &attr, PTHREAD_MUTEX_ERRORCHECK );
         pthread_mutex_init( (pthread_mutex_t*) mutex, &attr );
-    
-    #else 
+        pthread_mutexattr_destroy(&attr);
+
+#else 
         #error Unknown platform.
     #endif
     }

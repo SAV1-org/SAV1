@@ -116,13 +116,6 @@ thread_manager_destroy(ThreadManager *manager)
     parse_destroy(manager->parse_context);
 
     // empty and destroy the thread queues
-    while (sav1_thread_queue_get_size(manager->video_output_queue) > 0) {
-        Sav1VideoFrame *frame =
-            (Sav1VideoFrame *)sav1_thread_queue_pop(manager->video_output_queue);
-        if (frame != NULL) {
-            sav1_video_frame_destroy(manager->ctx->context, frame);
-        }
-    }
     sav1_thread_queue_destroy(manager->video_output_queue);
     while (sav1_thread_queue_get_size(manager->audio_output_queue) > 0) {
         Sav1AudioFrame *frame =

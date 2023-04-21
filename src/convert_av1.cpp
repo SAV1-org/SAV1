@@ -444,6 +444,9 @@ convert_av1_init(ConvertAv1Context **context, Sav1InternalContext *ctx,
         return;
     }
 
+    (*context)->running = (thread_mutex_t *)malloc(sizeof(thread_mutex_t));
+    thread_mutex_init((*context)->running);
+
     (*context)->input_queue = input_queue;
     (*context)->output_queue = output_queue;
     (*context)->desired_pixel_format = ctx->settings->desired_pixel_format;
@@ -453,6 +456,8 @@ convert_av1_init(ConvertAv1Context **context, Sav1InternalContext *ctx,
 void
 convert_av1_destroy(ConvertAv1Context *context)
 {
+    thread_mutex_term(context->running);
+    free(context->running);
     free(context);
 }
 
@@ -462,6 +467,7 @@ convert_av1_start(void *context)
     ConvertAv1Context *convert_context = (ConvertAv1Context *)context;
     thread_atomic_int_store(&(convert_context->do_convert), 1);
 
+    thread_mutex_lock(convert_context->running);
     while (thread_atomic_int_load(&(convert_context->do_convert))) {
         // pull a Dav1dPicture from the input queue
         Dav1dPicture *dav1d_pic =
@@ -474,8 +480,10 @@ convert_av1_start(void *context)
         // make sure the picture is 8 bits per color
         if (dav1d_pic->p.bpc != 8) {
             sav1_set_error(convert_context->ctx,
-                           "convert_av1_start() failed: SAV1 currently only supports 8 bits per color");
+                           "convert_av1_start() failed: SAV1 currently only supports 8 "
+                           "bits per color");
             sav1_set_critical_error_flag(convert_context->ctx);
+            thread_mutex_unlock(convert_context->running);
             return -1;
         }
 
@@ -485,6 +493,11 @@ convert_av1_start(void *context)
             sav1_set_error(convert_context->ctx,
                            "malloc() failed in convert_av1_start()");
             sav1_set_critical_error_flag(convert_context->ctx);
+
+            // free the dav1d picture
+            dav1d_picture_unref(dav1d_pic);
+            free(dav1d_pic);
+            thread_mutex_unlock(convert_context->running);
             return -1;
         }
         output_frame->codec = SAV1_CODEC_AV1;
@@ -502,6 +515,7 @@ convert_av1_start(void *context)
         dav1d_picture_unref(dav1d_pic);
         free(dav1d_pic);
     }
+    thread_mutex_unlock(convert_context->running);
 
     return 0;
 }
@@ -515,6 +529,14 @@ convert_av1_stop(ConvertAv1Context *context)
     if (sav1_thread_queue_get_size(context->input_queue) == 0) {
         sav1_thread_queue_push_timeout(context->input_queue, NULL);
     }
+
+    Sav1VideoFrame *frame =
+        (Sav1VideoFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
+    if (frame != NULL) {
+        sav1_video_frame_destroy(context->ctx->context, frame);
+    }
+    thread_mutex_lock(context->running);
+    thread_mutex_unlock(context->running);
 
     // drain the output queue
     convert_av1_drain_output_queue(context);

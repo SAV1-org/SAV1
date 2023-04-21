@@ -14,6 +14,7 @@ typedef struct ConvertAv1Context {
     thread_atomic_int_t do_convert;
     Sav1InternalContext *ctx;
     Sav1PixelFormat desired_pixel_format;
+    thread_mutex_t *running;
 } ConvertAv1Context;
 
 void
