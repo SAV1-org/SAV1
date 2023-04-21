@@ -27,6 +27,17 @@ decode_opus_init(DecodeOpusContext **context, Sav1InternalContext *ctx,
         sav1_set_critical_error_flag(ctx);
         return;
     }
+
+    if (((*context)->running = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) ==
+        NULL) {
+        free(*context);
+        free((*context)->decode_buffer);
+        sav1_set_error(ctx, "malloc() failed in decode_opus_init()");
+        sav1_set_critical_error_flag(ctx);
+        return;
+    }
+    thread_mutex_init((*context)->running);
+
     (*context)->input_queue = input_queue;
     (*context)->output_queue = output_queue;
     (*context)->frequency = ctx->settings->frequency;
@@ -49,6 +60,8 @@ decode_opus_destroy(DecodeOpusContext *context)
 {
     opus_decoder_destroy(context->decoder);
     free(context->decode_buffer);
+    thread_mutex_term(context->running);
+    free(context->running);
     free(context);
 }
 
@@ -57,6 +70,7 @@ decode_opus_start(void *context)
 {
     DecodeOpusContext *decode_context = (DecodeOpusContext *)context;
     thread_atomic_int_store(&(decode_context->do_decode), 1);
+    thread_mutex_lock(decode_context->running);
 
     while (thread_atomic_int_load(&(decode_context->do_decode))) {
         // pull a webm frame from the input queue
@@ -76,6 +90,7 @@ decode_opus_start(void *context)
         if ((output_frame = (Sav1AudioFrame *)malloc(sizeof(Sav1AudioFrame))) == NULL) {
             sav1_set_error(decode_context->ctx, "malloc() failed in decode_opus_start()");
             sav1_set_critical_error_flag(decode_context->ctx);
+            thread_mutex_unlock(decode_context->running);
             return -1;
         }
         output_frame->codec = SAV1_CODEC_OPUS;
@@ -94,12 +109,14 @@ decode_opus_start(void *context)
             free(output_frame);
             sav1_set_error(decode_context->ctx, "malloc() failed in decode_opus_start()");
             sav1_set_critical_error_flag(decode_context->ctx);
+            thread_mutex_unlock(decode_context->running);
             return -1;
         }
         memcpy(output_frame->data, decode_context->decode_buffer, output_frame->size);
 
         sav1_thread_queue_push(decode_context->output_queue, output_frame);
     }
+    thread_mutex_unlock(decode_context->running);
 
     return 0;
 }
@@ -113,6 +130,17 @@ decode_opus_stop(DecodeOpusContext *context)
     if (sav1_thread_queue_get_size(context->input_queue) == 0) {
         sav1_thread_queue_push_timeout(context->input_queue, NULL);
     }
+
+    // pop an entry from the output queue so it doesn't hang on a push
+    Sav1AudioFrame *output_frame =
+        (Sav1AudioFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
+    if (output_frame != NULL) {
+        sav1_audio_frame_destroy(context->ctx->context, output_frame);
+    }
+
+    // wait for the decoding to officially stop
+    thread_mutex_lock(context->running);
+    thread_mutex_unlock(context->running);
 
     // drain the output queue
     decode_opus_drain_output_queue(context);

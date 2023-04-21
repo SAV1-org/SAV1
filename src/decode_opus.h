@@ -18,6 +18,7 @@ typedef struct DecodeOpusContext {
     Sav1AudioFrequency frequency;
     Sav1AudioChannel channels;
     Sav1InternalContext *ctx;
+    thread_mutex_t *running;
 } DecodeOpusContext;
 
 void

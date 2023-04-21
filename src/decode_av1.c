@@ -21,6 +21,15 @@ decode_av1_init(DecodeAv1Context **context, Sav1InternalContext *ctx,
         return;
     }
 
+    if (((*context)->running = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) ==
+        NULL) {
+        free(*context);
+        sav1_set_error(ctx, "malloc() failed in decode_av1_init()");
+        sav1_set_critical_error_flag(ctx);
+        return;
+    }
+    thread_mutex_init((*context)->running);
+
     (*context)->ctx = ctx;
     (*context)->input_queue = input_queue;
     (*context)->output_queue = output_queue;
@@ -34,6 +43,8 @@ void
 decode_av1_destroy(DecodeAv1Context *context)
 {
     dav1d_close(&context->dav1d_context);
+    thread_mutex_term(context->running);
+    free(context->running);
     free(context);
 }
 
@@ -42,6 +53,7 @@ decode_av1_start(void *context)
 {
     DecodeAv1Context *decode_context = (DecodeAv1Context *)context;
     thread_atomic_int_store(&(decode_context->do_decode), 1);
+    thread_mutex_lock(decode_context->running);
 
     int status;
 
@@ -116,8 +128,9 @@ decode_av1_start(void *context)
             status = dav1d_send_data(decode_context->dav1d_context, &data);
             if (status && status != DAV1D_ERR(EAGAIN)) {
                 webm_frame_destroy(input_frame);
-                sav1_set_error(decode_context->ctx,
-                           "dav1d_send_data() failed in decode_av1_start, retrying...");
+                sav1_set_error(
+                    decode_context->ctx,
+                    "dav1d_send_data() failed in decode_av1_start, retrying...");
                 continue;
             }
 
@@ -161,6 +174,7 @@ decode_av1_start(void *context)
                         sav1_set_error(decode_context->ctx,
                                        "malloc() failed in decode_av1_start()");
                         sav1_set_critical_error_flag(decode_context->ctx);
+                        thread_mutex_unlock(decode_context->running);
                         return -1;
                     }
                 }
@@ -169,9 +183,11 @@ decode_av1_start(void *context)
 
         webm_frame_destroy(input_frame);
     }
+    thread_mutex_unlock(decode_context->running);
 
     dav1d_picture_unref(picture);
     free(picture);
+
     return 0;
 }
 
@@ -184,6 +200,18 @@ decode_av1_stop(DecodeAv1Context *context)
     if (sav1_thread_queue_get_size(context->input_queue) == 0) {
         sav1_thread_queue_push_timeout(context->input_queue, NULL);
     }
+
+    // pop an entry from the output queue so it doesn't hang on a push
+    Dav1dPicture *picture =
+        (Dav1dPicture *)sav1_thread_queue_pop_timeout(context->output_queue);
+    if (picture != NULL) {
+        dav1d_picture_unref(picture);
+        free(picture);
+    }
+
+    // wait for the decoding to officially stop
+    thread_mutex_lock(context->running);
+    thread_mutex_unlock(context->running);
 
     // drain the output queue
     decode_av1_drain_output_queue(context);

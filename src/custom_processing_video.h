@@ -9,6 +9,7 @@ typedef struct CustomProcessingVideoContext {
     Sav1ThreadQueue *input_queue;
     Sav1ThreadQueue *output_queue;
     thread_atomic_int_t do_process;
+    thread_mutex_t *running;
     int (*process_function)(Sav1VideoFrame *, void *);
     void *cookie;
     Sav1InternalContext *ctx;

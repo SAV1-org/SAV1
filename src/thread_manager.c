@@ -115,15 +115,8 @@ thread_manager_destroy(ThreadManager *manager)
     // destroy the parse context
     parse_destroy(manager->parse_context);
 
-    // empty and destroy the thread queues
+    // destroy the thread queues
     sav1_thread_queue_destroy(manager->video_output_queue);
-    while (sav1_thread_queue_get_size(manager->audio_output_queue) > 0) {
-        Sav1AudioFrame *frame =
-            (Sav1AudioFrame *)sav1_thread_queue_pop(manager->audio_output_queue);
-        if (frame != NULL) {
-            sav1_audio_frame_destroy(manager->ctx->context, frame);
-        }
-    }
     sav1_thread_queue_destroy(manager->audio_output_queue);
 
     // destroy video-specific resources
@@ -132,23 +125,8 @@ thread_manager_destroy(ThreadManager *manager)
         decode_av1_destroy(manager->decode_av1_context);
         convert_av1_destroy(manager->convert_av1_context);
 
-        // empty and destroy the thread queues
-        while (sav1_thread_queue_get_size(manager->video_dav1d_picture_queue) > 0) {
-            Dav1dPicture *picture =
-                (Dav1dPicture *)sav1_thread_queue_pop(manager->video_dav1d_picture_queue);
-            if (picture != NULL) {
-                dav1d_picture_unref(picture);
-                free(picture);
-            }
-        }
+        // destroy the thread queues
         sav1_thread_queue_destroy(manager->video_dav1d_picture_queue);
-        while (sav1_thread_queue_get_size(manager->video_webm_frame_queue) > 0) {
-            WebMFrame *frame =
-                (WebMFrame *)sav1_thread_queue_pop(manager->video_webm_frame_queue);
-            if (frame != NULL) {
-                webm_frame_destroy(frame);
-            }
-        }
         sav1_thread_queue_destroy(manager->video_webm_frame_queue);
 
         // optionally destroy custom processing
@@ -164,14 +142,7 @@ thread_manager_destroy(ThreadManager *manager)
         // destroy the contexts
         decode_opus_destroy(manager->decode_opus_context);
 
-        // empty and destroy the thread queue
-        while (sav1_thread_queue_get_size(manager->audio_webm_frame_queue) > 0) {
-            WebMFrame *frame =
-                (WebMFrame *)sav1_thread_queue_pop(manager->audio_webm_frame_queue);
-            if (frame != NULL) {
-                webm_frame_destroy(frame);
-            }
-        }
+        // destroy the thread queue
         sav1_thread_queue_destroy(manager->audio_webm_frame_queue);
 
         // optionally destroy custom processing

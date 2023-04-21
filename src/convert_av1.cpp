@@ -444,7 +444,13 @@ convert_av1_init(ConvertAv1Context **context, Sav1InternalContext *ctx,
         return;
     }
 
-    (*context)->running = (thread_mutex_t *)malloc(sizeof(thread_mutex_t));
+    if (((*context)->running = (thread_mutex_t *)malloc(sizeof(thread_mutex_t))) ==
+        NULL) {
+        free(*context);
+        sav1_set_error(ctx, "malloc() failed in convert_av1_init()");
+        sav1_set_critical_error_flag(ctx);
+        return;
+    }
     thread_mutex_init((*context)->running);
 
     (*context)->input_queue = input_queue;
@@ -466,8 +472,8 @@ convert_av1_start(void *context)
 {
     ConvertAv1Context *convert_context = (ConvertAv1Context *)context;
     thread_atomic_int_store(&(convert_context->do_convert), 1);
-
     thread_mutex_lock(convert_context->running);
+
     while (thread_atomic_int_load(&(convert_context->do_convert))) {
         // pull a Dav1dPicture from the input queue
         Dav1dPicture *dav1d_pic =
@@ -530,11 +536,14 @@ convert_av1_stop(ConvertAv1Context *context)
         sav1_thread_queue_push_timeout(context->input_queue, NULL);
     }
 
+    // pop an entry from the output queue so it doesn't hang on a push
     Sav1VideoFrame *frame =
         (Sav1VideoFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
     if (frame != NULL) {
         sav1_video_frame_destroy(context->ctx->context, frame);
     }
+
+    // wait for the conversion to officially stop
     thread_mutex_lock(context->running);
     thread_mutex_unlock(context->running);
 

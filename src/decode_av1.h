@@ -12,6 +12,7 @@ typedef struct DecodeAv1Context {
     thread_atomic_int_t do_decode;
     Dav1dContext *dav1d_context;
     Sav1InternalContext *ctx;
+    thread_mutex_t *running;
 } DecodeAv1Context;
 
 void

@@ -129,7 +129,6 @@ class Sav1Callback : public Callback {
     OnClusterBegin(const ElementMetadata &, const Cluster &cluster,
                    Action *action) override
     {
-
         if (cluster.timecode.is_present()) {
             this->cluster_timecode = cluster.timecode.value();
         }
@@ -351,11 +350,11 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
     // open the input file
     state->file = std::fopen(ctx->settings->file_path, "rb");
     if (state->file == NULL) {
-        sav1_set_error(ctx,
-                           "parse_init failed: input file does not exist");
+        sav1_set_error(ctx, "parse_init failed: input file does not exist");
         sav1_set_critical_error_flag(ctx);
         state->reader = nullptr;
-    } else {
+    }
+    else {
         state->reader = new FileReader(state->file);
     }
 
@@ -378,6 +377,7 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
     parse_context->wait_before_seek = new thread_mutex_t;
     parse_context->wait_after_parse = new thread_mutex_t;
     parse_context->wait_to_acquire = new thread_mutex_t;
+    parse_context->running = new thread_mutex_t;
     parse_context->duration = 0;
     parse_context->seek_timecode = 0;
     thread_atomic_int_store(&(parse_context->status), PARSE_STATUS_OK);
@@ -385,6 +385,7 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
     thread_mutex_init(parse_context->wait_before_seek);
     thread_mutex_init(parse_context->wait_after_parse);
     thread_mutex_init(parse_context->wait_to_acquire);
+    thread_mutex_init(parse_context->running);
 
     // initialize the callback class
     state->callback->init(parse_context, state->reader);
@@ -395,7 +396,7 @@ parse_destroy(ParseContext *context)
 {
     // clean up internal state
     ParseInternalState *state = (ParseInternalState *)context->internal_state;
-    
+
     delete state->callback;
     if (state->reader != nullptr) {
         delete state->reader;
@@ -407,10 +408,12 @@ parse_destroy(ParseContext *context)
     thread_mutex_term(context->wait_before_seek);
     thread_mutex_term(context->wait_after_parse);
     thread_mutex_term(context->wait_to_acquire);
+    thread_mutex_term(context->running);
     delete context->duration_lock;
     delete context->wait_before_seek;
     delete context->wait_after_parse;
     delete context->wait_to_acquire;
+    delete context->running;
 
     // clean up the context
     delete context;
@@ -427,6 +430,7 @@ parse_start(void *context)
     }
 
     thread_atomic_int_store(&(parse_context->do_seek), 0);
+    thread_mutex_lock(parse_context->running);
 
     Status status;
     while (1) {
@@ -497,6 +501,7 @@ parse_start(void *context)
         }
     }
 
+    thread_mutex_unlock(parse_context->running);
     parse_stop(parse_context);
 
     return 0;
@@ -506,6 +511,30 @@ void
 parse_stop(ParseContext *context)
 {
     thread_atomic_int_store(&(context->do_parse), 0);
+
+    // pop an entry from the output queues so it doesn't hang on a push
+    if (context->video_output_queue != NULL) {
+        WebMFrame *video_frame =
+            (WebMFrame *)sav1_thread_queue_pop_timeout(context->video_output_queue);
+        if (video_frame != NULL) {
+            webm_frame_destroy(video_frame);
+        }
+    }
+    if (context->audio_output_queue != NULL) {
+        WebMFrame *audio_frame =
+            (WebMFrame *)sav1_thread_queue_pop_timeout(context->audio_output_queue);
+        if (audio_frame != NULL) {
+            webm_frame_destroy(audio_frame);
+        }
+    }
+
+    if (thread_atomic_int_load(&(context->do_seek)) == 0) {
+        // wait for parsing to officially stop
+        thread_mutex_lock(context->running);
+        thread_mutex_unlock(context->running);
+    }
+
+    // drain output queues
     if (context->video_output_queue != NULL) {
         while (1) {
             WebMFrame *video_frame =
