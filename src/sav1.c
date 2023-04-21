@@ -269,9 +269,12 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
     }
 
     // while we have a next frame, and the next frame is ahead of current time
+    // alternatively, in FAST mode- when we have a next frame and the current frame
+    // has not yet been pulled.
     while (ctx->next_video_frame != NULL &&
-           (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST ||
-            ctx->next_video_frame->timecode <= curr_ms)) {
+           (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST
+                ? !ctx->video_frame_ready
+                : ctx->next_video_frame->timecode <= curr_ms)) {
         if (ctx->curr_video_frame != NULL) {
             // if the new video frame is from before the current frame, then we've
             // looped back to the start of the file
