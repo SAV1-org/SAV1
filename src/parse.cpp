@@ -129,7 +129,6 @@ class Sav1Callback : public Callback {
     OnClusterBegin(const ElementMetadata &, const Cluster &cluster,
                    Action *action) override
     {
-        assert(action != nullptr);
 
         if (cluster.timecode.is_present()) {
             this->cluster_timecode = cluster.timecode.value();
@@ -193,7 +192,6 @@ class Sav1Callback : public Callback {
     OnSimpleBlockBegin(const ElementMetadata &, const SimpleBlock &simple_block,
                        Action *action) override
     {
-        assert(action != nullptr);
         if ((simple_block.track_number == this->av1_track_number &&
              this->context->codec_target & SAV1_CODEC_AV1) ||
             (simple_block.track_number == this->opus_track_number &&
@@ -221,7 +219,6 @@ class Sav1Callback : public Callback {
     Status
     OnBlockBegin(const ElementMetadata &, const Block &block, Action *action) override
     {
-        assert(action != nullptr);
         if ((block.track_number == this->av1_track_number &&
              this->context->codec_target & SAV1_CODEC_AV1) ||
             (block.track_number == this->opus_track_number &&
@@ -256,9 +253,7 @@ class Sav1Callback : public Callback {
         }
 
         // sanity checks
-        assert(reader != nullptr);
-        assert(bytes_remaining != nullptr);
-        if (*bytes_remaining == 0) {
+        if (reader == nullptr || bytes_remaining == nullptr || *bytes_remaining == 0) {
             return Status(Status::kOkCompleted);
         }
 
@@ -355,10 +350,17 @@ parse_init(ParseContext **context, Sav1InternalContext *ctx,
 
     // open the input file
     state->file = std::fopen(ctx->settings->file_path, "rb");
+    if (state->file == NULL) {
+        sav1_set_error(ctx,
+                           "parse_init failed: input file does not exist");
+        sav1_set_critical_error_flag(ctx);
+        state->reader = nullptr;
+    } else {
+        state->reader = new FileReader(state->file);
+    }
 
     // create the webmparser objects
     state->callback = new Sav1Callback();
-    state->reader = new FileReader(state->file);
     state->parser = new WebmParser();
 
     // allocate the ParseContext
@@ -393,10 +395,11 @@ parse_destroy(ParseContext *context)
 {
     // clean up internal state
     ParseInternalState *state = (ParseInternalState *)context->internal_state;
-    assert(state != nullptr);
-
+    
     delete state->callback;
-    delete state->reader;
+    if (state->reader != nullptr) {
+        delete state->reader;
+    }
     delete state->parser;
     delete state;
 
@@ -418,6 +421,10 @@ parse_start(void *context)
 {
     ParseContext *parse_context = (ParseContext *)context;
     ParseInternalState *state = (ParseInternalState *)parse_context->internal_state;
+
+    if (state->reader == nullptr) {
+        return -1;
+    }
 
     thread_atomic_int_store(&(parse_context->do_seek), 0);
 
