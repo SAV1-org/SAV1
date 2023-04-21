@@ -473,10 +473,10 @@ convert_av1_start(void *context)
 
         // make sure the picture is 8 bits per color
         if (dav1d_pic->p.bpc != 8) {
-            // TODO: proper logging here
-            printf("ERROR: SAV1 only currently supports 8 bits per color\n");
-            sav1_thread_queue_push(convert_context->output_queue, NULL);
-            break;
+            sav1_set_error(convert_context->ctx,
+                           "convert_av1_start() failed: SAV1 currently only supports 8 bits per color");
+            sav1_set_critical_error_flag(convert_context->ctx);
+            return -1;
         }
 
         // setup the output frame

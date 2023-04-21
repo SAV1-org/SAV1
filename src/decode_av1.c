@@ -107,7 +107,8 @@ decode_av1_start(void *context)
         status = dav1d_data_wrap(&data, input_frame->data, input_frame->size,
                                  fake_dealloc, NULL);
         if (status) {
-            printf("Error wrapping dav1d data\n");
+            sav1_set_error(decode_context->ctx,
+                           "dav1d_data_wrap() failed in decode_av1_start");
         }
 
         do {
@@ -115,7 +116,8 @@ decode_av1_start(void *context)
             status = dav1d_send_data(decode_context->dav1d_context, &data);
             if (status && status != DAV1D_ERR(EAGAIN)) {
                 webm_frame_destroy(input_frame);
-                printf("Error sending dav1d data\n");
+                sav1_set_error(decode_context->ctx,
+                           "dav1d_send_data() failed in decode_av1_start, retrying...");
                 continue;
             }
 
