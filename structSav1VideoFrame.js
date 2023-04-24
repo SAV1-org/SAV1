@@ -6,6 +6,7 @@ var structSav1VideoFrame =
     [ "data", "structSav1VideoFrame.html#af0fde7ef63297d5c59c7a3ac889f0f30", null ],
     [ "height", "structSav1VideoFrame.html#a4dd83a89ba103c7791add7e79648889f", null ],
     [ "pixel_format", "structSav1VideoFrame.html#a870710646ce6a3770ed8a5d73d5532c6", null ],
+    [ "sav1_has_ownership", "structSav1VideoFrame.html#ad021e088a6a37a942eef66be80b5a091", null ],
     [ "sentinel", "structSav1VideoFrame.html#ac2a7693b21c7692a1a66adc6d5bc4729", null ],
     [ "size", "structSav1VideoFrame.html#a81e4d4367e74dc6dcfc5003530902ee9", null ],
     [ "stride", "structSav1VideoFrame.html#a7ce11a53617571128b35e47068ca15a9", null ],
