@@ -36,6 +36,37 @@ sav1_audio_frame_destroy(Sav1Context *context, Sav1AudioFrame *frame)
 }
 
 int
+sav1_audio_frame_take_ownership(Sav1Context *context, Sav1AudioFrame *frame)
+{
+    // pull out internal context
+    if (context == NULL || context->is_initialized != 1) {
+        return -1;
+    }
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    if (ctx == NULL || ctx->critical_error_flag) {
+        return -1;
+    }
+
+    // make sure the frame isn't null
+    if (frame == NULL) {
+        sav1_set_error(ctx, "frame cannot be NULL in sav1_audio_frame_take_ownership()");
+        return -1;
+    }
+
+    // make sure SAV1 controls the frame currently
+    if (frame->sav1_has_ownership) {
+        sav1_set_error(
+            ctx, "SAV1 already doesn't own frame in sav1_audio_frame_take_ownership()");
+        return -1;
+    }
+
+    // give up ownership to the user
+    frame->sav1_has_ownership = 0;
+
+    return 0;
+}
+
+int
 sav1_audio_frame_clone(Sav1Context *context, Sav1AudioFrame *src_frame,
                        Sav1AudioFrame **dst_frame)
 {

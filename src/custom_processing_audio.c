@@ -90,7 +90,7 @@ custom_processing_audio_stop(CustomProcessingAudioContext *context)
     // pop an entry from the output queue so it doesn't hang on a push
     Sav1AudioFrame *frame =
         (Sav1AudioFrame *)sav1_thread_queue_pop_timeout(context->output_queue);
-    if (frame != NULL) {
+    if (frame != NULL && frame->sav1_has_ownership) {
         sav1_audio_frame_destroy(context->ctx->context, frame);
     }
 
@@ -112,6 +112,8 @@ custom_processing_audio_drain_output_queue(CustomProcessingAudioContext *context
             break;
         }
 
-        sav1_audio_frame_destroy(context->ctx->context, frame);
+        if (frame->sav1_has_ownership) {
+            sav1_audio_frame_destroy(context->ctx->context, frame);
+        }
     }
 }

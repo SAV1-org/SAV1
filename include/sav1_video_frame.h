@@ -16,13 +16,17 @@ typedef struct Sav1VideoFrame {
     int codec;
     Sav1PixelFormat pixel_format;
     void *custom_data;
-    
+
     /** (internal use) */
-    int sentinel; 
+    int sentinel;
+    int sav1_has_ownership;
 } Sav1VideoFrame;
 
 SAV1_API int
 sav1_video_frame_destroy(Sav1Context *context, Sav1VideoFrame *frame);
+
+SAV1_API int
+sav1_video_frame_take_ownership(Sav1Context *context, Sav1VideoFrame *frame);
 
 // TODO: include in documentation that custom_data is shallow cloned
 SAV1_API int

@@ -512,6 +512,7 @@ convert_av1_start(void *context)
         output_frame->timecode = dav1d_pic->m.timestamp;
         output_frame->sentinel = dav1d_pic->m.user_data.data == NULL ? 0 : 1;
         output_frame->custom_data = NULL;
+        output_frame->sav1_has_ownership = 1;
 
         // convert the color space
         convert_dav1d_picture(dav1d_pic, output_frame);

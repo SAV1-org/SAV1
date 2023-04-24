@@ -14,13 +14,17 @@ typedef struct Sav1AudioFrame {
     size_t num_channels;
     int codec;
     void *custom_data;
-    
+
     /** (internal use) */
     int sentinel;
+    int sav1_has_ownership;
 } Sav1AudioFrame;
 
 SAV1_API int
 sav1_audio_frame_destroy(Sav1Context *context, Sav1AudioFrame *frame);
+
+SAV1_API int
+sav1_audio_frame_take_ownership(Sav1Context *context, Sav1AudioFrame *frame);
 
 // TODO: include in documentation that custom_data is shallow cloned
 SAV1_API int

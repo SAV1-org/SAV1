@@ -118,16 +118,16 @@ sav1_destroy_context(Sav1Context *context)
     }
 
     // free any remaining frames
-    if (ctx->curr_video_frame != NULL) {
+    if (ctx->curr_video_frame != NULL && ctx->curr_video_frame->sav1_has_ownership) {
         sav1_video_frame_destroy(context, ctx->curr_video_frame);
     }
-    if (ctx->next_video_frame != NULL) {
+    if (ctx->next_video_frame != NULL && ctx->next_video_frame->sav1_has_ownership) {
         sav1_video_frame_destroy(context, ctx->next_video_frame);
     }
-    if (ctx->curr_audio_frame != NULL) {
+    if (ctx->curr_audio_frame != NULL && ctx->curr_audio_frame->sav1_has_ownership) {
         sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
     }
-    if (ctx->next_audio_frame != NULL) {
+    if (ctx->next_audio_frame != NULL && ctx->next_audio_frame->sav1_has_ownership) {
         sav1_audio_frame_destroy(context, ctx->next_audio_frame);
     }
 
@@ -256,7 +256,9 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
         }
         else {
             // throw out this frame and try another one if we can
-            sav1_video_frame_destroy(ctx->context, ctx->next_video_frame);
+            if (ctx->next_video_frame->sav1_has_ownership) {
+                sav1_video_frame_destroy(ctx->context, ctx->next_video_frame);
+            }
             if (sav1_thread_queue_get_size(ctx->thread_manager->video_output_queue) ==
                 0) {
                 ctx->next_video_frame = NULL;
@@ -287,7 +289,9 @@ pump_video_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             }
 
             // clean up current frame before replacing it
-            sav1_video_frame_destroy(ctx->context, ctx->curr_video_frame);
+            if (ctx->curr_video_frame->sav1_has_ownership) {
+                sav1_video_frame_destroy(ctx->context, ctx->curr_video_frame);
+            }
         }
 
         // mark ready, there is new content
@@ -336,7 +340,9 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
         }
         else {
             // throw out this frame and try another one if we can
-            sav1_audio_frame_destroy(ctx->context, ctx->next_audio_frame);
+            if (ctx->next_audio_frame->sav1_has_ownership) {
+                sav1_audio_frame_destroy(ctx->context, ctx->next_audio_frame);
+            }
             if (sav1_thread_queue_get_size(ctx->thread_manager->audio_output_queue) ==
                 0) {
                 ctx->next_audio_frame = NULL;
@@ -364,7 +370,9 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
             }
 
             // clean up current frame before replacing it
-            sav1_audio_frame_destroy(ctx->context, ctx->curr_audio_frame);
+            if (ctx->curr_audio_frame->sav1_has_ownership) {
+                sav1_audio_frame_destroy(ctx->context, ctx->curr_audio_frame);
+            }
         }
 
         // mark ready, there is new content
@@ -700,19 +708,19 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
     ctx->seek_timecode = timecode_ms;
 
     // remove all the currently queued frames
-    if (ctx->curr_video_frame != NULL) {
+    if (ctx->curr_video_frame != NULL && ctx->curr_video_frame->sav1_has_ownership) {
         sav1_video_frame_destroy(context, ctx->curr_video_frame);
         ctx->curr_video_frame = NULL;
     }
-    if (ctx->next_video_frame != NULL) {
+    if (ctx->next_video_frame != NULL && ctx->next_video_frame->sav1_has_ownership) {
         sav1_video_frame_destroy(context, ctx->next_video_frame);
         ctx->next_video_frame = NULL;
     }
-    if (ctx->curr_audio_frame != NULL) {
+    if (ctx->curr_audio_frame != NULL && ctx->curr_audio_frame->sav1_has_ownership) {
         sav1_audio_frame_destroy(context, ctx->curr_audio_frame);
         ctx->curr_audio_frame = NULL;
     }
-    if (ctx->next_audio_frame != NULL) {
+    if (ctx->next_audio_frame != NULL && ctx->next_audio_frame->sav1_has_ownership) {
         sav1_audio_frame_destroy(context, ctx->next_audio_frame);
         ctx->next_audio_frame = NULL;
     }
