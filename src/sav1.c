@@ -589,7 +589,7 @@ sav1_stop_playback(Sav1Context *context)
 }
 
 int
-sav1_get_playback_status(Sav1Context *context, int *status)
+sav1_is_playback_paused(Sav1Context *context, int *is_paused)
 {
     CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
@@ -597,7 +597,29 @@ sav1_get_playback_status(Sav1Context *context, int *status)
     CHECK_CTX_INITIALIZED(ctx, context)
     CHECK_CTX_CRITICAL_ERROR(ctx)
 
-    *status = ctx->is_playing;
+    *is_paused = !ctx->is_playing;
+    return 0;
+}
+
+int
+sav1_is_playback_at_file_end(Sav1Context *context, int *is_at_file_end)
+{
+    CHECK_CONTEXT_VALID(context)
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    // in loop mode the file will never be over
+    if (ctx->settings->on_file_end == SAV1_FILE_END_LOOP) {
+        *is_at_file_end = 0;
+    }
+    else {
+        *is_at_file_end = parse_get_status(ctx->thread_manager->parse_context) ==
+                              PARSE_STATUS_END_OF_FILE &&
+                          ctx->next_video_frame == NULL && ctx->next_audio_frame == NULL;
+    }
+
     return 0;
 }
 
@@ -700,12 +722,20 @@ sav1_set_playback_speed(Sav1Context *context, double playback_speed)
     }
     thread_mutex_unlock(ctx->seek_lock);
 
+    // check with a value slightly above 0 to avoid floating point precision issues
+    if (playback_speed < 0.0000001) {
+        RAISE(ctx, "sav1_set_playback_speed() must be called with playback_speed > 0")
+    }
+
+    // calculate adjusted playback_time
     uint64_t prev_playback_time;
     sav1_get_playback_time(context, &prev_playback_time);
     prev_playback_time /= playback_speed;
 
+    // update playback speed
     ctx->settings->playback_speed = playback_speed;
 
+    // update start time and pause time based on prev_playback_time
     struct timespec curr_time;
     clock_gettime(CLOCK_MONOTONIC, &curr_time);
 
@@ -756,7 +786,7 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
     // don't seek if we're already doing it
     thread_mutex_lock(ctx->seek_lock);
     if (ctx->do_seek) {
-        if (thread_atomic_int_load(&(ctx->thread_manager->parse_context->status)) ==
+        if (parse_get_status(ctx->thread_manager->parse_context) ==
                 PARSE_STATUS_END_OF_FILE &&
             thread_atomic_int_load(&(ctx->thread_manager->parse_context->do_seek)) == 0) {
             seek_update_start_time(ctx);

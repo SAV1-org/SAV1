@@ -253,17 +253,34 @@ SAV1_API int
 sav1_stop_playback(Sav1Context *context);
 
 /**
- * @brief Gets the current playback status
+ * @brief Gets whether the video is playing or not
  *
  * @param[in] context pointer to a created SAV1 context
- * @param[out] status 0 when paused or not yet started, 1 when playing
+ * @param[out] is_paused 1 when paused or not yet started, 0 when playing
  * @return 0 on success, or < 0 on error
  *
  * @sa sav1_start_playback
  * @sa sav1_stop_playback
  */
 SAV1_API int
-sav1_get_playback_status(Sav1Context *context, int *status);
+sav1_is_playback_paused(Sav1Context *context, int *is_paused);
+
+/**
+ * @brief Gets whether the video has reached the end of the file
+ *
+ * Only relevant when using the SAV1_FILE_END_WAIT mode for the @ref
+ * Sav1Settings.on_file_end setting
+ *
+ * @param[in] context pointer to a created SAV1 context
+ * @param[out] is_at_file_end 1 when at the end of the file, 0 otherwise
+ * @return 0 on success, or < 0 on error
+ *
+ * @sa sav1_start_playback
+ * @sa sav1_stop_playback
+ * @sa sav1_seek_playback
+ */
+SAV1_API int
+sav1_is_playback_at_file_end(Sav1Context *context, int *is_at_file_end);
 
 /**
  * @brief Gets the current playback time in milliseconds

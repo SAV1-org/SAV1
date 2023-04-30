@@ -85,8 +85,6 @@ main(int argc, char *argv[])
     SDL_Event event;
     int mouse_x, mouse_y;
 
-    double playback_speed = 1.0;
-
     while (running) {
         SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 103, 155, 203));
 
@@ -220,14 +218,6 @@ main(int argc, char *argv[])
                         uint64_t timecode;
                         sav1_get_playback_time(&context, &timecode);
                         sav1_seek_playback(&context, timecode + 10000);
-                    }
-                    else if (event.key.keysym.sym == SDLK_i) {
-                        playback_speed -= 0.2;
-                        sav1_set_playback_speed(&context, playback_speed);
-                    }
-                    else if (event.key.keysym.sym == SDLK_o) {
-                        playback_speed += 0.2;
-                        sav1_set_playback_speed(&context, playback_speed);
                     }
                     break;
 
