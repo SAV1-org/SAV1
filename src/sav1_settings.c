@@ -19,6 +19,7 @@ sav1_default_settings(Sav1Settings *settings, char *file_path)
     settings->frequency = SAV1_AUDIO_FREQ_48KHZ;
     settings->channels = SAV1_AUDIO_STEREO;
     settings->playback_mode = SAV1_PLAYBACK_TIMED;
+    settings->playback_speed = 1.0;
     settings->on_file_end = SAV1_FILE_END_WAIT;
 }
 

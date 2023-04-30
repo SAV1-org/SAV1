@@ -70,6 +70,9 @@ typedef struct Sav1Context {
 /**
  * @brief Initialize SAV1 context
  *
+ * After this function has been called, further changes to the @ref Sav1Settings struct
+ * will not have any effect.
+ *
  * @param[in] context pointer to an empty SAV1 context struct
  * @param[in] settings pointer to an initialized SAV1 settings struct
  * @return 0 on success, or < 0 on error
@@ -300,6 +303,39 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms);
  */
 SAV1_API int
 sav1_get_playback_duration(Sav1Context *context, uint64_t *duration_ms);
+
+/**
+ * @brief Adjusts the playback speed of the video/audio
+ *
+ * Allows the changing of the @ref Sav1Settings.playback_speed setting after the @ref
+ * Sav1Context has been created. Example: setting playback speed to 2.0 will cause the
+ * video to play twice as fast, while setting it to 0.5 will cause the video to play at
+ * half speed. This setting only controls the rate at which audio or video frames are
+ * returned by SAV1, audio will not be resampled to be faster or slower. Calling this
+ * function while using the SAV1_PLAYBACK_FAST setting will have no effect.
+ *
+ * @param[in] context pointer to a created SAV1 context
+ * @param[in] playback_speed the new rate at which to play
+ * @return 0 on success, or < 0 on error
+ *
+ * @sa Sav1Settings.playback_speed
+ * @sa sav1_get_playback_speed
+ */
+SAV1_API int
+sav1_set_playback_speed(Sav1Context *context, double playback_speed);
+
+/**
+ * @brief Gets the current value of the @ref Sav1Settings.playback_speed setting
+ *
+ * @param[in] context pointer to a created SAV1 context
+ * @param[out] playback_speed the rate that the video/audio is playing at
+ * @return 0 on success, or < 0 on error
+ *
+ * @sa Sav1Settings.playback_speed
+ * @sa sav1_set_playback_speed
+ */
+SAV1_API int
+sav1_get_playback_speed(Sav1Context *context, double *playback_speed);
 
 /**
  * @brief Seeks playback to a different time in the file

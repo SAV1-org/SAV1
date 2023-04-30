@@ -171,8 +171,9 @@ seek_update_start_time(Sav1InternalContext *ctx)
 
     struct timespec curr_time;
     clock_gettime(CLOCK_MONOTONIC, &curr_time);
-    ctx->start_time->tv_sec = curr_time.tv_sec - ctx->seek_timecode / 1000;
-    uint64_t timecode_ns = (ctx->seek_timecode % 1000) * 1000000;
+    uint64_t adjusted_seek_timecode = ctx->seek_timecode / ctx->settings->playback_speed;
+    ctx->start_time->tv_sec = curr_time.tv_sec - adjusted_seek_timecode / 1000;
+    uint64_t timecode_ns = (adjusted_seek_timecode % 1000) * 1000000;
     if (timecode_ns > (uint64_t)curr_time.tv_nsec) {
         ctx->start_time->tv_sec--;
         ctx->start_time->tv_nsec = curr_time.tv_nsec + 1000000000 - timecode_ns;
@@ -356,8 +357,9 @@ pump_audio_frames(Sav1InternalContext *ctx, uint64_t curr_ms)
 
     // while we have a next frame, and the next frame is ahead of current time
     while (ctx->next_audio_frame != NULL &&
-           (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST ||
-            ctx->next_audio_frame->timecode <= curr_ms)) {
+           (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST
+                ? !ctx->audio_frame_ready
+                : ctx->next_audio_frame->timecode <= curr_ms)) {
         if (ctx->curr_audio_frame != NULL) {
             // if the new audio frame is from before the current frame, then we've
             // looped back to the start of the file
@@ -629,8 +631,9 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
         else {
             // calculate the offset from the pause time to the start time
             *timecode_ms =
-                ((ctx->pause_time->tv_sec - ctx->start_time->tv_sec) * 1000) +
-                ((ctx->pause_time->tv_nsec - ctx->start_time->tv_nsec) / 1000000);
+                (((ctx->pause_time->tv_sec - ctx->start_time->tv_sec) * 1000) +
+                 ((ctx->pause_time->tv_nsec - ctx->start_time->tv_nsec) / 1000000)) *
+                ctx->settings->playback_speed;
             if (duration && duration < *timecode_ms) {
                 *timecode_ms = duration;
             }
@@ -649,8 +652,9 @@ sav1_get_playback_time(Sav1Context *context, uint64_t *timecode_ms)
     }
 
     // calculate the offset from the current time to the start time
-    *timecode_ms = ((curr_time.tv_sec - ctx->start_time->tv_sec) * 1000) +
-                   ((curr_time.tv_nsec - ctx->start_time->tv_nsec) / 1000000);
+    *timecode_ms = (((curr_time.tv_sec - ctx->start_time->tv_sec) * 1000) +
+                    ((curr_time.tv_nsec - ctx->start_time->tv_nsec) / 1000000)) *
+                   ctx->settings->playback_speed;
     if (duration && duration < *timecode_ms) {
         *timecode_ms = duration;
     }
@@ -673,6 +677,70 @@ sav1_get_playback_duration(Sav1Context *context, uint64_t *duration_ms)
     }
     *duration_ms = duration;
 
+    return 0;
+}
+
+int
+sav1_set_playback_speed(Sav1Context *context, double playback_speed)
+{
+    CHECK_CONTEXT_VALID(context)
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    if (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST) {
+        RAISE(ctx, "sav1_set_playback_speed() called while in SAV1_PLAYBACK_FAST mode")
+    }
+
+    thread_mutex_lock(ctx->seek_lock);
+    if (ctx->do_seek == ctx->settings->codec_target) {
+        thread_mutex_unlock(ctx->seek_lock);
+        RAISE(ctx, "sav1_set_playback_speed() called while in the middle of seeking")
+    }
+    thread_mutex_unlock(ctx->seek_lock);
+
+    uint64_t prev_playback_time;
+    sav1_get_playback_time(context, &prev_playback_time);
+    prev_playback_time /= playback_speed;
+
+    ctx->settings->playback_speed = playback_speed;
+
+    struct timespec curr_time;
+    clock_gettime(CLOCK_MONOTONIC, &curr_time);
+
+    if (!ctx->is_playing && ctx->pause_time != NULL) {
+        ctx->pause_time->tv_sec = curr_time.tv_sec;
+        ctx->pause_time->tv_nsec = curr_time.tv_nsec;
+    }
+
+    ctx->start_time->tv_sec = curr_time.tv_sec - prev_playback_time / 1000;
+    uint64_t timecode_ns = (prev_playback_time % 1000) * 1000000;
+    if (timecode_ns > (uint64_t)curr_time.tv_nsec) {
+        ctx->start_time->tv_sec--;
+        ctx->start_time->tv_nsec = curr_time.tv_nsec + 1000000000 - timecode_ns;
+    }
+    else {
+        ctx->start_time->tv_nsec = curr_time.tv_nsec - timecode_ns;
+    }
+
+    return 0;
+}
+
+int
+sav1_get_playback_speed(Sav1Context *context, double *playback_speed)
+{
+    CHECK_CONTEXT_VALID(context)
+    Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
+    CHECK_CTX_VALID(ctx)
+    CHECK_CTX_INITIALIZED(ctx, context)
+    CHECK_CTX_CRITICAL_ERROR(ctx)
+
+    if (ctx->settings->playback_mode == SAV1_PLAYBACK_FAST) {
+        RAISE(ctx, "sav1_get_playback_speed() called while in SAV1_PLAYBACK_FAST mode")
+    }
+
+    *playback_speed = ctx->settings->playback_speed;
     return 0;
 }
 

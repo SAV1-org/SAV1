@@ -69,7 +69,8 @@ typedef struct Sav1Settings {
     int use_custom_processing; /**< The bitwise indication for whether custom
                                   processing should be applied to audio and/or video.
                                 */
-    double playback_speed;
+    double playback_speed;     /**< The multiplier applied to the playback rate. Does not
+                                  cause audio to be resampled to be shorter or longer. */
     int (*custom_video_frame_processing)(
         Sav1VideoFrame *, void *); /**< A function for postprocessing the video output
                                       frames in a separate thread,
@@ -115,6 +116,8 @@ typedef struct Sav1Settings {
  * - @ref Sav1Settings.frequency defaults to `SAV1_AUDIO_FREQ_48KHZ`
  * - @ref Sav1Settings.channels defaults to `SAV1_AUDIO_STEREO`
  * - @ref Sav1Settings.playback_mode defaults to `SAV1_PLAYBACK_TIMED`
+ * - @ref Sav1Settings.on_file_end defaults to `SAV1_FILE_END_WAIT`
+ * - @ref Sav1Settings.playback_speed defaults to `1.0`
  *
  * @param[in] settings pointer to a SAV1 settings struct that will be modified
  * @param[in] file_path path to the file that will be played
