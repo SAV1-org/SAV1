@@ -136,8 +136,8 @@ RGB24ToBGR24(const uint8_t *src_rgb24, int src_stride_rgb24, uint8_t *dst_bgr24,
              int dst_stride_bgr24, int width, int height)
 {
     // iterate over all pixels
-    for (size_t y = 0; y < height; y++) {
-        for (size_t x = 0; x < width; x++) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             // swap the R and B bytes
             size_t i = y * src_stride_rgb24 + x * 3;
             uint8_t temp = src_rgb24[i];
@@ -266,8 +266,8 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
                                 start_x = 1;
                                 next_i = (y + 1) * output_frame->stride;
                             }
-                            output_frame->data[i] = output_frame->data[i + 2];
-                            output_frame->data[i + 2] = temp;
+                            output_frame->data[i] = output_frame->data[next_i];
+                            output_frame->data[next_i] = temp;
                         }
                     }
                 }
