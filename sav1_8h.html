@@ -177,9 +177,12 @@ Functions</h2></td></tr>
 <tr class="memitem:aa54a43b397a8641461fa7224d1a86731"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#aa54a43b397a8641461fa7224d1a86731">sav1_stop_playback</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context)</td></tr>
 <tr class="memdesc:aa54a43b397a8641461fa7224d1a86731"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops playback.  <a href="sav1_8h.html#aa54a43b397a8641461fa7224d1a86731">More...</a><br /></td></tr>
 <tr class="separator:aa54a43b397a8641461fa7224d1a86731"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe6c6ced21bb8b0ddbbeb4b243e06ed9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#abe6c6ced21bb8b0ddbbeb4b243e06ed9">sav1_get_playback_status</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, int *status)</td></tr>
-<tr class="memdesc:abe6c6ced21bb8b0ddbbeb4b243e06ed9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the current playback status.  <a href="sav1_8h.html#abe6c6ced21bb8b0ddbbeb4b243e06ed9">More...</a><br /></td></tr>
-<tr class="separator:abe6c6ced21bb8b0ddbbeb4b243e06ed9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae66b69d249a2e8d497a43f9954164ea1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#ae66b69d249a2e8d497a43f9954164ea1">sav1_is_playback_paused</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, int *is_paused)</td></tr>
+<tr class="memdesc:ae66b69d249a2e8d497a43f9954164ea1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets whether the video is playing or not.  <a href="sav1_8h.html#ae66b69d249a2e8d497a43f9954164ea1">More...</a><br /></td></tr>
+<tr class="separator:ae66b69d249a2e8d497a43f9954164ea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a168edfc64c8937a14edce11dce258609"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#a168edfc64c8937a14edce11dce258609">sav1_is_playback_at_file_end</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, int *is_at_file_end)</td></tr>
+<tr class="memdesc:a168edfc64c8937a14edce11dce258609"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets whether the video has reached the end of the file.  <a href="sav1_8h.html#a168edfc64c8937a14edce11dce258609">More...</a><br /></td></tr>
+<tr class="separator:a168edfc64c8937a14edce11dce258609"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af30c17b1ec7f4e60c0c23e8519cb211f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#af30c17b1ec7f4e60c0c23e8519cb211f">sav1_get_playback_time</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, uint64_t *timecode_ms)</td></tr>
 <tr class="memdesc:af30c17b1ec7f4e60c0c23e8519cb211f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the current playback time in milliseconds.  <a href="sav1_8h.html#af30c17b1ec7f4e60c0c23e8519cb211f">More...</a><br /></td></tr>
 <tr class="separator:af30c17b1ec7f4e60c0c23e8519cb211f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -587,47 +590,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="abe6c6ced21bb8b0ddbbeb4b243e06ed9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abe6c6ced21bb8b0ddbbeb4b243e06ed9">&#9670;&nbsp;</a></span>sav1_get_playback_status()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int sav1_get_playback_status </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structSav1Context.html">Sav1Context</a> *&#160;</td>
-          <td class="paramname"><em>context</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>status</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Gets the current playback status. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to a created SAV1 context </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">status</td><td>0 when paused or not yet started, 1 when playing </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success, or &lt; 0 on error</dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#a722d8382d9dc33458563c00b46ad36b2" title="Starts playback (either initially or to unpause)">sav1_start_playback</a> </dd>
-<dd>
-<a class="el" href="sav1_8h.html#aa54a43b397a8641461fa7224d1a86731" title="Stops playback.">sav1_stop_playback</a> </dd></dl>
-
-</div>
-</div>
 <a id="af30c17b1ec7f4e60c0c23e8519cb211f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af30c17b1ec7f4e60c0c23e8519cb211f">&#9670;&nbsp;</a></span>sav1_get_playback_time()</h2>
 
@@ -806,6 +768,91 @@ Functions</h2></td></tr>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#a2ea2e8b80276b5b83ec959cb8fd17602" title="Returns a frame to be displayed at the current time, or NULL">sav1_get_video_frame</a> </dd>
 <dd>
 <a class="el" href="sav1_8h.html#a82ad23b6e9b1f43408dcaeaa63201ff2" title="Queries whether the calling application has a new audio frame to play.">sav1_get_audio_frame_ready</a> </dd></dl>
+
+</div>
+</div>
+<a id="a168edfc64c8937a14edce11dce258609"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a168edfc64c8937a14edce11dce258609">&#9670;&nbsp;</a></span>sav1_is_playback_at_file_end()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int sav1_is_playback_at_file_end </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSav1Context.html">Sav1Context</a> *&#160;</td>
+          <td class="paramname"><em>context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>is_at_file_end</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets whether the video has reached the end of the file. </p>
+<p>Only relevant when using the SAV1_FILE_END_WAIT mode for the <a class="el" href="structSav1Settings.html#ac667854fb8046432d66a815f435b5a52">Sav1Settings::on_file_end</a> setting</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to a created SAV1 context </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">is_at_file_end</td><td>1 when at the end of the file, 0 otherwise </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, or &lt; 0 on error</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#a722d8382d9dc33458563c00b46ad36b2" title="Starts playback (either initially or to unpause)">sav1_start_playback</a> </dd>
+<dd>
+<a class="el" href="sav1_8h.html#aa54a43b397a8641461fa7224d1a86731" title="Stops playback.">sav1_stop_playback</a> </dd>
+<dd>
+<a class="el" href="sav1_8h.html#a16c2902743959b23433e0a35939589b9" title="Seeks playback to a different time in the file.">sav1_seek_playback</a> </dd></dl>
+
+</div>
+</div>
+<a id="ae66b69d249a2e8d497a43f9954164ea1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae66b69d249a2e8d497a43f9954164ea1">&#9670;&nbsp;</a></span>sav1_is_playback_paused()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int sav1_is_playback_paused </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSav1Context.html">Sav1Context</a> *&#160;</td>
+          <td class="paramname"><em>context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>is_paused</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets whether the video is playing or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to a created SAV1 context </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">is_paused</td><td>1 when paused or not yet started, 0 when playing </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, or &lt; 0 on error</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#a722d8382d9dc33458563c00b46ad36b2" title="Starts playback (either initially or to unpause)">sav1_start_playback</a> </dd>
+<dd>
+<a class="el" href="sav1_8h.html#aa54a43b397a8641461fa7224d1a86731" title="Stops playback.">sav1_stop_playback</a> </dd></dl>
 
 </div>
 </div>
