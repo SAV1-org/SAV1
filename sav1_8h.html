@@ -186,6 +186,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a37095916c9584511814177845d6877a7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#a37095916c9584511814177845d6877a7">sav1_get_playback_duration</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, uint64_t *duration_ms)</td></tr>
 <tr class="memdesc:a37095916c9584511814177845d6877a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the total duration of the file in milliseconds.  <a href="sav1_8h.html#a37095916c9584511814177845d6877a7">More...</a><br /></td></tr>
 <tr class="separator:a37095916c9584511814177845d6877a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa09428206133a7ffc6cd466e9bd9f372"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#aa09428206133a7ffc6cd466e9bd9f372">sav1_set_playback_speed</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, double playback_speed)</td></tr>
+<tr class="memdesc:aa09428206133a7ffc6cd466e9bd9f372"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adjusts the playback speed of the video/audio.  <a href="sav1_8h.html#aa09428206133a7ffc6cd466e9bd9f372">More...</a><br /></td></tr>
+<tr class="separator:aa09428206133a7ffc6cd466e9bd9f372"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af37d9a5a5b66b1b4d9a1e4282f440243"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#af37d9a5a5b66b1b4d9a1e4282f440243">sav1_get_playback_speed</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, double *playback_speed)</td></tr>
+<tr class="memdesc:af37d9a5a5b66b1b4d9a1e4282f440243"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the current value of the <a class="el" href="structSav1Settings.html#afc73b726ea7fe755a8e80fc943cc233a">Sav1Settings::playback_speed</a> setting.  <a href="sav1_8h.html#af37d9a5a5b66b1b4d9a1e4282f440243">More...</a><br /></td></tr>
+<tr class="separator:af37d9a5a5b66b1b4d9a1e4282f440243"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a16c2902743959b23433e0a35939589b9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#a16c2902743959b23433e0a35939589b9">sav1_seek_playback</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, uint64_t timecode_ms)</td></tr>
 <tr class="memdesc:a16c2902743959b23433e0a35939589b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Seeks playback to a different time in the file.  <a href="sav1_8h.html#a16c2902743959b23433e0a35939589b9">More...</a><br /></td></tr>
 <tr class="separator:a16c2902743959b23433e0a35939589b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -295,6 +301,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Initialize SAV1 context. </p>
+<p>After this function has been called, further changes to the <a class="el" href="structSav1Settings.html">Sav1Settings</a> struct will not have any effect.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to an empty SAV1 context struct </td></tr>
@@ -536,6 +543,47 @@ Functions</h2></td></tr>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#a722d8382d9dc33458563c00b46ad36b2" title="Starts playback (either initially or to unpause)">sav1_start_playback</a> </dd>
 <dd>
 <a class="el" href="sav1_8h.html#af30c17b1ec7f4e60c0c23e8519cb211f" title="Gets the current playback time in milliseconds.">sav1_get_playback_time</a> </dd></dl>
+
+</div>
+</div>
+<a id="af37d9a5a5b66b1b4d9a1e4282f440243"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af37d9a5a5b66b1b4d9a1e4282f440243">&#9670;&nbsp;</a></span>sav1_get_playback_speed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int sav1_get_playback_speed </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSav1Context.html">Sav1Context</a> *&#160;</td>
+          <td class="paramname"><em>context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>playback_speed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets the current value of the <a class="el" href="structSav1Settings.html#afc73b726ea7fe755a8e80fc943cc233a">Sav1Settings::playback_speed</a> setting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to a created SAV1 context </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">playback_speed</td><td>the rate that the video/audio is playing at </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, or &lt; 0 on error</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structSav1Settings.html#afc73b726ea7fe755a8e80fc943cc233a">Sav1Settings.playback_speed</a> </dd>
+<dd>
+<a class="el" href="sav1_8h.html#aa09428206133a7ffc6cd466e9bd9f372" title="Adjusts the playback speed of the video/audio.">sav1_set_playback_speed</a> </dd></dl>
 
 </div>
 </div>
@@ -803,6 +851,48 @@ Functions</h2></td></tr>
 <a class="el" href="sav1_8h.html#a86358a75470a3be594d2becb935ae34d" title="Returns a frame to be played at the current time, or NULL">sav1_get_audio_frame</a> </dd>
 <dd>
 <a class="el" href="sav1_8h.html#af30c17b1ec7f4e60c0c23e8519cb211f" title="Gets the current playback time in milliseconds.">sav1_get_playback_time</a> </dd></dl>
+
+</div>
+</div>
+<a id="aa09428206133a7ffc6cd466e9bd9f372"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa09428206133a7ffc6cd466e9bd9f372">&#9670;&nbsp;</a></span>sav1_set_playback_speed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int sav1_set_playback_speed </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSav1Context.html">Sav1Context</a> *&#160;</td>
+          <td class="paramname"><em>context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>playback_speed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adjusts the playback speed of the video/audio. </p>
+<p>Allows the changing of the <a class="el" href="structSav1Settings.html#afc73b726ea7fe755a8e80fc943cc233a">Sav1Settings::playback_speed</a> setting after the <a class="el" href="structSav1Context.html">Sav1Context</a> has been created. Example: setting playback speed to 2.0 will cause the video to play twice as fast, while setting it to 0.5 will cause the video to play at half speed. This setting only controls the rate at which audio or video frames are returned by SAV1, audio will not be resampled to be faster or slower. Calling this function while using the SAV1_PLAYBACK_FAST setting will have no effect.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to a created SAV1 context </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">playback_speed</td><td>the new rate at which to play </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, or &lt; 0 on error</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structSav1Settings.html#afc73b726ea7fe755a8e80fc943cc233a">Sav1Settings.playback_speed</a> </dd>
+<dd>
+<a class="el" href="sav1_8h.html#af37d9a5a5b66b1b4d9a1e4282f440243" title="Gets the current value of the Sav1Settings::playback_speed setting.">sav1_get_playback_speed</a> </dd></dl>
 
 </div>
 </div>
