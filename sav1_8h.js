@@ -5,6 +5,10 @@ var sav1_8h =
     [ "SAV1_MINOR_VERSION", "sav1_8h.html#a6dcc8efdb629d49057c3f6ce5138b28b", null ],
     [ "SAV1_PATCH_VERSION", "sav1_8h.html#ad93122d9ee821cc8bd1351132491c0d5", null ],
     [ "Sav1Context", "sav1_8h.html#a9a674d16ad23bdb90ee48ed9e33a4f6e", null ],
+    [ "Sav1SeekMode", "sav1_8h.html#abbaf08a967110625f7357987b8b9e77e", [
+      [ "SAV1_SEEK_MODE_FAST", "sav1_8h.html#abbaf08a967110625f7357987b8b9e77ea2d22373e6de9542a4d54f3ab6082c7b8", null ],
+      [ "SAV1_SEEK_MODE_PRECISE", "sav1_8h.html#abbaf08a967110625f7357987b8b9e77ea9cab13381c4e1e257a91e985090c476b", null ]
+    ] ],
     [ "sav1_create_context", "sav1_8h.html#a00d063e1eb59348120f22879a762b861", null ],
     [ "sav1_destroy_context", "sav1_8h.html#ae42730e0876702baa687c77ab1a3b786", null ],
     [ "sav1_get_audio_frame", "sav1_8h.html#a86358a75470a3be594d2becb935ae34d", null ],
@@ -20,7 +24,7 @@ var sav1_8h =
     [ "sav1_get_video_frame_ready", "sav1_8h.html#a453373f9f53c493b9dbb428bc2ca41d7", null ],
     [ "sav1_is_playback_at_file_end", "sav1_8h.html#a168edfc64c8937a14edce11dce258609", null ],
     [ "sav1_is_playback_paused", "sav1_8h.html#ae66b69d249a2e8d497a43f9954164ea1", null ],
-    [ "sav1_seek_playback", "sav1_8h.html#a16c2902743959b23433e0a35939589b9", null ],
+    [ "sav1_seek_playback", "sav1_8h.html#a8cb6c1f768d21190dab2cefc41614daf", null ],
     [ "sav1_set_playback_speed", "sav1_8h.html#aa09428206133a7ffc6cd466e9bd9f372", null ],
     [ "sav1_start_playback", "sav1_8h.html#a722d8382d9dc33458563c00b46ad36b2", null ],
     [ "sav1_stop_playback", "sav1_8h.html#aa54a43b397a8641461fa7224d1a86731", null ]
