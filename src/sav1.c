@@ -775,7 +775,7 @@ sav1_get_playback_speed(Sav1Context *context, double *playback_speed)
 }
 
 int
-sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
+sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms, int seek_mode)
 {
     CHECK_CONTEXT_VALID(context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
@@ -798,6 +798,9 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms)
         }
     }
     thread_mutex_unlock(ctx->seek_lock);
+
+    // update the atomic seek mode variable
+    thread_atomic_int_store(&(ctx->seek_mode), seek_mode);
 
     // make the thread manager do all the hard work
     thread_manager_seek_to_time(ctx->thread_manager, timecode_ms);

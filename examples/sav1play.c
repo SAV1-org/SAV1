@@ -207,7 +207,7 @@ main(int argc, char *argv[])
                         uint64_t timecode;
                         sav1_get_playback_time(&context, &timecode);
                         timecode = timecode >= 10000 ? timecode - 10000 : 0;
-                        sav1_seek_playback(&context, timecode);
+                        sav1_seek_playback(&context, timecode, SAV1_SEEK_MODE_FAST);
                     }
                     else if (event.key.keysym.sym == SDLK_RIGHT) {
                         // jump forward 10 seconds
@@ -217,7 +217,8 @@ main(int argc, char *argv[])
                         }
                         uint64_t timecode;
                         sav1_get_playback_time(&context, &timecode);
-                        sav1_seek_playback(&context, timecode + 10000);
+                        sav1_seek_playback(&context, timecode + 10000,
+                                           SAV1_SEEK_MODE_FAST);
                     }
                     break;
 
@@ -256,7 +257,8 @@ main(int argc, char *argv[])
                             SDL_FreeSurface(frame);
                             frame = NULL;
                         }
-                        sav1_seek_playback(&context, duration * seek_progress);
+                        sav1_seek_playback(&context, duration * seek_progress,
+                                           SAV1_SEEK_MODE_FAST);
                     }
                     break;
 

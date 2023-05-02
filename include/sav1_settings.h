@@ -52,7 +52,13 @@ typedef enum {
     SAV1_PLAYBACK_FAST
 } Sav1PlaybackMode;
 
-typedef enum { SAV1_FILE_END_WAIT, SAV1_FILE_END_LOOP } Sav1OnFileEnd;
+typedef enum {
+    /** Wait when the video ends for the user to seek to a different point. */
+    SAV1_FILE_END_WAIT,
+
+    /** Restart the video automatically upon reaching the end. */
+    SAV1_FILE_END_LOOP
+} Sav1OnFileEnd;
 
 /**
  * @brief Settings for SAV1.

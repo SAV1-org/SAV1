@@ -88,6 +88,12 @@ decode_av1_start(void *context)
                 dav1d_flush(decode_context->dav1d_context);
                 seek_state = 1;
             }
+            if (thread_atomic_int_load(&(decode_context->ctx->seek_mode)) ==
+                SAV1_SEEK_MODE_PRECISE) {
+                // if we're in precise mode then don't worry about keyframes, start
+                // feeding immediately
+                seek_feed_state = 2;
+            }
             if (seek_feed_state == 0 && input_frame->sentinel) {
                 // feed starting at next keyframe
                 seek_feed_state = 1;

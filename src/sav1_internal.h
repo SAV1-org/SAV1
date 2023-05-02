@@ -27,6 +27,7 @@ typedef struct Sav1InternalContext {
     uint8_t end_of_file;
     uint8_t do_seek;
     thread_mutex_t *seek_lock;
+    thread_atomic_int_t seek_mode;
 } Sav1InternalContext;
 
 void

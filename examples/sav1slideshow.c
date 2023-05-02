@@ -24,7 +24,7 @@ move_towards_targeted_slide(int targeted_slide, int *curr_slide, Sav1Context *co
 
     if (targeted_slide < *curr_slide) {
         // printf("seeking 0\n");
-        sav1_seek_playback(context, 0);
+        sav1_seek_playback(context, 0, SAV1_SEEK_MODE_FAST);
         *curr_slide = -1;
     }
     // printf("seek_err=%s\n", sav1_get_error(context));
