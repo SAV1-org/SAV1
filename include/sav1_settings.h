@@ -112,7 +112,7 @@ typedef struct Sav1Settings {
  *
  * This is the easiest way to get your settings up and running to create a
  * @ref Sav1Context with. If you don't call @ref sav1_default_settings, you
- * have to set every setting youself. It's recommended to use
+ * have to set every setting yourself. It's recommended to use
  * @ref sav1_default_settings to populate your settings struct, and then
  * changing any settings you desire from the defaults after.
  *
@@ -143,7 +143,7 @@ sav1_default_settings(Sav1Settings *settings, char *file_path);
  * an additional thread before it reaches the user. This can be done manually by
  * modifying the @ref Sav1Settings struct directly, but this function provides a
  * convenient way to do so. New frames are not created, but the existing frame passed in
- * can be modifed and the @ref Sav1VideoFrame.custom_data property can be used to store
+ * can be modified and the @ref Sav1VideoFrame.custom_data property can be used to store
  * additional output data. Include an optional cookie to store necessary information.
  *
  * If `destroy_function` is `NULL`, then no additional steps will be taken when frames are
@@ -177,7 +177,7 @@ sav1_settings_use_custom_video_processing(
  * an additional thread before it reaches the user. This can be done manually by
  * modifying the @ref Sav1Settings struct directly, but this function provides a
  * convenient way to do so. New frames are not created, but the existing frame passed in
- * can be modifed and the @ref Sav1AudioFrame.custom_data property can be used to store
+ * can be modified and the @ref Sav1AudioFrame.custom_data property can be used to store
  * additional output data. Include an optional cookie to store necessary information.
  *
  * If `destroy_function` is `NULL`, then no additional steps will be taken when frames are

@@ -59,7 +59,7 @@ typedef struct Sav1Context {
     /** (internal use) Pointer to SAV1's internal state, hidden from the user. */
     void *internal_state;
 
-    /** (interal use) */
+    /** (internal use) */
     uint8_t is_initialized;
 } Sav1Context;
 
