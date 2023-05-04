@@ -1,6 +1,6 @@
 var sav1_8h =
 [
-    [ "Sav1Context", "structSav1Context.html", "structSav1Context" ],
+    [ "Sav1Context", "struct_sav1_context.html", "struct_sav1_context" ],
     [ "SAV1_MAJOR_VERSION", "sav1_8h.html#a82a5cc61e109fee4b48bc1be6a9f37b6", null ],
     [ "SAV1_MINOR_VERSION", "sav1_8h.html#a6dcc8efdb629d49057c3f6ce5138b28b", null ],
     [ "SAV1_PATCH_VERSION", "sav1_8h.html#ad93122d9ee821cc8bd1351132491c0d5", null ],
@@ -13,9 +13,9 @@ var sav1_8h =
     [ "sav1_destroy_context", "sav1_8h.html#ae42730e0876702baa687c77ab1a3b786", null ],
     [ "sav1_get_audio_frame", "sav1_8h.html#a86358a75470a3be594d2becb935ae34d", null ],
     [ "sav1_get_audio_frame_ready", "sav1_8h.html#a82ad23b6e9b1f43408dcaeaa63201ff2", null ],
-    [ "sav1_get_dav1d_version", "sav1_8h.html#ab40f8ec7a88b48fd3e56c4a7d8e7c7c5", null ],
-    [ "sav1_get_error", "sav1_8h.html#a9fe2b6b9dbf910e11b93740e737835ba", null ],
-    [ "sav1_get_opus_version", "sav1_8h.html#ae335f194ba001e00c5f190e5d07124ec", null ],
+    [ "sav1_get_dav1d_version", "sav1_8h.html#a170937549acb060409b57b2f8ea6ef24", null ],
+    [ "sav1_get_error", "sav1_8h.html#ab5353fb9124424b3580c507ecbb07e7b", null ],
+    [ "sav1_get_opus_version", "sav1_8h.html#a9a300c234867c601c704899412186fbf", null ],
     [ "sav1_get_playback_duration", "sav1_8h.html#a37095916c9584511814177845d6877a7", null ],
     [ "sav1_get_playback_speed", "sav1_8h.html#af37d9a5a5b66b1b4d9a1e4282f440243", null ],
     [ "sav1_get_playback_time", "sav1_8h.html#af30c17b1ec7f4e60c0c23e8519cb211f", null ],

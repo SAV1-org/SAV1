@@ -1,6 +1,6 @@
 var sav1__settings_8h =
 [
-    [ "Sav1Settings", "structSav1Settings.html", "structSav1Settings" ],
+    [ "Sav1Settings", "struct_sav1_settings.html", "struct_sav1_settings" ],
     [ "SAV1_CODEC_AV1", "sav1__settings_8h.html#a781756830c28630cdaf64b8db987c31a", null ],
     [ "SAV1_CODEC_OPUS", "sav1__settings_8h.html#aab7f5170b542e6185008ad023398890c", null ],
     [ "SAV1_USE_CUSTOM_PROCESSING_AUDIO", "sav1__settings_8h.html#a7e74115d56cb7ffdb9596fe538762b52", null ],

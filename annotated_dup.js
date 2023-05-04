@@ -1,7 +1,7 @@
 var annotated_dup =
 [
-    [ "Sav1AudioFrame", "structSav1AudioFrame.html", "structSav1AudioFrame" ],
-    [ "Sav1Context", "structSav1Context.html", "structSav1Context" ],
-    [ "Sav1Settings", "structSav1Settings.html", "structSav1Settings" ],
-    [ "Sav1VideoFrame", "structSav1VideoFrame.html", "structSav1VideoFrame" ]
+    [ "Sav1AudioFrame", "struct_sav1_audio_frame.html", "struct_sav1_audio_frame" ],
+    [ "Sav1Context", "struct_sav1_context.html", "struct_sav1_context" ],
+    [ "Sav1Settings", "struct_sav1_settings.html", "struct_sav1_settings" ],
+    [ "Sav1VideoFrame", "struct_sav1_video_frame.html", "struct_sav1_video_frame" ]
 ];
