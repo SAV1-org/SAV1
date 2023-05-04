@@ -15,32 +15,15 @@ typedef struct Sav1AudioFrame Sav1AudioFrame;
 #define SAV1_USE_CUSTOM_PROCESSING_AUDIO 2
 
 typedef enum {
-    /* { Red, Green, Blue, Alpha }  */
-    SAV1_PIXEL_FORMAT_RGBA = 0,
-
-    /* { Alpha, Red, Green, Blue } */
-    SAV1_PIXEL_FORMAT_ARGB = 1,
-
-    /* { Blue, Green, Red, Alpha } */
-    SAV1_PIXEL_FORMAT_BGRA = 2,
-
-    /* { Alpha, Blue, Green, Red } */
-    SAV1_PIXEL_FORMAT_ABGR = 3,
-
-    /* { Red, Green, Blue } */
-    SAV1_PIXEL_FORMAT_RGB = 4,
-
-    /* { Red, Green, Blue } */
-    SAV1_PIXEL_FORMAT_BGR = 5,
-
-    /* { Y0, U0, Y1, V0 } in BT.601 limited range. */
-    SAV1_PIXEL_FORMAT_YUY2 = 6,
-
-    /* { U0, Y0, V0, Y1 } in BT.601 limited range. */
-    SAV1_PIXEL_FORMAT_UYVY = 7,
-
-    /* { Y0, V0, Y1, U0 } in BT.601 limited range. */
-    SAV1_PIXEL_FORMAT_YVYU = 8,
+    SAV1_PIXEL_FORMAT_RGBA = 0, /**< { Red, Green, Blue, Alpha }  */
+    SAV1_PIXEL_FORMAT_ARGB = 1, /**< { Alpha, Red, Green, Blue } */
+    SAV1_PIXEL_FORMAT_BGRA = 2, /**< { Blue, Green, Red, Alpha } */
+    SAV1_PIXEL_FORMAT_ABGR = 3, /**< { Alpha, Blue, Green, Red } */
+    SAV1_PIXEL_FORMAT_RGB = 4,  /**< { Red, Green, Blue } */
+    SAV1_PIXEL_FORMAT_BGR = 5,  /**< { Red, Green, Blue } */
+    SAV1_PIXEL_FORMAT_YUY2 = 6, /**< { Y0, U0, Y1, V0 } in BT.601 limited range. */
+    SAV1_PIXEL_FORMAT_UYVY = 7, /**< { U0, Y0, V0, Y1 } in BT.601 limited range. */
+    SAV1_PIXEL_FORMAT_YVYU = 8, /**< { Y0, V0, Y1, U0 } in BT.601 limited range. */
 } Sav1PixelFormat;
 
 typedef enum {
