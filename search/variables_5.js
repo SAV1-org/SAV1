@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['num_5fchannels_163',['num_channels',['../structSav1AudioFrame.html#af54e2222822f8fa023cbebf1cafaed26',1,'Sav1AudioFrame']]]
+  ['on_5ffile_5fend_161',['on_file_end',['../structSav1Settings.html#ac667854fb8046432d66a815f435b5a52',1,'Sav1Settings']]]
 ];

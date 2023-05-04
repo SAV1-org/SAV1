@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['use_5fcustom_5fprocessing_175',['use_custom_processing',['../structSav1Settings.html#a6fbd1cdfca551854087be039fe8fba0e',1,'Sav1Settings']]]
+  ['width_172',['width',['../structSav1VideoFrame.html#aabf8285873842f0dd638aa5680189b43',1,'Sav1VideoFrame']]]
 ];

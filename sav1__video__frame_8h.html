@@ -124,20 +124,25 @@ $(document).ready(function(){initNavTree('sav1__video__frame_8h.html',''); initR
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Struct to represent one decoded video frame.  <a href="structSav1VideoFrame.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:a4462679664a42dfeec7694f134d14910"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1__video__frame_8h.html#a4462679664a42dfeec7694f134d14910">Sav1VideoFrame</a></td></tr>
+<tr class="memdesc:a4462679664a42dfeec7694f134d14910"><td class="mdescLeft">&#160;</td><td class="mdescRight">Struct to represent one decoded video frame.  <a href="sav1__video__frame_8h.html#a4462679664a42dfeec7694f134d14910">More...</a><br /></td></tr>
 <tr class="separator:a4462679664a42dfeec7694f134d14910"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ae7174eb6c124d01cda282a7ab9ceff55"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55">sav1_video_frame_destroy</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a> *frame)</td></tr>
+<tr class="memdesc:ae7174eb6c124d01cda282a7ab9ceff55"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory used by a <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a>.  <a href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55">More...</a><br /></td></tr>
 <tr class="separator:ae7174eb6c124d01cda282a7ab9ceff55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8da1572fd2afa4218cb4f4135214ed78"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1__video__frame_8h.html#a8da1572fd2afa4218cb4f4135214ed78">sav1_video_frame_take_ownership</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a> *frame)</td></tr>
+<tr class="memdesc:a8da1572fd2afa4218cb4f4135214ed78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Give the user lifecycle ownership of an existing <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a>.  <a href="sav1__video__frame_8h.html#a8da1572fd2afa4218cb4f4135214ed78">More...</a><br /></td></tr>
 <tr class="separator:a8da1572fd2afa4218cb4f4135214ed78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea548946d0fe9efe669406bb4eefc9fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1__video__frame_8h.html#aea548946d0fe9efe669406bb4eefc9fb">sav1_video_frame_clone</a> (<a class="el" href="structSav1Context.html">Sav1Context</a> *context, <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a> *src_frame, <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a> **dst_frame)</td></tr>
+<tr class="memdesc:aea548946d0fe9efe669406bb4eefc9fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deep clone an existing <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a>.  <a href="sav1__video__frame_8h.html#aea548946d0fe9efe669406bb4eefc9fb">More...</a><br /></td></tr>
 <tr class="separator:aea548946d0fe9efe669406bb4eefc9fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Typedef Documentation</h2>
@@ -152,6 +157,14 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Struct to represent one decoded video frame. </p>
+<p>Contains packed pixel data in the format of the user's choice, as well as metadata to aid in its usage. Ownership of <code><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a></code>s belongs to SAV1, unless the user calls the <a class="el" href="sav1__video__frame_8h.html#a8da1572fd2afa4218cb4f4135214ed78">sav1_video_frame_take_ownership</a> function, in which case they are responsible for calling the <a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55">sav1_video_frame_destroy</a> function to destroy it.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1__video__frame_8h.html#aea548946d0fe9efe669406bb4eefc9fb" title="Deep clone an existing Sav1VideoFrame.">sav1_video_frame_clone</a> </dd>
+<dd>
+<a class="el" href="sav1__video__frame_8h.html#a8da1572fd2afa4218cb4f4135214ed78" title="Give the user lifecycle ownership of an existing Sav1VideoFrame.">sav1_video_frame_take_ownership</a> </dd>
+<dd>
+<a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55" title="Free memory used by a Sav1VideoFrame.">sav1_video_frame_destroy</a> </dd></dl>
 
 </div>
 </div>
@@ -188,6 +201,20 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Deep clone an existing <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a>. </p>
+<p>SAV1 will allocate a new video frame and new data within to copy the provided frame. SAV1 will not hold ownership of the newly created frame, so the user is responsible for calling the <a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55">sav1_video_frame_destroy</a> function when they are done with it.</p>
+<p>If the user is using <a class="el" href="structSav1Settings.html#aca3dff89f24f254294dfaf3631904aca">Sav1Settings::custom_video_frame_processing</a>, the <a class="el" href="structSav1VideoFrame.html#a4b3796078ea220421320b2cbc6269380">Sav1VideoFrame::custom_data</a> member will only be shallow-cloned.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to a created SAV1 context </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">src_frame</td><td>pointer to a <code><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a></code> to be cloned </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">dst_frame</td><td>pointer to the new <code><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a></code> </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, or &lt; 0 on error</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55" title="Free memory used by a Sav1VideoFrame.">sav1_video_frame_destroy</a> </dd></dl>
+
 </div>
 </div>
 <a id="ae7174eb6c124d01cda282a7ab9ceff55"></a>
@@ -216,6 +243,20 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Free memory used by a <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a>. </p>
+<p>Normally, SAV1 maintains ownership over <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a>`s and is responsible for destroying them. If the user has ownership over a frame, either by calling the <a class="el" href="sav1__video__frame_8h.html#a8da1572fd2afa4218cb4f4135214ed78">sav1_video_frame_take_ownership</a> function to claim ownership of an existing frame, or the <a class="el" href="sav1__video__frame_8h.html#aea548946d0fe9efe669406bb4eefc9fb">sav1_video_frame_clone</a> function to create a new clone of an existing frame, then they must call this function to free its memory after the frame is no longer needed.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to a created SAV1 context </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">frame</td><td>pointer to a <code><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a></code> that the user has ownership of </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, or &lt; 0 on error</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1__video__frame_8h.html#a8da1572fd2afa4218cb4f4135214ed78" title="Give the user lifecycle ownership of an existing Sav1VideoFrame.">sav1_video_frame_take_ownership</a> </dd>
+<dd>
+<a class="el" href="sav1__video__frame_8h.html#aea548946d0fe9efe669406bb4eefc9fb" title="Deep clone an existing Sav1VideoFrame.">sav1_video_frame_clone</a> </dd></dl>
+
 </div>
 </div>
 <a id="a8da1572fd2afa4218cb4f4135214ed78"></a>
@@ -243,6 +284,18 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Give the user lifecycle ownership of an existing <a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a>. </p>
+<p>After calling this function, SAV1 will not destroy the frame. The user is responsible for calling the <a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55">sav1_video_frame_destroy</a> function when they are done with this frame.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>pointer to a created SAV1 context </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">frame</td><td>pointer to a <code><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a></code> that SAV1 has ownership of </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, or &lt; 0 on error</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55" title="Free memory used by a Sav1VideoFrame.">sav1_video_frame_destroy</a> </dd></dl>
 
 </div>
 </div>

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['channels_0',['channels',['../structSav1Settings.html#a684dd0342ce9a3d468d8409bf4ccdcd2',1,'Sav1Settings']]],
+  ['channels_0',['channels',['../structSav1AudioFrame.html#ab32957bf1f12a4268a1a7f9da712669f',1,'Sav1AudioFrame::channels()'],['../structSav1Settings.html#a684dd0342ce9a3d468d8409bf4ccdcd2',1,'Sav1Settings::channels()']]],
   ['codec_1',['codec',['../structSav1AudioFrame.html#a6b0a83f7d870e6fb9dae46d612c860d1',1,'Sav1AudioFrame::codec()'],['../structSav1VideoFrame.html#a49f8b9a9b2976ad82e92ac680ed03339',1,'Sav1VideoFrame::codec()']]],
   ['codec_5ftarget_2',['codec_target',['../structSav1Settings.html#a37251f3f741bb345593ecf1063110db0',1,'Sav1Settings']]],
   ['color_5fdepth_3',['color_depth',['../structSav1VideoFrame.html#ad288ee8b218310c46b25dffef034477f',1,'Sav1VideoFrame']]],

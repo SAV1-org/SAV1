@@ -115,6 +115,9 @@ $(document).ready(function(){initNavTree('structSav1VideoFrame.html',''); initRe
 </div><!--header-->
 <div class="contents">
 
+<p>Struct to represent one decoded video frame.  
+ <a href="structSav1VideoFrame.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="sav1__video__frame_8h_source.html">sav1_video_frame.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -144,7 +147,15 @@ Data Fields</h2></td></tr>
 <tr class="memitem:ad021e088a6a37a942eef66be80b5a091"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1VideoFrame.html#ad021e088a6a37a942eef66be80b5a091">sav1_has_ownership</a></td></tr>
 <tr class="separator:ad021e088a6a37a942eef66be80b5a091"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Field Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Struct to represent one decoded video frame. </p>
+<p>Contains packed pixel data in the format of the user's choice, as well as metadata to aid in its usage. Ownership of <code><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a></code>s belongs to SAV1, unless the user calls the <a class="el" href="sav1__video__frame_8h.html#a8da1572fd2afa4218cb4f4135214ed78">sav1_video_frame_take_ownership</a> function, in which case they are responsible for calling the <a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55">sav1_video_frame_destroy</a> function to destroy it.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1__video__frame_8h.html#aea548946d0fe9efe669406bb4eefc9fb" title="Deep clone an existing Sav1VideoFrame.">sav1_video_frame_clone</a> </dd>
+<dd>
+<a class="el" href="sav1__video__frame_8h.html#a8da1572fd2afa4218cb4f4135214ed78" title="Give the user lifecycle ownership of an existing Sav1VideoFrame.">sav1_video_frame_take_ownership</a> </dd>
+<dd>
+<a class="el" href="sav1__video__frame_8h.html#ae7174eb6c124d01cda282a7ab9ceff55" title="Free memory used by a Sav1VideoFrame.">sav1_video_frame_destroy</a> </dd></dl>
+</div><h2 class="groupheader">Field Documentation</h2>
 <a id="a49f8b9a9b2976ad82e92ac680ed03339"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a49f8b9a9b2976ad82e92ac680ed03339">&#9670;&nbsp;</a></span>codec</h2>
 
@@ -156,6 +167,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The video codec this frame was originally stored in. SAV1 currently only supports AV1 video. </p>
 
 </div>
 </div>
@@ -170,6 +182,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The number of bits per color. SAV1 currently only supports 8 bits per color. </p>
 
 </div>
 </div>
@@ -184,6 +197,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Optional custom data attached by the user during <a class="el" href="structSav1Settings.html#aca3dff89f24f254294dfaf3631904aca">Sav1Settings::custom_video_frame_processing</a>. </p>
 
 </div>
 </div>
@@ -198,6 +212,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>An array of packed pixel data. </p>
 
 </div>
 </div>
@@ -212,6 +227,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The height in pixels of the video frame. </p>
 
 </div>
 </div>
@@ -226,6 +242,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The order that the red, green, blue, and alpha pixels have been packed in. </p>
 
 </div>
 </div>
@@ -240,6 +257,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>(internal use) </p>
 
 </div>
 </div>
@@ -269,6 +287,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The length of the pixel data array. </p>
 
 </div>
 </div>
@@ -283,6 +302,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The length of a single row of byte data. </p>
 
 </div>
 </div>
@@ -297,6 +317,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The timecode in milliseconds at which the frame should first appear. </p>
 
 </div>
 </div>
@@ -311,6 +332,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The width in pixels of the video frame. </p>
 
 </div>
 </div>

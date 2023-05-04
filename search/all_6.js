@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['on_5ffile_5fend_21',['on_file_end',['../structSav1Settings.html#ac667854fb8046432d66a815f435b5a52',1,'Sav1Settings']]]
+  ['pixel_5fformat_21',['pixel_format',['../structSav1VideoFrame.html#a870710646ce6a3770ed8a5d73d5532c6',1,'Sav1VideoFrame']]],
+  ['playback_5fmode_22',['playback_mode',['../structSav1Settings.html#acec97ed93f04e0fb34d8da9f611eabc7',1,'Sav1Settings']]],
+  ['playback_5fspeed_23',['playback_speed',['../structSav1Settings.html#afc73b726ea7fe755a8e80fc943cc233a',1,'Sav1Settings']]]
 ];

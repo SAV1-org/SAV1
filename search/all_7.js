@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['pixel_5fformat_22',['pixel_format',['../structSav1VideoFrame.html#a870710646ce6a3770ed8a5d73d5532c6',1,'Sav1VideoFrame']]],
-  ['playback_5fmode_23',['playback_mode',['../structSav1Settings.html#acec97ed93f04e0fb34d8da9f611eabc7',1,'Sav1Settings']]],
-  ['playback_5fspeed_24',['playback_speed',['../structSav1Settings.html#afc73b726ea7fe755a8e80fc943cc233a',1,'Sav1Settings']]]
+  ['queue_5fsize_24',['queue_size',['../structSav1Settings.html#a2bc8976ec075695181cf6dfbe6dbdcea',1,'Sav1Settings']]]
 ];

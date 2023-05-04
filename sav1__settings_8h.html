@@ -380,15 +380,25 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6a8998c48bc0d60ef45a16f3779d9fe913"></a>SAV1_PIXEL_FORMAT_RGBA&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6a40e879b8ea1377b8d76d89fca917b6a8"></a>SAV1_PIXEL_FORMAT_ARGB&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6a75e98af75e4106b5547c30d731d785d6"></a>SAV1_PIXEL_FORMAT_BGRA&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6aaec85c9a3bf1352792e6c6d1807e6e95"></a>SAV1_PIXEL_FORMAT_ABGR&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6af90379427f5ac6dfdf0742f0d5048db6"></a>SAV1_PIXEL_FORMAT_RGB&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6afc2ec5902d23ddf5c84c2c11c16d1c0b"></a>SAV1_PIXEL_FORMAT_BGR&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6a5ff09b8a40b061c615bc777e0aca064b"></a>SAV1_PIXEL_FORMAT_YUY2&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6ab86dca2569498aa19c564a51acf4b023"></a>SAV1_PIXEL_FORMAT_UYVY&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6af3ef67ae9918126021752f6b07fbea3e"></a>SAV1_PIXEL_FORMAT_YVYU&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6a8998c48bc0d60ef45a16f3779d9fe913"></a>SAV1_PIXEL_FORMAT_RGBA&#160;</td><td class="fielddoc"><p>{ Red, Green, Blue, Alpha } <br  />
+ </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6a40e879b8ea1377b8d76d89fca917b6a8"></a>SAV1_PIXEL_FORMAT_ARGB&#160;</td><td class="fielddoc"><p>{ Alpha, Red, Green, Blue } </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6a75e98af75e4106b5547c30d731d785d6"></a>SAV1_PIXEL_FORMAT_BGRA&#160;</td><td class="fielddoc"><p>{ Blue, Green, Red, Alpha } </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6aaec85c9a3bf1352792e6c6d1807e6e95"></a>SAV1_PIXEL_FORMAT_ABGR&#160;</td><td class="fielddoc"><p>{ Alpha, Blue, Green, Red } </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6af90379427f5ac6dfdf0742f0d5048db6"></a>SAV1_PIXEL_FORMAT_RGB&#160;</td><td class="fielddoc"><p>{ Red, Green, Blue } </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6afc2ec5902d23ddf5c84c2c11c16d1c0b"></a>SAV1_PIXEL_FORMAT_BGR&#160;</td><td class="fielddoc"><p>{ Red, Green, Blue } </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6a5ff09b8a40b061c615bc777e0aca064b"></a>SAV1_PIXEL_FORMAT_YUY2&#160;</td><td class="fielddoc"><p>{ Y0, U0, Y1, V0 } in BT.601 limited range. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6ab86dca2569498aa19c564a51acf4b023"></a>SAV1_PIXEL_FORMAT_UYVY&#160;</td><td class="fielddoc"><p>{ U0, Y0, V0, Y1 } in BT.601 limited range. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a23cc739311c28af830c5a6ee9584dac6af3ef67ae9918126021752f6b07fbea3e"></a>SAV1_PIXEL_FORMAT_YVYU&#160;</td><td class="fielddoc"><p>{ Y0, V0, Y1, U0 } in BT.601 limited range. </p>
+</td></tr>
 </table>
 
 </div>
@@ -514,13 +524,13 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">settings</td><td>pointer to a SAV1 settings struct </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">processing_function</td><td>function to modify <code><a class="el" href="structSav1AudioFrame.html">Sav1AudioFrame</a></code>s and add custom data </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">destroy_function</td><td>function for destroying custom <code><a class="el" href="structSav1AudioFrame.html">Sav1AudioFrame</a></code> data or <code>NULL</code> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">processing_function</td><td>function to modify <code><a class="el" href="structSav1AudioFrame.html" title="Struct to represent one decoded audio frame.">Sav1AudioFrame</a></code>s and add custom data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">destroy_function</td><td>function for destroying custom <code><a class="el" href="structSav1AudioFrame.html" title="Struct to represent one decoded audio frame.">Sav1AudioFrame</a></code> data or <code>NULL</code> </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">cookie</td><td>data to be passed in during custom frame processing and destruction or <code>NULL</code></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="structSav1AudioFrame.html">Sav1AudioFrame</a> </dd>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structSav1AudioFrame.html" title="Struct to represent one decoded audio frame.">Sav1AudioFrame</a> </dd>
 <dd>
 <a class="el" href="structSav1Settings.html" title="Settings for SAV1.">Sav1Settings</a> </dd></dl>
 
@@ -571,13 +581,13 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">settings</td><td>pointer to a SAV1 settings struct </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">processing_function</td><td>function to modify <code><a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a></code>s and add custom data </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">destroy_function</td><td>function for destroying custom <code><a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a></code> data or <code>NULL</code> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">processing_function</td><td>function to modify <code><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a></code>s and add custom data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">destroy_function</td><td>function for destroying custom <code><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a></code> data or <code>NULL</code> </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">cookie</td><td>data to be passed in during custom frame processing and destruction or <code>NULL</code></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="structSav1VideoFrame.html">Sav1VideoFrame</a> </dd>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structSav1VideoFrame.html" title="Struct to represent one decoded video frame.">Sav1VideoFrame</a> </dd>
 <dd>
 <a class="el" href="structSav1Settings.html" title="Settings for SAV1.">Sav1Settings</a> </dd></dl>
 

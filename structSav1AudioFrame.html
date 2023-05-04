@@ -115,6 +115,9 @@ $(document).ready(function(){initNavTree('structSav1AudioFrame.html',''); initRe
 </div><!--header-->
 <div class="contents">
 
+<p>Struct to represent one decoded audio frame.  
+ <a href="structSav1AudioFrame.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="sav1__audio__frame_8h_source.html">sav1_audio_frame.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -127,10 +130,10 @@ Data Fields</h2></td></tr>
 <tr class="separator:a0bcc01368543b5694b0273d7bf699c4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5cc17f69134581c2f97aa790c7ffdbb3"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1AudioFrame.html#a5cc17f69134581c2f97aa790c7ffdbb3">duration</a></td></tr>
 <tr class="separator:a5cc17f69134581c2f97aa790c7ffdbb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84ce6c42d5cb3b9b630d77f1fc8328b5"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1AudioFrame.html#a84ce6c42d5cb3b9b630d77f1fc8328b5">sampling_frequency</a></td></tr>
-<tr class="separator:a84ce6c42d5cb3b9b630d77f1fc8328b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af54e2222822f8fa023cbebf1cafaed26"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1AudioFrame.html#af54e2222822f8fa023cbebf1cafaed26">num_channels</a></td></tr>
-<tr class="separator:af54e2222822f8fa023cbebf1cafaed26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac55f664703c37dd890b4549f2b980c3c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="sav1__settings_8h.html#a718b1ea6d93df583f9abdeecdd6b621c">Sav1AudioFrequency</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1AudioFrame.html#ac55f664703c37dd890b4549f2b980c3c">frequency</a></td></tr>
+<tr class="separator:ac55f664703c37dd890b4549f2b980c3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab32957bf1f12a4268a1a7f9da712669f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="sav1__settings_8h.html#abb8b6eed1d187006416c9ab060a1845f">Sav1AudioChannel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1AudioFrame.html#ab32957bf1f12a4268a1a7f9da712669f">channels</a></td></tr>
+<tr class="separator:ab32957bf1f12a4268a1a7f9da712669f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b0a83f7d870e6fb9dae46d612c860d1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1AudioFrame.html#a6b0a83f7d870e6fb9dae46d612c860d1">codec</a></td></tr>
 <tr class="separator:a6b0a83f7d870e6fb9dae46d612c860d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a5aa131e0be089dc3da51adacf5e87d"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1AudioFrame.html#a0a5aa131e0be089dc3da51adacf5e87d">custom_data</a></td></tr>
@@ -140,7 +143,30 @@ Data Fields</h2></td></tr>
 <tr class="memitem:aa47ed519af14374ed6796619c4c762d6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSav1AudioFrame.html#aa47ed519af14374ed6796619c4c762d6">sav1_has_ownership</a></td></tr>
 <tr class="separator:aa47ed519af14374ed6796619c4c762d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Field Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Struct to represent one decoded audio frame. </p>
+<p>Contains raw audio data, as well as metadata to aid in its usage. Ownership of <code><a class="el" href="structSav1AudioFrame.html" title="Struct to represent one decoded audio frame.">Sav1AudioFrame</a></code>s belongs to SAV1, unless the user calls the <a class="el" href="sav1__audio__frame_8h.html#ae4139c20686cbbeb2dcbad0fdb44ad07">sav1_audio_frame_take_ownership</a> function, in which case they are responsible for calling the <a class="el" href="sav1__audio__frame_8h.html#ae8d7f8607cffb6553651b8bee7899a88">sav1_audio_frame_destroy</a> function to destroy it.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1__audio__frame_8h.html#aa1b95987935f19638f2842cc7e5566be" title="Deep clone an existing Sav1AudioFrame.">sav1_audio_frame_clone</a> </dd>
+<dd>
+<a class="el" href="sav1__audio__frame_8h.html#ae4139c20686cbbeb2dcbad0fdb44ad07" title="Give the user lifecycle ownership of an existing Sav1AudioFrame.">sav1_audio_frame_take_ownership</a> </dd>
+<dd>
+<a class="el" href="sav1__audio__frame_8h.html#ae8d7f8607cffb6553651b8bee7899a88" title="Free memory used by a Sav1AudioFrame.">sav1_audio_frame_destroy</a> </dd></dl>
+</div><h2 class="groupheader">Field Documentation</h2>
+<a id="ab32957bf1f12a4268a1a7f9da712669f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab32957bf1f12a4268a1a7f9da712669f">&#9670;&nbsp;</a></span>channels</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="sav1__settings_8h.html#abb8b6eed1d187006416c9ab060a1845f">Sav1AudioChannel</a> Sav1AudioFrame::channels</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The number of audio channels. </p>
+
+</div>
+</div>
 <a id="a6b0a83f7d870e6fb9dae46d612c860d1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6b0a83f7d870e6fb9dae46d612c860d1">&#9670;&nbsp;</a></span>codec</h2>
 
@@ -152,6 +178,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The audio codec this frame was originally stored in. SAV1 currently only supports Opus audio. </p>
 
 </div>
 </div>
@@ -166,6 +193,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Optional custom data attached by the user during <a class="el" href="structSav1Settings.html#a28ba563eb03f6eb2bbbec365272fc15b">Sav1Settings::custom_audio_frame_processing</a>. </p>
 
 </div>
 </div>
@@ -180,6 +208,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>An array of PCM audio samples. </p>
 
 </div>
 </div>
@@ -194,34 +223,22 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The duration in milliseconds of the audio frame. </p>
 
 </div>
 </div>
-<a id="af54e2222822f8fa023cbebf1cafaed26"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af54e2222822f8fa023cbebf1cafaed26">&#9670;&nbsp;</a></span>num_channels</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t Sav1AudioFrame::num_channels</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a84ce6c42d5cb3b9b630d77f1fc8328b5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a84ce6c42d5cb3b9b630d77f1fc8328b5">&#9670;&nbsp;</a></span>sampling_frequency</h2>
+<a id="ac55f664703c37dd890b4549f2b980c3c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac55f664703c37dd890b4549f2b980c3c">&#9670;&nbsp;</a></span>frequency</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double Sav1AudioFrame::sampling_frequency</td>
+          <td class="memname"><a class="el" href="sav1__settings_8h.html#a718b1ea6d93df583f9abdeecdd6b621c">Sav1AudioFrequency</a> Sav1AudioFrame::frequency</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The sampling frequency of the audio frame. </p>
 
 </div>
 </div>
@@ -236,6 +253,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>(internal use) </p>
 
 </div>
 </div>
@@ -265,6 +283,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The length of the data array. </p>
 
 </div>
 </div>
@@ -279,6 +298,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The timecode in milliseconds at which the frame should begin playing. </p>
 
 </div>
 </div>
