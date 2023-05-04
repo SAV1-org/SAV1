@@ -18,6 +18,8 @@
 <script type="text/javascript" src="$relpath^dynsections.js"></script>
 $treeview
 $search
+$mathjax
+$darkmode
 <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css" />
 $extrastylesheet
 
@@ -26,7 +28,6 @@ $extrastylesheet
 <link rel="icon" type="image/png" sizes="16x16" href="$relpath^favicon-16x16.png" />
 <link rel="shortcut icon" type="image/x-icon" href="$relpath^favicon.ico" />
 <link rel="manifest" href="$relpath^site.webmanifest" />
-
 </head>
 <body>
 <!--BEGIN DISABLE_INDEX-->
