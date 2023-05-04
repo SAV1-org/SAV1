@@ -68,13 +68,17 @@ typedef struct Sav1Context {
 #include "sav1_audio_frame.h"
 
 typedef enum {
-    /** Seek video to the first keyframe at or after the specified timecode. Sacrifices
-       some precision for improved speed. (Recommended) */
+    /** Recommended mode to seek video to approximately the specified timecode utilizing
+       keyframes. The first frame returned after seeking will at best be the first
+       frame at or after the specified timecode, and at worst will be the first
+       keyframe at or after the specified timecode. Sacrifices some precision for improved
+       speed.
+     */
     SAV1_SEEK_MODE_FAST,
 
     /** Seek video to the first frame at or after the specified timecode, regardless of
-       whether it is a keyframe. Can sometimes be signficiantly slower for the benefit of
-       increased precision. */
+       whether it is a keyframe. Can sometimes be significantly slower than
+       `SAV1_SEEK_MODE_FAST` for the benefit of increased precision. */
     SAV1_SEEK_MODE_PRECISE
 } Sav1SeekMode;
 
@@ -374,11 +378,12 @@ sav1_get_playback_speed(Sav1Context *context, double *playback_speed);
  * The first audio frame returned after seeking will be the first audio frame
  * in the file with a timecode greater than or equal to `timecode_ms`. It is recommended
  * to use the @ref SAV1_SEEK_MODE_FAST mode which will cause the first video frame
- * returned after seeking to be the first keyframe in the file with a timecode greater
- * than or equal to `timecode_ms`. Using the @ref SAV1_SEEK_MODE_PRECISE mode will cause
- * the first video frame returned after seeking to be the first frame of any kind in the
- * file with a timecode greater than or equal to `timecode_ms`. This can be closer to the
- * timecode provided, but it may cause SAV1 to spend more time finding that frame.
+ * returned after seeking to be in the worst case the first keyframe in the file with a
+ * timecode greater than or equal to `timecode_ms`. Using the @ref SAV1_SEEK_MODE_PRECISE
+ * mode will cause the first video frame returned after seeking to be the first frame of
+ * any kind in the file with a timecode greater than or equal to `timecode_ms`. This can
+ * be closer to the timecode provided, but it may cause SAV1 to spend more time finding
+ * that frame.
  *
  * While SAV1 is actively seeking, calls to @ref sav1_get_video_frame and
  * @ref sav1_get_audio_frame may return a `NULL` frame. When seeking has finished,

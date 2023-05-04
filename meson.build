@@ -185,3 +185,9 @@ executable('sav1slideshow', 'examples/sav1slideshow.c',
             link_with: sav1_lib,
             install: true, install_dir: dir_base)
 
+executable('sav2play', 'examples/sav2play.c', 
+            include_directories: sav1play_includes,
+            dependencies: sav1play_deps,
+            link_with: sav1_lib,
+            install: true, install_dir: dir_base)
+
