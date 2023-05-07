@@ -2,7 +2,7 @@ name: Build on Windows
 
 on:
   push:
-# branches: main
+    branches: main
 
   pull_request:
     branches: main
@@ -59,5 +59,21 @@ jobs:
         run: |
           ls
           ls dependencies/
+
+          # Move deps DLLs into root folder for runtime.
+          robocopy "dependencies/x64-windows/bin/" . *.dll
+
+          # robocopy exit codes cause problems
+          # See https://github.com/microsoft/azure-pipelines-tasks/issues/1605
+          if ($lastexitcode -lt 8) { $global:lastexitcode = 0 }
+
           meson setup build
           meson install -C build
+    
+      - name: Upload build
+        uses: actions/upload-artifact@v3
+        with:
+          name: sav1-windows-x64
+          path: |
+            ./*.DLL
+            ./include/*
