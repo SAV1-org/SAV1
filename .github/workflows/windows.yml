@@ -1,0 +1,79 @@
+name: Build on Windows
+
+on:
+  push:
+    branches: main
+
+  pull_request:
+    branches: main
+
+concurrency:
+  group: windows-build
+  cancel-in-progress: true
+
+jobs:
+  deps:
+    name: Windows Deps
+    runs-on: windows-latest
+  
+    steps:
+      - uses: actions/checkout@v3.5.2
+
+      - name: Test for Windows C Deps cache hit
+        id: windowsdep-cache
+        uses: actions/cache@v3.0.2
+        with:
+          path: ${{ github.workspace }}/dependencies/x64-windows
+          key: 2
+
+      # if they don't exist, rebuild
+      - name: Build Windows C Deps
+        if: steps.windowsdep-cache.outputs.cache-hit != 'true'
+        run: |
+          ./install_windows_deps.bat
+
+          # robocopy exit codes cause problems
+          # See https://github.com/microsoft/azure-pipelines-tasks/issues/1605
+          if ($lastexitcode -lt 8) { $global:lastexitcode = 0 }
+
+  build:
+    name: Windows Build
+    runs-on: windows-latest
+    needs: deps
+
+    steps:
+      - uses: actions/checkout@v3.5.2
+
+      - name: Fetch Windows C deps
+        id: windowsdep-cache
+        uses: actions/cache@v3.0.2
+        with:
+          path: ${{ github.workspace }}/dependencies/x64-windows
+          key: 2
+
+      - name: Install other deps
+        run: |
+          pip install meson ninja
+      
+      - name: Build SAV1
+        run: |
+          ls
+          ls dependencies/
+
+          # Move deps DLLs into root folder for runtime.
+          robocopy "dependencies/x64-windows/bin/" . *.dll
+
+          # robocopy exit codes cause problems
+          # See https://github.com/microsoft/azure-pipelines-tasks/issues/1605
+          if ($lastexitcode -lt 8) { $global:lastexitcode = 0 }
+
+          meson setup build
+          meson install -C build
+    
+      - name: Upload build
+        uses: actions/upload-artifact@v3
+        with:
+          name: sav1-windows-x64
+          path: |
+            ./*.DLL
+            ./include/*
