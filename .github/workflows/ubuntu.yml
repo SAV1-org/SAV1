@@ -1,0 +1,40 @@
+name: Build on Ubuntu
+
+on:
+  push:
+    branches: main
+
+  pull_request:
+    branches: main
+
+concurrency:
+  group: ubuntu-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Ubuntu Build
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3.5.2
+
+      - name: Install deps
+        run: |
+          sudo apt-get update --fix-missing
+          sudo apt-get upgrade
+          sudo apt-get install ninja-build libopus-dev libdav1d-dev libsdl2-dev
+          pip install meson
+      
+      - name: Build SAV1
+        run: |
+          meson setup build
+          meson install -C build
+    
+      - name: Upload build
+        uses: actions/upload-artifact@v3
+        with:
+          name: sav1-ubuntu-x64
+          path: |
+            ./*.so
+            ./include/*
