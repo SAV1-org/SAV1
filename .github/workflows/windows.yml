@@ -57,9 +57,6 @@ jobs:
       
       - name: Build SAV1
         run: |
-          ls
-          ls dependencies/
-
           # Move deps DLLs into root folder for runtime.
           robocopy "dependencies/x64-windows/bin/" . *.dll
 
