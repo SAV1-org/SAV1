@@ -1,12 +1,14 @@
 #include <cassert>
 #include <cstdio>
 
+extern "C" {
 #include <dav1d/dav1d.h>
 
 #include "convert_av1.h"
 #include "sav1_video_frame.h"
 #include "sav1_settings.h"
 #include "sav1_internal.h"
+}
 
 using namespace libyuv;
 

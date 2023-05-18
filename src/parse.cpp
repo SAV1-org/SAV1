@@ -5,10 +5,12 @@
 #include <webm/webm_parser.h>
 #include <webm/file_reader.h>
 
+extern "C" {
 #include "parse.h"
 #include "sav1_settings.h"
 #include "sav1_internal.h"
 #include "webm_frame.h"
+}
 
 #define PARSE_TRACK_NUMBER_NOT_SPECIFIED 99999
 #define PARSE_SEEK_STATUS 5
