@@ -1,6 +1,10 @@
 #ifndef SAV1_H
 #define SAV1_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -453,5 +457,9 @@ sav1_get_dav1d_version();
  */
 SAV1_API char *
 sav1_get_opus_version();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
