@@ -1,7 +1,7 @@
-#include "webm_frame.h"
-
 #include <assert.h>
 #include <stdlib.h>
+
+#include "webm_frame.h"
 
 int
 webm_frame_init(WebMFrame **frame, size_t size)

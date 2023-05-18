@@ -1,7 +1,7 @@
+#include <string.h>
+
 #include "sav1_video_frame.h"
 #include "sav1_internal.h"
-
-#include <string.h>
 
 int
 sav1_video_frame_destroy(Sav1Context *context, Sav1VideoFrame *frame)

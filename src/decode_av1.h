@@ -2,6 +2,7 @@
 #define DECODE_AV1_H
 
 #include <dav1d/dav1d.h>
+
 #include "thread_queue.h"
 
 typedef struct Sav1InternalContext Sav1InternalContext;

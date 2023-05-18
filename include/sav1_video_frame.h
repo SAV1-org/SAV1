@@ -1,9 +1,9 @@
 #ifndef SAV1_VIDEO_FRAME_H
 #define SAV1_VIDEO_FRAME_H
 
-#include "sav1.h"
-
 #include <stdint.h>
+
+#include "sav1.h"
 
 /**
  * @brief Struct to represent one decoded video frame.

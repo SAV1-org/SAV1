@@ -1,9 +1,9 @@
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "thread_manager.h"
 #include "sav1_internal.h"
 #include "webm_frame.h"
-
-#include <stdlib.h>
-#include <stdio.h>
 
 void
 thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
 #include "common.h"
 
 typedef struct Sav1VideoFrame Sav1VideoFrame;

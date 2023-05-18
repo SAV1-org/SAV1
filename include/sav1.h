@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
 #include "common.h"
 
 /**
@@ -14,17 +15,18 @@
  * Opus audio tracks. Written by Elijah Cirioli, Daniel Wolnick, and Charles Hayden.
  *
  * SAV1 provides a simple interface on top of file parsing, low level AV1 and Opus
- * decoding, and tracking time for playback. SAV1 allows the user to choose their
- * preferred audio frequency / channels, and their preferred video pixelformat, and
- * receive data in those formats. This allows desktop app developers to easily add video
- * playback to their app. For example, a game developer could easily add cutscenes.
+ * decoding, and tracking time for playback. It allows the user to choose their preferred
+ * audio frequency and number of channels, as well as their preferred video pixel format,
+ * in order to receive data in those formats. This allows desktop app developers to easily
+ * add video playback to their app. For example, a game developer could easily add
+ * cutscenes.
  *
  * Currently SAV1 is in beta.
  *
- * The library uses `dav1d` to efficiently decode video, `libopus` to efficiently decode
- * audio-- vendors `libwebm` and `libyuv` for file parsing and color conversion
- * respectively. The decoder and parsing modules are threaded internally so the top level
- * API is non blocking and efficient.
+ * SAV1 uses `dav1d` to efficiently decode video, `libopus` to efficiently decode audio,
+ * and vendors `libwebm` and `libyuv` for file parsing and color conversion respectively.
+ * The internal parsing and decoding modules run in separate threads so the top level API
+ * is non-blocking and efficient.
  *
  * Why should I use this instead of another playback library?
  * - FFmpeg: Has great support for all sorts of formats, which makes the full library

@@ -1,11 +1,11 @@
 #ifndef PARSE_H
 #define PARSE_H
 
-#include "thread_queue.h"
-#include "sav1_settings.h"
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include "thread_queue.h"
+#include "sav1_settings.h"
 
 typedef struct Sav1InternalContext Sav1InternalContext;
 
