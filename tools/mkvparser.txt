@@ -1,7 +1,0 @@
-How to use:
-
-pip install git+https://github.com/vi/mkvparse.git
-
-Use the script in tools/, mkv2xml.py
-
-python -m mkv2xml.py < input.webm
