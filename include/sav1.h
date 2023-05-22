@@ -418,7 +418,7 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms, int seek_mode);
 /**
  * @brief Macro (compile time) for SAV1 minor version
  */
-#define SAV1_MINOR_VERSION 3
+#define SAV1_MINOR_VERSION 9
 /**
  * @brief Macro (compile time) for SAV1 patch version
  */
