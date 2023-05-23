@@ -794,7 +794,7 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms, int seek_mode)
         }
         else {
             thread_mutex_unlock(ctx->seek_lock);
-            return -1;
+            RAISE(ctx, "sav1_seek_playback() called while already seeking")
         }
     }
     thread_mutex_unlock(ctx->seek_lock);
