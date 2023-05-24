@@ -201,12 +201,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a91640d970647f8c95708b6e6cf1f087f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#a91640d970647f8c95708b6e6cf1f087f">sav1_get_version</a> (int *major, int *minor, int *patch)</td></tr>
 <tr class="memdesc:a91640d970647f8c95708b6e6cf1f087f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populate out variables with linked SAV1 version.  <br /></td></tr>
 <tr class="separator:a91640d970647f8c95708b6e6cf1f087f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a170937549acb060409b57b2f8ea6ef24"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#a170937549acb060409b57b2f8ea6ef24">sav1_get_dav1d_version</a> ()</td></tr>
-<tr class="memdesc:a170937549acb060409b57b2f8ea6ef24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets dav1d version.  <br /></td></tr>
-<tr class="separator:a170937549acb060409b57b2f8ea6ef24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a300c234867c601c704899412186fbf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#a9a300c234867c601c704899412186fbf">sav1_get_opus_version</a> ()</td></tr>
-<tr class="memdesc:a9a300c234867c601c704899412186fbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets opus version.  <br /></td></tr>
-<tr class="separator:a9a300c234867c601c704899412186fbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02af7769630754873107be07a288ffe0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#a02af7769630754873107be07a288ffe0">sav1_get_dav1d_version</a> ()</td></tr>
+<tr class="memdesc:a02af7769630754873107be07a288ffe0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets dav1d version.  <br /></td></tr>
+<tr class="separator:a02af7769630754873107be07a288ffe0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe9772eb08087f291b7fcb55adc9e3aa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sav1_8h.html#afe9772eb08087f291b7fcb55adc9e3aa">sav1_get_opus_version</a> ()</td></tr>
+<tr class="memdesc:afe9772eb08087f291b7fcb55adc9e3aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets opus version.  <br /></td></tr>
+<tr class="separator:afe9772eb08087f291b7fcb55adc9e3aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="a82a5cc61e109fee4b48bc1be6a9f37b6" name="a82a5cc61e109fee4b48bc1be6a9f37b6"></a>
@@ -458,14 +458,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a170937549acb060409b57b2f8ea6ef24" name="a170937549acb060409b57b2f8ea6ef24"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a170937549acb060409b57b2f8ea6ef24">&#9670;&#160;</a></span>sav1_get_dav1d_version()</h2>
+<a id="a02af7769630754873107be07a288ffe0" name="a02af7769630754873107be07a288ffe0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a02af7769630754873107be07a288ffe0">&#9670;&#160;</a></span>sav1_get_dav1d_version()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> char * sav1_get_dav1d_version </td>
+          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> const char * sav1_get_dav1d_version </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -475,7 +475,7 @@ Functions</h2></td></tr>
 
 <p>Gets dav1d version. </p>
 <dl class="section return"><dt>Returns</dt><dd>dav1d version string as self-reported by dav1d</dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#a9a300c234867c601c704899412186fbf" title="Gets opus version.">sav1_get_opus_version</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#afe9772eb08087f291b7fcb55adc9e3aa" title="Gets opus version.">sav1_get_opus_version</a> </dd></dl>
 
 </div>
 </div>
@@ -507,14 +507,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a9a300c234867c601c704899412186fbf" name="a9a300c234867c601c704899412186fbf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9a300c234867c601c704899412186fbf">&#9670;&#160;</a></span>sav1_get_opus_version()</h2>
+<a id="afe9772eb08087f291b7fcb55adc9e3aa" name="afe9772eb08087f291b7fcb55adc9e3aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afe9772eb08087f291b7fcb55adc9e3aa">&#9670;&#160;</a></span>sav1_get_opus_version()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> char * sav1_get_opus_version </td>
+          <td class="memname"><a class="el" href="common_8h.html#a33702791b388e55c0cd4fae04a4b08a5">SAV1_API</a> const char * sav1_get_opus_version </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -524,7 +524,7 @@ Functions</h2></td></tr>
 
 <p>Gets opus version. </p>
 <dl class="section return"><dt>Returns</dt><dd>opus version string as self-reported by opus</dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#a170937549acb060409b57b2f8ea6ef24" title="Gets dav1d version.">sav1_get_dav1d_version</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="sav1_8h.html#a02af7769630754873107be07a288ffe0" title="Gets dav1d version.">sav1_get_dav1d_version</a> </dd></dl>
 
 </div>
 </div>
