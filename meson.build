@@ -1,6 +1,7 @@
 project('sav1', ['c', 'cpp'],
   version : '0.9.0',
-  default_options : ['warning_level=3', 'buildtype=release', 'debug=false', 'cpp_std=c++11'])
+  default_options : ['warning_level=3', 'buildtype=release', 'debug=false', 'cpp_std=c++11', 
+  'strip=true']) # STRIP=TRUE strips the debug symbol table, a very significant size saving for builds.
 
 inc_dirs = []
 inc_dirs += include_directories('include')
