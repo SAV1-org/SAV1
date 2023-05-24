@@ -156,7 +156,7 @@ sav1_lib = library('sav1',
                    project_source_files,
                    include_directories: inc_dirs,
                    dependencies: deps,
-                   link_whole: [webm_lib, yuv_lib],
+                   link_with: [webm_lib, yuv_lib],
                    name_prefix: sav1_name_prefix,
                    install: true,
                    install_dir: dir_base)
