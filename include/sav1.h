@@ -445,7 +445,7 @@ sav1_get_version(int *major, int *minor, int *patch);
  *
  * @sa sav1_get_opus_version
  */
-SAV1_API char *
+SAV1_API const char *
 sav1_get_dav1d_version();
 
 /**
@@ -455,7 +455,7 @@ sav1_get_dav1d_version();
  *
  * @sa sav1_get_dav1d_version
  */
-SAV1_API char *
+SAV1_API const char *
 sav1_get_opus_version();
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 project('sav1', ['c', 'cpp'],
-  version : '0.3.0',
+  version : '0.9.0',
   default_options : ['warning_level=3', 'buildtype=release', 'debug=false', 'cpp_std=c++11'])
 
 inc_dirs = []

@@ -845,13 +845,13 @@ sav1_get_version(int *major, int *minor, int *patch)
     *patch = SAV1_PATCH_VERSION;
 }
 
-char *
+const char *
 sav1_get_dav1d_version()
 {
     return dav1d_version();
 }
 
-char *
+const char *
 sav1_get_opus_version()
 {
     return opus_get_version_string();
