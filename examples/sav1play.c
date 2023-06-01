@@ -119,13 +119,15 @@ main(int argc, char *argv[])
 
     Sav1Context context = {0};
     Sav1Settings settings;
-    sav1_default_settings(&settings, argv[1]);
 
     // Make sure a video file was provided
     if (argc < 2) {
         fprintf(stderr, "Error: No input file specified\n");
         exit(1);
     }
+
+    // Populate settings struct with default values
+    sav1_default_settings(&settings, argv[1]);
 
     // Setup SAV1 context
     if (sav1_create_context(&context, &settings) < 0) {
