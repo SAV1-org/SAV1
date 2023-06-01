@@ -66,11 +66,19 @@ jobs:
 
           meson setup build
           meson install -C build
+
+      - name: Create Bundle
+        run : |
+          mkdir _bundle
+          mkdir _bundle/bin
+          cp dav1d.dll _bundle/bin
+          cp opus.dll _bundle/bin
+          cp sav1.dll _bundle/bin
+          cp -R include _bundle
     
-      - name: Upload build
+      - name: Upload Bundle
         uses: actions/upload-artifact@v3
         with:
           name: sav1-windows-x64
           path: |
-            ./*.DLL
-            ./include/*
+            ./_bundle/*

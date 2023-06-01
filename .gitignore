@@ -17,3 +17,4 @@ test_files/_*
 *.dylib
 docs/latex
 docs/html
+_bundle
