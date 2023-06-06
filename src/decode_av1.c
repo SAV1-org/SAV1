@@ -6,9 +6,11 @@
 #include "sav1_internal.h"
 
 void
-fake_dealloc(const uint8_t *, void *)
+fake_dealloc(const uint8_t *data, void *cookie)
 {
-    // NOP
+    if (data && cookie) {
+        // use the arguments to avoid compiler warning
+    }
 }
 
 void

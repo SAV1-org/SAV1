@@ -18,11 +18,12 @@
  * @sa sav1_audio_frame_destroy
  */
 typedef struct Sav1AudioFrame {
-    uint8_t *data;     /**< An array of PCM audio samples. */
-    size_t size;       /**< The length of the data array. */
-    uint64_t timecode; /**< The timecode in milliseconds at which the frame should begin
-                          playing. */
-    uint64_t duration; /**< The duration in milliseconds of the audio frame. */
+    void *data;         /**< An array of interleaved PCM audio samples. */
+    size_t size;        /**< The length of the data array in bytes. */
+    size_t sample_size; /**< The length of a single channel audio sample in bytes. */
+    uint64_t timecode;  /**< The timecode in milliseconds at which the frame should begin
+                           playing. */
+    uint64_t duration;  /**< The duration in milliseconds of the audio frame. */
     Sav1AudioFrequency frequency; /**< The sampling frequency of the audio frame. */
     Sav1AudioChannel channels;    /**< The number of audio channels. */
     int codec; /**< The audio codec this frame was originally stored in. SAV1 currently
