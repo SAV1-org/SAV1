@@ -13,12 +13,16 @@
 
 #define QUEUE_WIDTH 160
 #define DEBUG_PADDING 20
-#define DEBUG_HEIGHT 150
+#define DEBUG_HEIGHT 170
 #define FONT_SIZE 16
 
 #define USE_AUDIO 1
 
 TTF_Font *font;
+thread_atomic_int_t playback_speed;
+thread_atomic_int_t filter;
+size_t y_scroll = 0;
+size_t x_scroll = 0;
 
 void
 draw_queue(int x, int y, int cell_size, int num_items, char *title, SDL_Surface *screen,
@@ -108,11 +112,157 @@ draw_debug(Sav1Context *context, SDL_Rect screen_rect, SDL_Surface *screen,
                           debug_rect.y + 10, text->w, text->h};
     SDL_BlitSurface(text, NULL, screen, &font_rect);
     SDL_free(text);
+
+    // filters
+    text = TTF_RenderText_Blended(font, "Filter:", font_color);
+    SDL_Rect filter_font_rect = {debug_rect.x + DEBUG_PADDING, debug_rect.y + 128,
+                                 text->w, text->h};
+    SDL_BlitSurface(text, NULL, screen, &filter_font_rect);
+    SDL_free(text);
+
+    int selected_filter = thread_atomic_int_load(&filter);
+    int filter_width = 85;
+    char *filter_names[] = {"1. None", "2. Invert", "3. Edges", "4. Scroll",
+                            "5. Distort"};
+    for (int i = 0; i < 5; i++) {
+        int start_x = debug_rect.x + DEBUG_PADDING * 2 + 40 + i * (filter_width + 10);
+        int start_y = debug_rect.y + DEBUG_PADDING + 100;
+        if (i + 1 == selected_filter) {
+            SDL_Rect selected_filter_rect = {start_x, start_y, filter_width, 35};
+            SDL_FillRect(screen, &selected_filter_rect,
+                         SDL_MapRGB(screen->format, COLOR_BLUE));
+            SDL_Rect selected_filter_infill_rect = {start_x + 2, start_y + 2,
+                                                    filter_width - 4, 31};
+            SDL_FillRect(screen, &selected_filter_infill_rect,
+                         SDL_MapRGB(screen->format, COLOR_BLACK));
+        }
+        text = TTF_RenderText_Blended(font, filter_names[i], font_color);
+        SDL_Rect filter_name_font_rect = {start_x + (filter_width - text->w) / 2,
+                                          start_y + 8, text->w, text->h};
+        SDL_BlitSurface(text, NULL, screen, &filter_name_font_rect);
+        SDL_free(text);
+    }
+}
+
+void
+edge_detection_convolution(Sav1VideoFrame *frame)
+{
+    // pre-compute the brightness of each pixel
+    uint8_t *avg = (uint8_t *)malloc(frame->width * frame->height * sizeof(uint8_t));
+    for (size_t y = 0; y < frame->height; y++) {
+        for (size_t x = 0; x < frame->width; x++) {
+            size_t pos = y * frame->stride + x * 4;
+            size_t avg_pos = y * frame->width + x;
+            avg[avg_pos] =
+                (frame->data[pos] + frame->data[pos + 1] + frame->data[pos + 2]) / 3;
+        }
+    }
+
+    // define the edge-detection convolutions
+    int x_con[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+    int y_con[3][3] = {{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}};
+
+    for (size_t y = 0; y < frame->height; y++) {
+        for (size_t x = 0; x < frame->width; x++) {
+            size_t pos = y * frame->stride + x * 4;
+            if (x == 0 || x == frame->width - 1 || y == 0 || y == frame->height - 1) {
+                frame->data[pos] = 0;
+                frame->data[pos + 1] = 0;
+                frame->data[pos + 2] = 0;
+                continue;
+            }
+
+            int x_grad = 0;
+            int y_grad = 0;
+
+            // look at 8 surrounding pixels for every pixel
+            for (int y_offset = -1; y_offset <= 1; y_offset++) {
+                for (int x_offset = -1; x_offset <= 1; x_offset++) {
+                    // compute horizontal and vertical gradients
+                    size_t con_pos = (y + y_offset) * frame->width + x + x_offset;
+                    x_grad += x_con[1 + y_offset][1 + x_offset] * avg[con_pos];
+                    y_grad += y_con[1 + y_offset][1 + x_offset] * avg[con_pos];
+                }
+            }
+
+            uint16_t grad = abs(x_grad) + abs(y_grad);
+            if (grad > 255) {
+                grad = 255;
+            }
+
+            // set the brightness of the pixel to the gradient
+            frame->data[pos] = grad;
+            frame->data[pos + 1] = grad;
+            frame->data[pos + 2] = grad;
+        }
+    }
+    free(avg);
 }
 
 int
 video_postprocessing_function(Sav1VideoFrame *frame, void *cookie)
 {
+    if (thread_atomic_int_load(&filter) == 2) {
+        // invert
+        for (size_t y = 0; y < frame->height; y++) {
+            for (size_t x = 0; x < frame->width; x++) {
+                size_t i = y * frame->stride + x * 4;
+                frame->data[i] = ~frame->data[i];
+                frame->data[i + 1] = ~frame->data[i + 1];
+                frame->data[i + 2] = ~frame->data[i + 2];
+            }
+        }
+    }
+    else if (thread_atomic_int_load(&filter) == 3) {
+        // edge detection
+        edge_detection_convolution(frame);
+    }
+    else if (thread_atomic_int_load(&filter) == 4) {
+        // scroll vertically
+        y_scroll = (y_scroll + 3) % frame->height;
+        if (y_scroll == 0) {
+            return 0;
+        }
+        uint8_t *new_data = (uint8_t *)malloc(frame->size * sizeof(uint8_t));
+        memcpy(new_data, frame->data + y_scroll * frame->stride,
+               (frame->height - y_scroll) * frame->stride);
+        memcpy(new_data + (frame->height - y_scroll) * frame->stride, frame->data,
+               y_scroll * frame->stride);
+        free(frame->data);
+        frame->data = new_data;
+    }
+    else if (thread_atomic_int_load(&filter) == 5) {
+        // sine distort
+        x_scroll = (x_scroll + 1) % frame->width;
+        for (size_t x = 0; x < frame->width; x++) {
+            int y_offset = 10 * sinf((x + x_scroll) / 10.0);
+            if (y_offset == 0) {
+                continue;
+            }
+
+            size_t start_y = y_offset > 0 ? 0 : frame->height - 1;
+            size_t end_y = y_offset > 0 ? frame->height - 1 : 0;
+            int y_dir = y_offset > 0 ? 1 : -1;
+
+            for (size_t y = start_y; y <= end_y; y += y_dir) {
+                int sample_y = y + y_offset;
+                size_t i = y * frame->stride + x * 4;
+                if (sample_y >= (int)frame->height || sample_y < 0) {
+                    frame->data[i] = 0;
+                    frame->data[i + 1] = 0;
+                    frame->data[i + 2] = 0;
+                }
+                else {
+                    // read in sample pixel all at once to reduce cache misses
+                    uint64_t sample_pixel =
+                        *((uint64_t *)(frame->data + sample_y * frame->stride + x * 4));
+                    frame->data[i] = sample_pixel;
+                    frame->data[i + 1] = sample_pixel >> 8;
+                    frame->data[i + 2] = sample_pixel >> 16;
+                }
+            }
+        }
+    }
     return 0;
 }
 
@@ -151,6 +301,9 @@ rect_fit(SDL_Rect *rect, SDL_Rect target)
     rect->h = (int)ceil(rect->h / max_ratio);
     rect->x = target.x + (target.w - rect->w) / 2;
     rect->y = target.y + (target.h - rect->h) / 2;
+    if (rect->y < 15) {
+        rect->y = 2;
+    }
 }
 
 // Setup an SDL window and audio device
@@ -237,7 +390,7 @@ int
 main(int argc, char *argv[])
 {
     int screen_width = 820;
-    int screen_height = 630;
+    int screen_height = 640;
     int is_fullscreen = 0, is_paused = 0;
     int mouse_x, mouse_y;
     uint64_t mouse_active_timeout = 0;
@@ -262,6 +415,9 @@ main(int argc, char *argv[])
         fprintf(stderr, "Error: No input file specified\n");
         exit(1);
     }
+
+    thread_atomic_int_store(&playback_speed, 10);
+    thread_atomic_int_store(&filter, 1);
 
     // Populate settings struct with default values
     sav1_default_settings(&settings, argv[1]);
@@ -483,6 +639,21 @@ main(int argc, char *argv[])
                             PRINT_SAV1_ERROR
                         }
                     }
+                    else if (event.key.keysym.sym == SDLK_1) {
+                        thread_atomic_int_store(&filter, 1);
+                    }
+                    else if (event.key.keysym.sym == SDLK_2) {
+                        thread_atomic_int_store(&filter, 2);
+                    }
+                    else if (event.key.keysym.sym == SDLK_3) {
+                        thread_atomic_int_store(&filter, 3);
+                    }
+                    else if (event.key.keysym.sym == SDLK_4) {
+                        thread_atomic_int_store(&filter, 4);
+                    }
+                    else if (event.key.keysym.sym == SDLK_5) {
+                        thread_atomic_int_store(&filter, 5);
+                    }
                     break;
 
                 case SDL_WINDOWEVENT:
@@ -507,7 +678,8 @@ main(int argc, char *argv[])
                     SDL_GetMouseState(&mouse_x, &mouse_y);
                     if (mouse_x >= frame_rect.x &&
                         mouse_x <= frame_rect.x + frame_rect.w) {
-                        // If clicking anywhere above the progress bar, toggle pause
+                        // If clicking anywhere above the progress bar, toggle
+                        // pause
                         if (mouse_y < frame_rect.h - 2 * padding) {
                             if (is_paused && sav1_start_playback(&context) < 0) {
                                 PRINT_SAV1_ERROR
