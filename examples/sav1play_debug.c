@@ -19,8 +19,9 @@
 #define USE_AUDIO 1
 
 TTF_Font *font;
-thread_atomic_int_t playback_speed;
 thread_atomic_int_t filter;
+thread_atomic_int_t playback_speed;
+double playback_speeds[] = {0.5, 1.0, 2.0, 10.0};
 size_t y_scroll = 0;
 size_t x_scroll = 0;
 
@@ -269,7 +270,52 @@ video_postprocessing_function(Sav1VideoFrame *frame, void *cookie)
 int
 audio_postprocessing_function(Sav1AudioFrame *frame, void *cookie)
 {
-    return 0;
+    int speed_index = thread_atomic_int_load(&playback_speed);
+    if (speed_index == 1) {
+        return 0;
+    }
+    double playback_speed = playback_speeds[speed_index];
+    uint16_t *cast_data = (uint16_t *)frame->data;
+
+    int num_samples = frame->size / 4;
+    int new_num_samples = (int)((double)num_samples / playback_speed);
+    uint16_t *new_data = (uint16_t *)malloc(new_num_samples * 2 * sizeof(uint16_t));
+
+    if (speed_index == 0) {
+        // half the speed
+        for (int i = 0; i < num_samples; i++) {
+            new_data[i * 4] = cast_data[i * 2];
+            new_data[i * 4 + 1] = cast_data[i * 2 + 1];
+            if (i + 1 < num_samples) {
+                new_data[i * 4 + 2] = (cast_data[i * 2] + cast_data[i * 2 + 2]) / 2;
+                new_data[i * 4 + 3] = (cast_data[i * 2 + 1] + cast_data[i * 2 + 3]) / 2;
+            }
+            else {
+                new_data[i * 4 + 2] = cast_data[i * 2];
+                new_data[i * 4 + 3] = cast_data[i * 2 + 1];
+            }
+        }
+    }
+    else {
+        // increase the speed
+        for (int i = 0; i < new_num_samples; i++) {
+            uint64_t total = 0;
+            for (int j = 0; j < (int)playback_speed; j++) {
+                total += cast_data[(int)(i * playback_speed) + j];
+                new_data[(int)(i * 2.0 / playback_speed)] +=
+                    cast_data[i * 2] / playback_speed;
+                new_data[(int)(i * 2.0 / playback_speed) + 1] +=
+                    cast_data[i * 2 + 1] / playback_speed;
+            }
+        }
+    }
+}
+
+free(frame->data);
+frame->data = (uint8_t *)new_data;
+frame->size = new_num_samples * 4;
+
+return 0;
 }
 
 char *
@@ -416,7 +462,7 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-    thread_atomic_int_store(&playback_speed, 10);
+    thread_atomic_int_store(&playback_speed, 1);
     thread_atomic_int_store(&filter, 1);
 
     // Populate settings struct with default values
@@ -654,6 +700,27 @@ main(int argc, char *argv[])
                     else if (event.key.keysym.sym == SDLK_5) {
                         thread_atomic_int_store(&filter, 5);
                     }
+                    else if (event.key.keysym.sym == SDLK_UP) {
+                        int speed_index = thread_atomic_int_load(&playback_speed);
+                        if (speed_index < 3) {
+                            speed_index++;
+                            thread_atomic_int_store(&playback_speed, speed_index);
+                            sav1_set_playback_speed(&context,
+                                                    playback_speeds[speed_index]);
+                            SDL_ClearQueuedAudio(audio_device);
+                        }
+                    }
+                    else if (event.key.keysym.sym == SDLK_DOWN) {
+                        int speed_index = thread_atomic_int_load(&playback_speed);
+                        if (speed_index > 0) {
+                            speed_index--;
+                            thread_atomic_int_store(&playback_speed, speed_index);
+                            sav1_set_playback_speed(&context,
+                                                    playback_speeds[speed_index]);
+                            SDL_ClearQueuedAudio(audio_device);
+                        }
+                    }
+
                     break;
 
                 case SDL_WINDOWEVENT:
