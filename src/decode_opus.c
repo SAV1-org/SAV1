@@ -107,8 +107,9 @@ decode_opus_start(void *context)
         // if the audio is stereo, each sample is twice as long, so we multiply by 2-
         // this is accomplished by using the values of SAV1_AUDIO_MONO and
         // SAV1_AUDIO_STEREO
-        output_frame->size = num_samples * sizeof(uint16_t) * decode_context->channels;
-        if ((output_frame->data = (uint8_t *)malloc(output_frame->size)) == NULL) {
+        output_frame->size = num_samples * sizeof(opus_int16) * decode_context->channels;
+        output_frame->sample_size = sizeof(opus_int16);
+        if ((output_frame->data = malloc(output_frame->size)) == NULL) {
             free(output_frame);
             sav1_set_error(decode_context->ctx, "malloc() failed in decode_opus_start()");
             sav1_set_critical_error_flag(decode_context->ctx);
