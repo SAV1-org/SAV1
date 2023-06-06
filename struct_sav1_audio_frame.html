@@ -112,10 +112,12 @@ $(document).ready(function(){initNavTree('struct_sav1_audio_frame.html',''); ini
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a42d842b27bbaa949df22c93db7250f05"><td class="memItemLeft" align="right" valign="top">uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sav1_audio_frame.html#a42d842b27bbaa949df22c93db7250f05">data</a></td></tr>
-<tr class="separator:a42d842b27bbaa949df22c93db7250f05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fa704f7d7aa5484fa59ab81a7ea2ff0"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sav1_audio_frame.html#a0fa704f7d7aa5484fa59ab81a7ea2ff0">data</a></td></tr>
+<tr class="separator:a0fa704f7d7aa5484fa59ab81a7ea2ff0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a919b489688a65eef74e28cbe8e0dbe04"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sav1_audio_frame.html#a919b489688a65eef74e28cbe8e0dbe04">size</a></td></tr>
 <tr class="separator:a919b489688a65eef74e28cbe8e0dbe04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a142b9ce6adec8585fb654a0d3427b9fa"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sav1_audio_frame.html#a142b9ce6adec8585fb654a0d3427b9fa">sample_size</a></td></tr>
+<tr class="separator:a142b9ce6adec8585fb654a0d3427b9fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bcc01368543b5694b0273d7bf699c4c"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sav1_audio_frame.html#a0bcc01368543b5694b0273d7bf699c4c">timecode</a></td></tr>
 <tr class="separator:a0bcc01368543b5694b0273d7bf699c4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5cc17f69134581c2f97aa790c7ffdbb3"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sav1_audio_frame.html#a5cc17f69134581c2f97aa790c7ffdbb3">duration</a></td></tr>
@@ -187,18 +189,18 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="a42d842b27bbaa949df22c93db7250f05" name="a42d842b27bbaa949df22c93db7250f05"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a42d842b27bbaa949df22c93db7250f05">&#9670;&#160;</a></span>data</h2>
+<a id="a0fa704f7d7aa5484fa59ab81a7ea2ff0" name="a0fa704f7d7aa5484fa59ab81a7ea2ff0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0fa704f7d7aa5484fa59ab81a7ea2ff0">&#9670;&#160;</a></span>data</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t* Sav1AudioFrame::data</td>
+          <td class="memname">void* Sav1AudioFrame::data</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>An array of PCM audio samples. </p>
+<p>An array of interleaved PCM audio samples. </p>
 
 </div>
 </div>
@@ -229,6 +231,21 @@ Data Fields</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>The sampling frequency of the audio frame. </p>
+
+</div>
+</div>
+<a id="a142b9ce6adec8585fb654a0d3427b9fa" name="a142b9ce6adec8585fb654a0d3427b9fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a142b9ce6adec8585fb654a0d3427b9fa">&#9670;&#160;</a></span>sample_size</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t Sav1AudioFrame::sample_size</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The length of a single channel audio sample in bytes. </p>
 
 </div>
 </div>
@@ -273,7 +290,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The length of the data array. </p>
+<p>The length of the data array in bytes. </p>
 
 </div>
 </div>
