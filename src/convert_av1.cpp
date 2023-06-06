@@ -205,7 +205,8 @@ get_matrix_coefficients(Dav1dSequenceHeader *seq_hdr)
 }
 
 void
-convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
+convert_dav1d_picture(Sav1InternalContext *ctx, Dav1dPicture *picture,
+                      Sav1VideoFrame *output_frame)
 {
     int width = picture->p.w;
     int height = picture->p.h;
@@ -232,8 +233,12 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
 
             // allocate twice as much memory as we'll eventually need
             output_frame->stride = 4 * output_frame->width;
-            output_frame->data = (uint8_t *)malloc(
-                output_frame->size * sizeof(uint8_t));  // TODO: error check this malloc
+            if ((output_frame->data =
+                     (uint8_t *)malloc(output_frame->size * sizeof(uint8_t))) == NULL) {
+                sav1_set_error(ctx, "malloc() failed in convert_dav1d_picture()");
+                sav1_set_critical_error_flag(ctx);
+                return;
+            }
 
             // first pack as BGRA
             convert_yuv_to_rgba_with_identity_matrix(
@@ -273,8 +278,12 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
             // allocate pixel buffer
             output_frame->stride = 2 * output_frame->width;
             output_frame->size = output_frame->stride * output_frame->height;
-            output_frame->data = (uint8_t *)malloc(
-                output_frame->size * sizeof(uint8_t));  // TODO: error check this malloc
+            if ((output_frame->data =
+                     (uint8_t *)malloc(output_frame->size * sizeof(uint8_t))) == NULL) {
+                sav1_set_error(ctx, "malloc() failed in convert_dav1d_picture()");
+                sav1_set_critical_error_flag(ctx);
+                return;
+            }
 
             // check for cases where libYUV functions already exist (most common)
             if (desired_pixel_format == SAV1_PIXEL_FORMAT_YUY2 &&
@@ -313,8 +322,12 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
 
         // allocate pixel buffer
         output_frame->size = output_frame->stride * output_frame->height;
-        output_frame->data = (uint8_t *)malloc(
-            output_frame->size * sizeof(uint8_t));  // TODO: error check this malloc
+        if ((output_frame->data =
+                 (uint8_t *)malloc(output_frame->size * sizeof(uint8_t))) == NULL) {
+            sav1_set_error(ctx, "malloc() failed in convert_dav1d_picture()");
+            sav1_set_critical_error_flag(ctx);
+            return;
+        }
         if (seq_hdr->mtrx == DAV1D_MC_IDENTITY) {
             convert_yuv_to_rgba_with_identity_matrix(
                 Y_data, Y_stride, U_data, V_data, UV_stride, output_frame,
@@ -519,7 +532,7 @@ convert_av1_start(void *context)
         output_frame->sav1_has_ownership = 1;
 
         // convert the color space
-        convert_dav1d_picture(dav1d_pic, output_frame);
+        convert_dav1d_picture(convert_context->ctx, dav1d_pic, output_frame);
 
         sav1_thread_queue_push(convert_context->output_queue, output_frame);
 
