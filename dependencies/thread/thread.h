@@ -959,7 +959,7 @@ int thread_signal_wait( thread_signal_t* signal, int timeout_ms )
             EnterCriticalSection( &internal->mutex );
             while( internal->value == 0 )
                 {
-                BOOL res = SleepConditionVariableCS( &internal->condition, &internal->mutex, timeout_ms < 0 ? INFINITE : timeout_ms );
+                BOOL res = SleepConditionVariableCS( &internal->condition, &internal->mutex, timeout_ms < 0 ? INFINITE : (unsigned int) timeout_ms );
                 if( !res && GetLastError() == ERROR_TIMEOUT ) { timed_out = 1; break; }
                 }
             internal->value = 0;

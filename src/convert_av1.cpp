@@ -31,10 +31,9 @@ convert_yuv_to_rgba_with_identity_matrix(uint8_t *Y_data, ptrdiff_t Y_stride,
     }
 
     // where do A, R, G, and B go within one pixel
-    uint8_t byte_offsets_lookup[6][4] = {
-        [SAV1_PIXEL_FORMAT_RGBA] = {3, 0, 1, 2}, [SAV1_PIXEL_FORMAT_ARGB] = {0, 1, 2, 3},
-        [SAV1_PIXEL_FORMAT_BGRA] = {3, 2, 1, 0}, [SAV1_PIXEL_FORMAT_ABGR] = {0, 3, 2, 1},
-        [SAV1_PIXEL_FORMAT_RGB] = {0, 0, 1, 2},  [SAV1_PIXEL_FORMAT_BGR] = {0, 2, 1, 0}};
+    // I would like to use designated initializers here but the compiler warns about it
+    uint8_t byte_offsets_lookup[6][4] = {{3, 0, 1, 2}, {0, 1, 2, 3}, {3, 2, 1, 0},
+                                         {0, 3, 2, 1}, {0, 0, 1, 2}, {0, 2, 1, 0}};
     uint8_t *byte_offsets = byte_offsets_lookup[desired_pixel_format];
 
     // how many bytes does one pixel take up
@@ -126,9 +125,11 @@ convert_yuv_to_packed(uint8_t *Y_data, ptrdiff_t Y_stride, uint8_t *U_data,
     }
 }
 
+// add an extra parameter that would be dst_stride_bgr24 to match the LibYUV function
+// signatures
 int
-RGB24ToBGR24(const uint8_t *src_rgb24, int src_stride_rgb24, uint8_t *dst_bgr24,
-             int dst_stride_bgr24, int width, int height)
+RGB24ToBGR24(const uint8_t *src_rgb24, int src_stride_rgb24, uint8_t *dst_bgr24, int,
+             int width, int height)
 {
     // iterate over all pixels
     for (int y = 0; y < height; y++) {
@@ -329,10 +330,16 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
                                                  int, int);
 
             // map the SAV1 pixel format enum to indices manually just to be safe
-            size_t output_pixel_layout_lookup[] = {
-                [SAV1_PIXEL_FORMAT_RGBA] = 0, [SAV1_PIXEL_FORMAT_ARGB] = 1,
-                [SAV1_PIXEL_FORMAT_BGRA] = 2, [SAV1_PIXEL_FORMAT_ABGR] = 3,
-                [SAV1_PIXEL_FORMAT_RGB] = 4,  [SAV1_PIXEL_FORMAT_BGR] = 5};
+            // again, it would be nice to use designated initializers but the compiler
+            // doesn't like it
+            size_t output_pixel_layout_lookup[6];
+            output_pixel_layout_lookup[SAV1_PIXEL_FORMAT_RGBA] = 0;
+            output_pixel_layout_lookup[SAV1_PIXEL_FORMAT_ARGB] = 1;
+            output_pixel_layout_lookup[SAV1_PIXEL_FORMAT_BGRA] = 2;
+            output_pixel_layout_lookup[SAV1_PIXEL_FORMAT_ABGR] = 3;
+            output_pixel_layout_lookup[SAV1_PIXEL_FORMAT_RGB] = 4;
+            output_pixel_layout_lookup[SAV1_PIXEL_FORMAT_BGR] = 5;
+
             size_t output_pixel_layout_index =
                 output_pixel_layout_lookup[desired_pixel_format];
 
@@ -392,10 +399,12 @@ convert_dav1d_picture(Dav1dPicture *picture, Sav1VideoFrame *output_frame)
                     {I420ToRGB24Matrix, I422ToRGB24Matrix, I444ToRGB24Matrix},
                     {I420ToRGB24Matrix, I422ToRGB24Matrix, I444ToRGB24Matrix}};
 
-                size_t input_pixel_layout_lookup[] = {[DAV1D_PIXEL_LAYOUT_I400] = 0,
-                                                      [DAV1D_PIXEL_LAYOUT_I420] = 0,
-                                                      [DAV1D_PIXEL_LAYOUT_I422] = 1,
-                                                      [DAV1D_PIXEL_LAYOUT_I444] = 2};
+                size_t input_pixel_layout_lookup[4];
+                input_pixel_layout_lookup[DAV1D_PIXEL_LAYOUT_I400] = 0;
+                input_pixel_layout_lookup[DAV1D_PIXEL_LAYOUT_I420] = 0;
+                input_pixel_layout_lookup[DAV1D_PIXEL_LAYOUT_I422] = 1;
+                input_pixel_layout_lookup[DAV1D_PIXEL_LAYOUT_I444] = 2;
+
                 size_t input_pixel_layout_index =
                     input_pixel_layout_lookup[seq_hdr->layout];
 

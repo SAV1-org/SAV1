@@ -6,7 +6,7 @@
 #include "sav1_internal.h"
 
 void
-fake_dealloc(const uint8_t *data, void *user_data)
+fake_dealloc(const uint8_t *, void *)
 {
     // NOP
 }
