@@ -81,9 +81,9 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
     // clear error string
     memset(ctx->error_message, 0, SAV1_ERROR_MESSAGE_SIZE);
 
-    // TODO: error check these eventually
     thread_manager_init(&(ctx->thread_manager), ctx);
     thread_manager_start_pipeline(ctx->thread_manager);
+    CHECK_CTX_CRITICAL_ERROR(ctx)
 
     context->internal_state = (void *)ctx;
     context->is_initialized = 1;
@@ -99,9 +99,9 @@ sav1_destroy_context(Sav1Context *context)
     CHECK_CTX_VALID(ctx)
     CHECK_CTX_INITIALIZED(ctx, context)
 
-    // TODO: error check these eventually
     thread_manager_kill_pipeline(ctx->thread_manager);
     thread_manager_destroy(ctx->thread_manager);
+    CHECK_CTX_CRITICAL_ERROR(ctx)
 
     // free time structs
     if (ctx->start_time != NULL) {
