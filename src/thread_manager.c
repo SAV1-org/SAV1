@@ -58,6 +58,7 @@ thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)
     else {
         thread_manager->video_webm_frame_queue = NULL;
         thread_manager->video_dav1d_picture_queue = NULL;
+        thread_manager->video_custom_processing_queue = NULL;
     }
 
     // setup audio if requested
@@ -84,10 +85,12 @@ thread_manager_init(ThreadManager **manager, Sav1InternalContext *ctx)
             decode_opus_init(&(thread_manager->decode_opus_context), ctx,
                              thread_manager->audio_webm_frame_queue,
                              thread_manager->audio_output_queue);
+            thread_manager->audio_custom_processing_queue = NULL;
         }
     }
     else {
         thread_manager->audio_webm_frame_queue = NULL;
+        thread_manager->audio_custom_processing_queue = NULL;
     }
 
     // always create the webm parser

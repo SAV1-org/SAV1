@@ -170,6 +170,7 @@ endif
 sav1play_deps = []
 if build_machine.system() == 'windows'
   sav1play_deps += c.find_library('SDL2', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
+  sav1play_deps += c.find_library('SDL2_ttf', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
 else
   sav1play_deps += c.find_library('SDL2', required: true)
 endif
@@ -178,6 +179,13 @@ executable('sav1play', 'examples/sav1play.c',
             include_directories: sav1play_includes,
             dependencies: sav1play_deps,
             link_with: sav1_lib,
+            install: true, install_dir: dir_base)
+
+executable('sav1play_debug', ['examples/sav1play_debug.c'] + project_source_files, 
+            include_directories: sav1play_includes + include_directories('src') + inc_dirs,
+            dependencies: sav1play_deps,
+            link_with: [webm_lib, yuv_lib],
+            dependencies: deps + sav1play_deps,  
             install: true, install_dir: dir_base)
 
 executable('sav1slideshow', 'examples/sav1slideshow.c', 
