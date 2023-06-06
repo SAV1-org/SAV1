@@ -143,6 +143,17 @@ draw_debug(Sav1Context *context, SDL_Rect screen_rect, SDL_Surface *screen,
         SDL_BlitSurface(text, NULL, screen, &filter_name_font_rect);
         SDL_free(text);
     }
+
+    // playback speed
+    char playback_speed_str[30];
+    double curr_speed = playback_speeds[thread_atomic_int_load(&playback_speed)];
+    snprintf(playback_speed_str, 30, "Playback speed: %.1fx", curr_speed);
+    text = TTF_RenderText_Blended(font, playback_speed_str, font_color);
+    SDL_Rect speed_font_rect = {
+        debug_rect.x + DEBUG_PADDING + (filter_width + 10) * 5 + 125, debug_rect.y + 128,
+        text->w, text->h};
+    SDL_BlitSurface(text, NULL, screen, &speed_font_rect);
+    SDL_free(text);
 }
 
 void
@@ -275,20 +286,22 @@ audio_postprocessing_function(Sav1AudioFrame *frame, void *cookie)
         return 0;
     }
     double playback_speed = playback_speeds[speed_index];
-    uint16_t *cast_data = (uint16_t *)frame->data;
+    int16_t *cast_data = (int16_t *)frame->data;
 
     int num_samples = frame->size / 4;
     int new_num_samples = (int)((double)num_samples / playback_speed);
-    uint16_t *new_data = (uint16_t *)malloc(new_num_samples * 2 * sizeof(uint16_t));
+    int16_t *new_data = (int16_t *)malloc(new_num_samples * 2 * sizeof(int16_t));
 
     if (speed_index == 0) {
-        // half the speed
+        // halve the speed
         for (int i = 0; i < num_samples; i++) {
             new_data[i * 4] = cast_data[i * 2];
             new_data[i * 4 + 1] = cast_data[i * 2 + 1];
             if (i + 1 < num_samples) {
-                new_data[i * 4 + 2] = (cast_data[i * 2] + cast_data[i * 2 + 2]) / 2;
-                new_data[i * 4 + 3] = (cast_data[i * 2 + 1] + cast_data[i * 2 + 3]) / 2;
+                int64_t left_total = cast_data[i * 2] + cast_data[i * 2 + 2];
+                int64_t right_total = cast_data[i * 2 + 1] + cast_data[i * 2 + 3];
+                new_data[i * 4 + 2] = left_total / 2;
+                new_data[i * 4 + 3] = right_total / 2;
             }
             else {
                 new_data[i * 4 + 2] = cast_data[i * 2];
@@ -299,23 +312,22 @@ audio_postprocessing_function(Sav1AudioFrame *frame, void *cookie)
     else {
         // increase the speed
         for (int i = 0; i < new_num_samples; i++) {
-            uint64_t total = 0;
+            int64_t left_total = 0;
+            int64_t right_total = 0;
             for (int j = 0; j < (int)playback_speed; j++) {
-                total += cast_data[(int)(i * playback_speed) + j];
-                new_data[(int)(i * 2.0 / playback_speed)] +=
-                    cast_data[i * 2] / playback_speed;
-                new_data[(int)(i * 2.0 / playback_speed) + 1] +=
-                    cast_data[i * 2 + 1] / playback_speed;
+                left_total += cast_data[(int)(i * playback_speed * 2) + j * 2];
+                right_total += cast_data[(int)(i * playback_speed * 2) + j * 2 + 1];
             }
+            new_data[i * 2] = left_total / playback_speed;
+            new_data[i * 2 + 1] = right_total / playback_speed;
         }
     }
-}
 
-free(frame->data);
-frame->data = (uint8_t *)new_data;
-frame->size = new_num_samples * 4;
+    free(frame->data);
+    frame->data = (void *)new_data;
+    frame->size = new_num_samples * 4;
 
-return 0;
+    return 0;
 }
 
 char *
