@@ -10,6 +10,7 @@ dependencies/*
 !dependencies/libwebm
 !dependencies/thread
 !dependencies/libyuv
+!dependencies/macbuild
 vcpkg/
 *.dll
 *.dll.a
@@ -20,3 +21,5 @@ docs/latex
 docs/html
 _bundle
 subprojects/*
+!subprojects/download.sh
+!subprojects/deps.sha512
