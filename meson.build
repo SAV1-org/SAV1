@@ -9,7 +9,9 @@ inc_dirs += include_directories('dependencies/libwebm/webm_parser/include')
 inc_dirs += include_directories('dependencies/libwebm/webm_parser') # so it can see .h files in that directory
 inc_dirs += include_directories('dependencies/libyuv/include')
 inc_dirs += include_directories('dependencies/thread')
-inc_dirs += include_directories('subprojects/dav1d/include') #this could theoretically be a bug in dav1d buildconfig, they include a include in their dav1d_dep statement, maybe the rel path is wrong?
+if get_option('use_subprojects')
+  inc_dirs += include_directories('subprojects/dav1d/include') #this could theoretically be a bug in dav1d buildconfig, they include a include in their dav1d_dep statement, maybe the rel path is wrong?
+endif
 if build_machine.system() == 'windows'
   inc_dirs += include_directories('dependencies/x64-windows/include')
 endif
