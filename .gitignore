@@ -5,6 +5,7 @@
 *.pyc
 .vscode/*
 sav1play
+sav1slideshow
 dependencies/*
 !dependencies/libwebm
 !dependencies/thread
@@ -18,3 +19,4 @@ test_files/_*
 docs/latex
 docs/html
 _bundle
+subprojects/*
