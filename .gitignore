@@ -5,10 +5,12 @@
 *.pyc
 .vscode/*
 sav1play
+sav1slideshow
 dependencies/*
 !dependencies/libwebm
 !dependencies/thread
 !dependencies/libyuv
+!dependencies/macbuild
 vcpkg/
 *.dll
 *.dll.a
@@ -18,3 +20,6 @@ test_files/_*
 docs/latex
 docs/html
 _bundle
+subprojects/*
+!subprojects/download.sh
+!subprojects/deps.sha512
