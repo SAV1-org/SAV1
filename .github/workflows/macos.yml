@@ -32,11 +32,18 @@ jobs:
         run: |
           meson setup build -Duse_subprojects=True
           meson install -C build
-    
-      - name: Upload build
+
+      - name: Create Bundle
+        run : |
+          mkdir _bundle
+          mkdir _bundle/bin
+          cp libsav1.dylib _bundle/bin
+          cp -R include _bundle
+          cp -R dependencies/licenses _bundle/bin
+
+      - name: Upload Bundle
         uses: actions/upload-artifact@v3
         with:
           name: sav1-macos-x64
           path: |
-            ./*.dylib
-            ./include/*
+            ./_bundle/*

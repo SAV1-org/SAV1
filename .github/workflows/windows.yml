@@ -75,6 +75,7 @@ jobs:
           cp opus.dll _bundle/bin
           cp sav1.dll _bundle/bin
           cp -R include _bundle
+          cp -R dependencies/licenses _bundle/bin
     
       - name: Upload Bundle
         uses: actions/upload-artifact@v3
