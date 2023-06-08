@@ -11,6 +11,7 @@ dependencies/*
 !dependencies/thread
 !dependencies/libyuv
 !dependencies/macbuild
+!dependencies/licenses
 vcpkg/
 *.dll
 *.dll.a
