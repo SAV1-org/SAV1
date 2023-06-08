@@ -24,12 +24,13 @@ jobs:
           python3 -m pip install meson ninja
           brew install sdl2
           brew install coreutils #for sha512 command
-          brew install nasm #for deps build
+          brew install nasm #for dav1d build
           cd subprojects
           bash ./download.sh
       
       - name: Build SAV1
         run: |
+          export MACOSX_DEPLOYMENT_TARGET=10.9
           meson setup build -Duse_subprojects=True
           meson install -C build
 
