@@ -1,0 +1,6 @@
+option(
+    'use_subprojects',
+    type : 'boolean', 
+    value : false,
+    description : 'Whether to attempt to use subprojects for dav1d and opus, rather than global binaries on unix and hardcoded dependency paths on Windows.'
+)

@@ -1,5 +1,5 @@
 project('sav1', ['c', 'cpp'],
-  version : '0.9.0',
+  version : '0.9.1',
   default_options : ['warning_level=3', 'buildtype=release', 'debug=false', 'cpp_std=c++11', 
   'strip=true']) # STRIP=TRUE strips the debug symbol table, a very significant size saving for builds.
 
@@ -9,6 +9,9 @@ inc_dirs += include_directories('dependencies/libwebm/webm_parser/include')
 inc_dirs += include_directories('dependencies/libwebm/webm_parser') # so it can see .h files in that directory
 inc_dirs += include_directories('dependencies/libyuv/include')
 inc_dirs += include_directories('dependencies/thread')
+if get_option('use_subprojects')
+  inc_dirs += include_directories('subprojects/dav1d/include') #this could theoretically be a bug in dav1d buildconfig, they include a include in their dav1d_dep statement, maybe the rel path is wrong?
+endif
 if build_machine.system() == 'windows'
   inc_dirs += include_directories('dependencies/x64-windows/include')
 endif
@@ -134,15 +137,26 @@ c = meson.get_compiler('c')
 dir_base = meson.current_source_dir()
 deps = []
 
-if build_machine.system() == 'windows'
+if get_option('use_subprojects')
+  opus_proj = subproject('opus', default_options: 'default_library=static')
+  deps += opus_proj.get_variable('opus_dep')
+
+  dav1d_proj = subproject('dav1d', default_options: ['default_library=static', 'enable_tools=False'])
+  deps += dav1d_proj.get_variable('dav1d_dep')
+
+elif build_machine.system() == 'windows'
   deps += c.find_library('opus', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
   deps += c.find_library('dav1d', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
-  deps += c.find_library('winmm', required: true) # for thread.h on windows
+
 else
   deps += c.find_library('opus', required: true)
   deps += c.find_library('dav1d', required: true)
 endif
 
+# Add thread library dependencies for Windows and Linux
+if build_machine.system() == 'windows'
+  deps += c.find_library('winmm', required: true) # for thread.h on windows
+endif
 if build_machine.system() == 'linux'
   deps += c.find_library('pthread', required: true)
 endif
