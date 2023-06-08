@@ -411,6 +411,7 @@ sav1_get_playback_speed(Sav1Context *context, double *playback_speed);
 SAV1_API int
 sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms, int seek_mode);
 
+// 0.9.1
 /**
  * @brief Macro (compile time) for SAV1 major version
  */
@@ -422,7 +423,7 @@ sav1_seek_playback(Sav1Context *context, uint64_t timecode_ms, int seek_mode);
 /**
  * @brief Macro (compile time) for SAV1 patch version
  */
-#define SAV1_PATCH_VERSION 0
+#define SAV1_PATCH_VERSION 1
 
 /**
  * @brief Populate out variables with linked SAV1 version
