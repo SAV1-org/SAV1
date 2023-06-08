@@ -10,10 +10,11 @@
         return -1;           \
     }
 
-#define CHECK_CTX_INITIALIZED(ctx, context)                                             \
-    if (context->is_initialized != 1) {                                                 \
-        sav1_set_error(ctx, "Uninitialized context: sav1_create_context() not called"); \
-        return -1;                                                                      \
+#define CHECK_CTX_INITIALIZED(ctx, context)                                            \
+    if (context->is_initialized != 1) {                                                \
+        sav1_set_error(                                                                \
+            ctx, "Uninitialized context: sav1_create_context() not called or failed"); \
+        return -1;                                                                     \
     }
 
 #define CHECK_CTX_CRITICAL_ERROR(ctx) \
@@ -152,7 +153,7 @@ sav1_get_error(Sav1Context *context)
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
 
     if (ctx == NULL) {
-        return (char *)"Uninitialized context: sav1_create_context() not called";
+        return (char *)"Uninitialized context: sav1_create_context() not called or failed";
     }
     else {
         return ctx->error_message;
