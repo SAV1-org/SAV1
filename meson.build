@@ -141,19 +141,22 @@ if get_option('use_subprojects')
   opus_proj = subproject('opus', default_options: 'default_library=static')
   deps += opus_proj.get_variable('opus_dep')
 
-  dav1d_proj = subproject('dav1d', default_options: 'default_library=static')
+  dav1d_proj = subproject('dav1d', default_options: ['default_library=static', 'enable_tools=False'])
   deps += dav1d_proj.get_variable('dav1d_dep')
 
 elif build_machine.system() == 'windows'
   deps += c.find_library('opus', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
   deps += c.find_library('dav1d', required: true, dirs: join_paths(dir_base, 'dependencies/x64-windows/bin'))
-  deps += c.find_library('winmm', required: true) # for thread.h on windows
 
 else
   deps += c.find_library('opus', required: true)
   deps += c.find_library('dav1d', required: true)
 endif
 
+# Add thread library dependencies for Windows and Linux
+if build_machine.system() == 'windows'
+  deps += c.find_library('winmm', required: true) # for thread.h on windows
+endif
 if build_machine.system() == 'linux'
   deps += c.find_library('pthread', required: true)
 endif
