@@ -131,7 +131,7 @@ main(int argc, char *argv[])
 
     // Setup SAV1 context
     if (sav1_create_context(&context, &settings) < 0) {
-        EXIT_W_SDL_ERROR
+        EXIT_W_SAV1_ERROR
     }
 
     // Setup SDL
