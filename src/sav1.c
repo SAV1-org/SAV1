@@ -84,10 +84,11 @@ sav1_create_context(Sav1Context *context, Sav1Settings *settings)
 
     thread_manager_init(&(ctx->thread_manager), ctx);
     thread_manager_start_pipeline(ctx->thread_manager);
-    CHECK_CTX_CRITICAL_ERROR(ctx)
 
     context->internal_state = (void *)ctx;
     context->is_initialized = 1;
+
+    CHECK_CTX_CRITICAL_ERROR(ctx)
 
     return 0;
 }
@@ -102,7 +103,6 @@ sav1_destroy_context(Sav1Context *context)
 
     thread_manager_kill_pipeline(ctx->thread_manager);
     thread_manager_destroy(ctx->thread_manager);
-    CHECK_CTX_CRITICAL_ERROR(ctx)
 
     // free time structs
     if (ctx->start_time != NULL) {
@@ -152,12 +152,11 @@ sav1_get_error(Sav1Context *context)
     }
     Sav1InternalContext *ctx = (Sav1InternalContext *)context->internal_state;
 
-    if (ctx == NULL) {
-        return (char *)"Uninitialized context: sav1_create_context() not called or failed";
-    }
-    else {
+    if (ctx) {
         return ctx->error_message;
     }
+
+    return (char *)"Uninitialized context: sav1_create_context() not called or failed";
 }
 
 void
